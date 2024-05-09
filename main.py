@@ -9,6 +9,8 @@ def read_har_file(file_path):
         har_data = json.load(file)
     return har_data
 
+# TODO: Make thie requirement powered by LLM.
+# TODO: We can try a few candidates and get feedback after subsequent agentic steps.
 def meets_requirement(text, requirement):
     # This function can be extended or modified to handle more complex requirements.
     return requirement in text
