@@ -5,28 +5,29 @@ import json
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+from transformers import GPT2TokenizerFast
+
 
 DEBUG_CONTEXT_SIZE = 500
+LLM_CONTEXT_WINDOW_SIZE = 2048
+
+# Initialize the tokenizer
+tokenizer = GPT2TokenizerFast.from_pretrained('Xenova/gpt-3.5-turbo')
 
 def read_har_file(file_path):
-    # TODO: Figure out how to get the HAR file automatically. Currently we just download it
-    # manually.
     with open(file_path, 'r', encoding='utf-8') as file:
         har_data = json.load(file)
     return har_data
 
-# TODO: Make thie requirement powered by LLM.
-# TODO: We can try a few candidates and get feedback after subsequent agentic steps.
-def meets_requirement(text, requirement, strategy='CONTAINS'):
-    if strategy == 'CONTAINS':
-        return requirement in text
-    elif strategy == 'USE_LLM':
-        # Assuming the function to call the LLM is defined elsewhere and handles API interaction
-        return check_with_llm(text, requirement)
+def split_text_into_chunks(text, words_per_chunk):
+    words = text.split()
+    chunks = [' '.join(words[i:i + words_per_chunk]) for i in range(0, len(words), words_per_chunk)]
+    return chunks
 
-# TODO(0): Fix error in this function.
 def check_with_llm(text, requirement):
-    chunks = [text[i:i+2048] for i in range(0, len(text), 2048)]
+    # Split the text into chunks of a specified number of words
+    chunks = split_text_into_chunks(text, LLM_CONTEXT_WINDOW_SIZE)
+    
     found = False
     for chunk in chunks:
         chat_completion = client.chat.completions.create(
@@ -34,15 +35,26 @@ def check_with_llm(text, requirement):
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"Does the following text contain information about gameplay availability times? Keep your response to yes or no \n\n'{chunk}'"}
             ],
+            temperature=0,
             model="gpt-3.5-turbo",
         )
         response = chat_completion.choices[0].message.content.lower()
-        if debug_mode:
-            print(f"response:\n {response}")  # Print the last response or modify as needed
         if "yes" in response:
             found = True
             break
+    if debug_mode:
+        print(f"response:\n {response}")
     return found
+
+
+# TODO(P2): We can try a few candidates and get feedback after subsequent agentic steps.
+def meets_requirement(text, requirement, strategy='CONTAINS'):
+    if strategy == 'CONTAINS':
+        return requirement in text
+    elif strategy == 'USE_LLM':
+        # Assuming the function to call the LLM is defined elsewhere and handles API interaction
+        return check_with_llm(text, requirement)
+
 
 def extract_filtered_request_response_pairs(har_data, requirement, strategy='CONTAINS'):
     filtered_pairs = []
@@ -99,6 +111,7 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # Setup
 debug_mode = os.getenv("DEBUG_MODE", "False").lower() in ('true', '1', 't')
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Usage
 har_file_path = 'data/example2.har'
