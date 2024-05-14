@@ -1,3 +1,4 @@
 alertbot
 .DS_Store
 data
+.env
