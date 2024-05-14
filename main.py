@@ -5,15 +5,13 @@ import json
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from transformers import GPT2TokenizerFast
-
 
 DEBUG_CONTEXT_SIZE = 500
 LLM_CONTEXT_WINDOW_SIZE = 2048
 
-# Initialize the tokenizer
-tokenizer = GPT2TokenizerFast.from_pretrained('Xenova/gpt-3.5-turbo')
-
+############################################################################################
+######################### FIND RELEVANT TIMES REQUEST/RESPONSE #############################
+############################################################################################
 def read_har_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         har_data = json.load(file)
@@ -111,7 +109,6 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # Setup
 debug_mode = os.getenv("DEBUG_MODE", "False").lower() in ('true', '1', 't')
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # Usage
 har_file_path = 'data/example2.har'
@@ -121,3 +118,49 @@ strategy = 'USE_LLM'  # or 'CONTAINS'
 filtered_request_response_pairs = extract_filtered_request_response_pairs(har_data, requirement, strategy)
 total_entries = len(har_data['log']['entries']) if 'log' in har_data and 'entries' in har_data['log'] else 0
 print_request_response_summary(filtered_request_response_pairs, total_entries, requirement)
+
+
+############################################################################################
+##############RESEND THE REQUEST AS IS AND TEST RESPONSE IS THE SAME #######################
+############################################################################################
+import requests
+
+# TODO(0): Verify that the issue is login token (by logging in and replacing token in request) then continue the flow.
+# TODO(P2): Solve the login flow using LLM
+# Resend the first request from the filtered pairs
+if filtered_request_response_pairs:
+    first_request = filtered_request_response_pairs[0][0]
+    method = first_request['method']
+    url = first_request['url']
+    headers = {header['name']: header['value'] for header in first_request['headers']}
+    body = first_request.get('postData', {}).get('text', '')
+
+    # Depending on the method, send the request
+    if method.lower() == 'get':
+        response = requests.get(url, headers=headers)
+    elif method.lower() == 'post':
+        response = requests.post(url, headers=headers, data=body)
+    else:
+        response = requests.request(method, url, headers=headers, data=body)
+
+    # Print the status code and response text to verify if it matches the original response
+    print(f"Resent Request Status: {response.status_code}")
+    print(f"Resent Request Response Text: {response.text}...")
+else:
+    print("No request-response pairs available to resend.")
+
+############################################################################################
+############################ SEND THE REQUEST WITH NEW PARAMS ##############################
+############################################################################################
+
+
+# TODO: Implement (in a general LLM powered way)
+
+############################################################################################
+################  PARSE THE RESPONSE AND COMPARE TO USER FILTER ############################
+############################################################################################
+
+# TODO: Implement (in a general LLM powered way)
+
+
+# TODO: Try to generalize the script from tennis bot to passport bot then golf bot.
