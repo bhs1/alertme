@@ -5,6 +5,7 @@ import json
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
+import re
 
 DEBUG_CONTEXT_SIZE = 500
 LLM_CONTEXT_WINDOW_SIZE = 2048
@@ -128,11 +129,34 @@ import requests
 # TODO(0): Verify that the issue is login token (by logging in and replacing token in request) then continue the flow.
 # TODO(P2): Solve the login flow using LLM
 # Resend the first request from the filtered pairs
+def update_to_logged_in_cookie(headers, loggged_in_phpsessid):
+    """
+    Updates the PHPSESSID in a cookie string with a new PHPSESSID value.
+    Args:
+    old_cookie_string (str): The original cookie string from the headers.
+    loggged_in_phpsessid (str): The new PHPSESSID value to be inserted.
+    Returns:
+    str: Updated cookie string with the new PHPSESSID.
+    """
+    # Regex to find and replace the PHPSESSID value
+    # Could be something like this
+    #updated_cookie = re.sub(r'PHPSESSID=[^;]+', f'PHPSESSID={loggged_in_phpsessid}', old_cookie_string)
+    #return updated_cookie
+    # TODO: fix and automate this. Idea could be for AI to output regex to find and replace the PHPSESSID.
+    headers['Cookie'] = '''PHPSESSID=rjes9bojneodauocf5uqdpr09n; __cf_bm=y94bfz7zVOCAB5ZZ\
+    Vyr4xyDp88aLX2eTk8VERHywlV8-1715922970-1.0.1.1-kmirNpFXvlwYkcoDYHPIsD0RmHtFSUm71MLjBmZ\
+    DciFZyYgpHA8isACN2PWL_yyUIXkdet82CH6AhlhmIAt.zA; isLoggedIn=1; SessionExpirationTime=17\
+    15951794'''
+
 if filtered_request_response_pairs:
     first_request = filtered_request_response_pairs[0][0]
     method = first_request['method']
     url = first_request['url']
     headers = {header['name']: header['value'] for header in first_request['headers']}
+
+    update_to_logged_in_cookie(headers, '')
+    
+    # TODO(0): Replace date with 5/22 and times with 10am-11pm and verify the request works.
     body = first_request.get('postData', {}).get('text', '')
 
     # Depending on the method, send the request
@@ -145,7 +169,10 @@ if filtered_request_response_pairs:
 
     # Print the status code and response text to verify if it matches the original response
     print(f"Resent Request Status: {response.status_code}")
-    print(f"Resent Request Response Text: {response.text}...")
+
+    # TODO(0): Get LLM generated code to extract times from response and print.
+    # Key is not getting times using LLM directly, but instead having LLM generate code to get the times.
+    # print(f"Resent Request Response Text: {response.text}...")
 else:
     print("No request-response pairs available to resend.")
 
