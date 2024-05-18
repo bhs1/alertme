@@ -126,8 +126,7 @@ print_request_response_summary(filtered_request_response_pairs, total_entries, r
 ############################################################################################
 import requests
 
-# TODO(0): Verify that the issue is login token (by logging in and replacing token in request) then continue the flow.
-# TODO(P2): Solve the login flow using LLM
+# TODO(Alec?): Solve the login flow using LLM
 # Resend the first request from the filtered pairs
 def update_to_logged_in_cookie(headers, loggged_in_phpsessid):
     """
@@ -186,9 +185,11 @@ if filtered_request_response_pairs:
 else:
     print("No request-response pairs available to resend.")
 
-#TODO(P2): We need an agentic loop where user puts the expected result and llm runs the 
+#TODO(0): We need an agentic loop where user puts the expected result and llm runs the 
 # code to extract the times and then user verifies the result. If it's wrong, it asks llm to 
 # tweak the code and then runs it again and so on until it gets the expected result.
+
+# Next: Create agent codegen library and test it!
 def extract_playing_times_with_llm(html_content):
     chat_completion = client.chat.completions.create(
         messages=[
