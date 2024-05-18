@@ -143,10 +143,18 @@ def update_to_logged_in_cookie(headers, loggged_in_phpsessid):
     #updated_cookie = re.sub(r'PHPSESSID=[^;]+', f'PHPSESSID={loggged_in_phpsessid}', old_cookie_string)
     #return updated_cookie
     # TODO: fix and automate this. Idea could be for AI to output regex to find and replace the PHPSESSID.
-    headers['Cookie'] = '''PHPSESSID=rjes9bojneodauocf5uqdpr09n; __cf_bm=y94bfz7zVOCAB5ZZ\
+    headers['Cookie'] = '''PHPSESSID=bv7smnpjcavo9f1ksqt2kes003; __cf_bm=y94bfz7zVOCAB5ZZ\
     Vyr4xyDp88aLX2eTk8VERHywlV8-1715922970-1.0.1.1-kmirNpFXvlwYkcoDYHPIsD0RmHtFSUm71MLjBmZ\
     DciFZyYgpHA8isACN2PWL_yyUIXkdet82CH6AhlhmIAt.zA; isLoggedIn=1; SessionExpirationTime=17\
     15951794'''
+
+def replace_date(body, new_date):
+    import re
+    # The new date should be in the format MM/DD/YY for the URL, which needs to be URL encoded
+    new_date_encoded = new_date.replace('/', '%2F')
+    # Replace the date in the body string using a regular expression
+    updated_body = re.sub(r'date=[^&]*', f'date={new_date_encoded}', body)
+    return updated_body
 
 if filtered_request_response_pairs:
     first_request = filtered_request_response_pairs[0][0]
@@ -156,8 +164,10 @@ if filtered_request_response_pairs:
 
     update_to_logged_in_cookie(headers, '')
     
-    # TODO(0): Replace date with 5/22 and times with 10am-11pm and verify the request works.
     body = first_request.get('postData', {}).get('text', '')
+    print(f"old body: {body}")
+    body = replace_date(body, '5/22/2024')
+    print(f"new body: {body}")
 
     # Depending on the method, send the request
     if method.lower() == 'get':
@@ -169,12 +179,72 @@ if filtered_request_response_pairs:
 
     # Print the status code and response text to verify if it matches the original response
     print(f"Resent Request Status: {response.status_code}")
+    response = response.text
 
-    # TODO(0): Get LLM generated code to extract times from response and print.
     # Key is not getting times using LLM directly, but instead having LLM generate code to get the times.
-    # print(f"Resent Request Response Text: {response.text}...")
+    #print(f"Resent Request Response Text: {response}...")
 else:
     print("No request-response pairs available to resend.")
+
+#TODO(P2): We need an agentic loop where user puts the expected result and llm runs the 
+# code to extract the times and then user verifies the result. If it's wrong, it asks llm to 
+# tweak the code and then runs it again and so on until it gets the expected result.
+def extract_playing_times_with_llm(html_content):
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": """Extract and list all available playing times 
+             from the following HTML content:\n\n"""
+              + html_content              
+              + """\n\n Then in addition, given that the html always follows a similar structure,
+              print a python function that takes the html as input and returns the list of playing times.
+              If there are multiple activity types, use a dictionary instead of a list and associate times
+              with the correct activity. Test the result and make sure it is of the form 
+              - Pickleball / Mini Tennis:
+                - 7:30pm
+
+            - Tennis:
+                - 3:00pm
+                - 3:30pm
+                - 5:00pm
+                - 9:30pm
+            If it is not, correct any errors in the function.
+            The output right now is{'Pickleball / Mini Tennis - \n\n                                        7:30pm': ['3:00pm', '3:30pm', '5:00pm', '9:30pm']} but
+            which is wrong. Try to find the error.
+              """}
+        ],
+        temperature=0,
+        model="gpt-4-turbo",
+    )
+    response = chat_completion.choices[0].message.content
+    print("Extracted Playing Times:", response)
+
+from bs4 import BeautifulSoup
+
+# Note this was created by the LLM call above!
+
+def extract_playing_times(html_content):
+    soup = BeautifulSoup(html_content, 'html.parser')
+    times_table = soup.find('table', {'id': 'times-to-reserve'})
+    activities = {}
+
+    if times_table:
+        for td in times_table.find_all('td'):
+            activity_name = td.find('b').text.strip()
+            print(activity_name)
+            times = [a.text.strip() for a in td.find_all('a')]
+            print(times)
+            if activity_name in activities:
+                activities[activity_name].extend(times)
+            else:
+                activities[activity_name] = times
+
+    return activities
+
+if response is not None:
+    extract_playing_times_with_llm(response)
+    print(extract_playing_times(response))
+
 
 ############################################################################################
 ############################ SEND THE REQUEST WITH NEW PARAMS ##############################
