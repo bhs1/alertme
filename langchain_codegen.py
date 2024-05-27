@@ -139,6 +139,7 @@ prompt = ChatPromptTemplate.from_messages(
         from your code so that the actual business logic is in its own function and clearly marked
         as the solution with a comment. So you should never call input() inside the function but rather
         call input() above the function and pass the result of input() to the function.
+        You are encouraged to add print statements to help yourself find the issue.
          
         {examples}"""),
         ("placeholder", "{messages}")
@@ -181,7 +182,7 @@ def evaluate(state: State):
     for test_case in test_cases:
         input_data = test_case["inputs"]
         expected_output = test_case["outputs"]
-        test_result = check_correctness(code, input_data, expected_output, runtime_limit)
+        test_result = check_correctness( , input_data, expected_output, runtime_limit)
         test_results.append(test_result)
         if test_result == "passed":
             succeeded += 1
@@ -226,30 +227,44 @@ try:
 except Exception as e:
     print(f"Failed to save graph: {e}")
 
-DESCRIPTION = """Create a function that sums two integers
-
-INPUT FORMAT (input arrives from the terminal / stdin): The numbers to sum are separated
-by spaces
-
-OUTPUT FORMAT (output sent to the terminal / stdout): The sum of the two integers
-
-Please pay attention to the system message above to see how to format your response.
-"""
-
 # TODO(0): Try to solve writing function to extract times from HTTP response!
 # Whoah eventually the agent can do the request finding, the response getting and everything and
 # loop until the end to end test passes!
 # Try with the request saved in data/response.txt and expect time 9:30pm. Then try with a more complex request with multiple times etc.
 
+# Load the content of 'data/response.txt' into a string variable
+def load_response_data(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            response_data = file.read()
+        return response_data
+    except Exception as e:
+        return str(e)
+
+response_content = load_response_data('data/response.txt')
+
+# Check what's going wrong in langsmith.
+# Find a few more interesting cases.
+PROMPT = f"""Write a function to extract and list all available playing times 
+             from the following HTTP response content:
+
+             {response_content}
+
+            If there are multiple activity types, use a dictionary instead of a list and associate times
+            with the correct activity.
+
+            INPUT FORMAT (input arrives from the terminal / stdin): The HTTP response content
+
+            OUTPUT FORMAT (output sent to the terminal / stdout): The python function
+
+            Please pay attention to the system message above to see how to format your response.
+            """
+
 input_states = [
     {
-        "messages": [("user", DESCRIPTION)],
+        "messages": [("user", PROMPT)],
         "test_cases": [
-            {"inputs": "1 2", "outputs": "3"},
-            {"inputs": "3 4", "outputs": "7"},
-            {"inputs": "0 0", "outputs": "0"},
-            {"inputs": "-1 -1", "outputs": "-2"},
-            {"inputs": "100 200", "outputs": "300"}
+            {"inputs": f"{response_content}", "outputs": "{'Pickleball / Mini Tennis' : ['9:30'], 'Tennis' : ['9:30']}"},
         ],
         "runtime_limit": 10,
         "status": "in_progress",
