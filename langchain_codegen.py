@@ -236,6 +236,10 @@ OUTPUT FORMAT (output sent to the terminal / stdout): The sum of the two integer
 Please pay attention to the system message above to see how to format your response.
 """
 
+# TODO(0): Try to solve writing function to extract times from HTTP response!
+# Whoah eventually the agent can do the request finding, the response getting and everything and
+# loop until the end to end test passes!
+# Try with the request saved in data/response.txt and expect time 9:30pm. Then try with a more complex request with multiple times etc.
 
 input_states = [
     {
@@ -260,7 +264,6 @@ input_state["test_cases"] = input_state["test_cases"][:3]
 from langchain_core.messages import BaseMessage
 from langchain_core.tracers.context import tracing_v2_enabled
 from langsmith import Client
-
 
 # We don't need to include all the test cases in our traces.
 def _hide_test_cases(inputs):

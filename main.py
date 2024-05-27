@@ -28,6 +28,7 @@ def check_with_llm(text, requirement):
     chunks = split_text_into_chunks(text, LLM_CONTEXT_WINDOW_SIZE)
     
     found = False
+    response = "no response"
     for chunk in chunks:
         chat_completion = client.chat.completions.create(
             messages=[
@@ -118,8 +119,13 @@ requirement = '0pm'
 strategy = 'USE_LLM'  # or 'CONTAINS'
 filtered_request_response_pairs = extract_filtered_request_response_pairs(har_data, requirement, strategy)
 total_entries = len(har_data['log']['entries']) if 'log' in har_data and 'entries' in har_data['log'] else 0
+
 print_request_response_summary(filtered_request_response_pairs, total_entries, requirement)
 
+# Writing the first response to a file
+with open('data/response.txt', 'w', encoding='utf-8') as file:
+    first_response = filtered_request_response_pairs[0][1]['content'].get('text', '') if filtered_request_response_pairs else "No response available."
+    file.write(first_response)
 
 ############################################################################################
 ##############RESEND THE REQUEST AS IS AND TEST RESPONSE IS THE SAME #######################
@@ -194,24 +200,17 @@ def extract_playing_times_with_llm(html_content):
     chat_completion = client.chat.completions.create(
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": """Extract and list all available playing times 
-             from the following HTML content:\n\n"""
-              + html_content              
-              + """\n\n Then in addition, given that the html always follows a similar structure,
-              print a python function that takes the html as input and returns the list of playing times.
-              If there are multiple activity types, use a dictionary instead of a list and associate times
-              with the correct activity. Test the result and make sure it is of the form 
-              - Pickleball / Mini Tennis:
-                - 7:30pm
+            {"role": "user", "content": f"""Extract and list all available playing times 
+             from the following HTML content:
 
-            - Tennis:
-                - 3:00pm
-                - 3:30pm
-                - 5:00pm
-                - 9:30pm
-            If it is not, correct any errors in the function.
-            The output right now is{'Pickleball / Mini Tennis - \n\n                                        7:30pm': ['3:00pm', '3:30pm', '5:00pm', '9:30pm']} but
-            which is wrong. Try to find the error.
+
+             {html_content}
+
+
+            Then in addition, given that the html always follows a similar structure,
+            write a python function that takes the html as input and returns the list of playing times.
+            If there are multiple activity types, use a dictionary instead of a list and associate times
+            with the correct activity.
               """}
         ],
         temperature=0,
