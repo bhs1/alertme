@@ -301,9 +301,10 @@ config = {
 import utils
 
 response_content1 = utils.load_response_data('data/response.txt')
-
+response_content2 = utils.load_response_data('data/response2.txt')
 
 # Find a few more interesting cases.
+# If they fail or take many iterations, try with a debug node.
 USER_REQUEST = f"""Write a function to extract and list all available playing times 
              from HTTP response content.
              
@@ -318,6 +319,7 @@ USER_REQUEST = f"""Write a function to extract and list all available playing ti
 
 TEST_CASES = [
             {"inputs": f"{response_content1}", "outputs": "{'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}"},
+            {"inputs": f"{response_content2}", "outputs": "{'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}"},
         ]
 
 events = graph.stream(
