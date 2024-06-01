@@ -1,7 +1,3 @@
-# 2) Try with HTML, if failing badly, try a less hard problem.
-# 3) Add debug and see if it improves.
-
-
 from operator import itemgetter
 import uuid
 from langgraph.graph import END, StateGraph
@@ -85,20 +81,20 @@ class GraphState(TypedDict):
     Attributes:
         error : Binary flag for control flow to indicate whether test error was tripped
         messages : With user question, error messages, reasoning
-        generation : Code solution
+        code_solution : Code solution
         iterations : Number of tries
         test_cases : List of test cases
     """
 
     error: str
     messages: Annotated[list[AnyMessage], add_messages]
-    generation: str
+    code_solution: str
     iterations: int
     test_cases: list[TestCase]
 
 
 # Parameters
-max_iterations = 3
+max_iterations = 10
 
 # Nodes
 
@@ -111,7 +107,7 @@ def generate(state: GraphState):
         state (dict): The current graph state
 
     Returns:
-        state (dict): New key added to state, generation
+        state (dict): New key added to state, code_solution
     """
 
     print("---GENERATING CODE SOLUTION---")
@@ -135,7 +131,7 @@ def generate(state: GraphState):
 
     # Increment
     iterations = iterations + 1
-    return {"generation": code_solution, "messages": messages, "iterations": iterations}
+    return {"code_solution": code_solution, "messages": messages, "iterations": iterations}
 
 
 def code_check(state: GraphState):
@@ -153,7 +149,7 @@ def code_check(state: GraphState):
 
     # State
     messages = state["messages"]
-    code_solution = state["generation"]
+    code_solution = state["code_solution"]
     iterations = state["iterations"]
     test_cases = state["test_cases"]
 
@@ -170,7 +166,7 @@ def code_check(state: GraphState):
             ("user", f"Your solution failed the import test. Here is the error: {e}. Reflect on these errors and your prior attempt to solve the problem. (1) State what you think went wrong with the prior solution and (2) try to solve this problem again. Return the FULL SOLUTION. Use the code tool to structure the output with a prefix, imports, and code block:")]
         messages += error_message
         return {
-            "generation": code_solution,
+            "code_solution": code_solution,
             "messages": messages,
             "iterations": iterations,
             "error": "yes",
@@ -200,7 +196,7 @@ def code_check(state: GraphState):
     if succeeded == num_test_cases:
         print("---CODE BLOCK CHECK: SUCCEEDED---")
         return {
-            "generation": code_solution,
+            "code_solution": code_solution,
             "messages": messages,
             "iterations": iterations,
             "error": "no",
@@ -212,7 +208,7 @@ def code_check(state: GraphState):
         ("user", f"{response} Reflect on these test case failures and your prior attempt to solve the problem. (1) State what you think went wrong with the prior solution and (2) try to solve this problem again. Return the FULL SOLUTION. Use the code tool to structure the output with a prefix, imports, and code block:")]
     messages += error_message
     return {
-        "generation": code_solution,
+        "code_solution": code_solution,
         "messages": messages,
         "iterations": iterations,
         "error": "yes",
@@ -262,7 +258,7 @@ def _print_event(event: dict, _printed: set, max_length=1500):
 builder = StateGraph(GraphState)
 
 # Define the nodes
-builder.add_node("generate", generate)  # generation solution
+builder.add_node("generate", generate)  # code_solution solution
 builder.add_node("check_code", code_check)  # check code
 
 # Build graph
@@ -328,5 +324,4 @@ events = graph.stream(
 for event in events:
     _print_event(event, _printed)
 
-# TODO: Change variable name generation to code_solution
-print(event['generation'])
+print(event['code_solution'])
