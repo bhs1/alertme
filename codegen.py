@@ -167,7 +167,7 @@ def code_check(state: GraphState):
     except Exception as e:
         print("---CODE IMPORT CHECK: FAILED---")
         error_message = [
-            ("user", f"Your solution failed the import test. Here is the error: {e}. Reflect on this error and your prior attempt to solve the problem. (1) State what you think went wrong with the prior solution and (2) try to solve this problem again. Return the FULL SOLUTION. Use the code tool to structure the output with a prefix, imports, and code block:")]
+            ("user", f"Your solution failed the import test. Here is the error: {e}. Reflect on these errors and your prior attempt to solve the problem. (1) State what you think went wrong with the prior solution and (2) try to solve this problem again. Return the FULL SOLUTION. Use the code tool to structure the output with a prefix, imports, and code block:")]
         messages += error_message
         return {
             "generation": code_solution,
@@ -188,12 +188,14 @@ def code_check(state: GraphState):
         }
         try:
             exec(combined_code, global_scope)
-            test_results.append(global_scope["global_output"])
-            if global_scope["global_output"] == test_case["outputs"]:
+            if str(global_scope["global_output"]) == str(test_case["outputs"]):
+                test_results.append(f"Correct test case! Your output matched the expected output: {test_case['outputs']}")
                 succeeded += 1
+            else:
+                test_results.append(f"Wrong answer. Got {global_scope['global_output']} but expected {test_case['outputs']}")
         except Exception as e:
             print("---CODE BLOCK CHECK: FAILED---")
-            test_results.append(f"{e}")
+            test_results.append(f"Wrong answer. Got exception {e} but expected {test_case['outputs']}")
         pass_rate = succeeded / num_test_cases if num_test_cases else "N/A"
     if succeeded == num_test_cases:
         print("---CODE BLOCK CHECK: SUCCEEDED---")
@@ -295,20 +297,31 @@ config = {
     }
 }
 
-
 # Run it
+import utils
 
-question = """Write a Python program that adds two numbers together.
+response_content1 = utils.load_response_data('data/response.txt')
 
-Example:
-  input: 1 2 outputs: 3
-"""
 
-TEST_CASES = [{"inputs": "1 2", "outputs": "3"}, {
-    "inputs": "5 10", "outputs": "15"}, {"inputs": "100 200", "outputs": "300"}]
+# Find a few more interesting cases.
+USER_REQUEST = f"""Write a function to extract and list all available playing times 
+             from HTTP response content.
+             
+             Example HTTP response content:
+               {response_content1}
+
+            If there are multiple activity types, use a dictionary instead of a list and associate times
+            with the correct activity.            
+
+            Please pay attention to the system message above to see how to format your response.
+            """
+
+TEST_CASES = [
+            {"inputs": f"{response_content1}", "outputs": "{'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}"},
+        ]
 
 events = graph.stream(
-    {"messages": [("user", question)], "iterations": 0, "test_cases": TEST_CASES}, config, stream_mode="values"
+    {"messages": [("user", USER_REQUEST)], "iterations": 0, "test_cases": TEST_CASES}, config, stream_mode="values"
 )
 for event in events:
     _print_event(event, _printed)
