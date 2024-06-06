@@ -134,9 +134,8 @@ def write_first_request_to_file(filtered_pairs, file_path='data/request.txt'):
     """
     with open(file_path, 'w', encoding='utf-8') as file:
         if filtered_pairs:
-            first_request = filtered_pairs[0][0]
-            request_details = f"Method: {first_request['method']}\nURL: {first_request['url']}\n"
-            file.write(request_details)
+            first_request = filtered_pairs[0][0]            
+            file.write(json.dumps(first_request))
         else:
             file.write("No request available.")
 

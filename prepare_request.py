@@ -32,14 +32,17 @@ def get_request_params_map(request):
     load_dotenv()
     os.environ["LANGCHAIN_PROJECT"] = "codegen"
     # Returns a dictionary with the field names that can be optionally customized by the user.
-    prompt = f"""Given this HTTP request {request}, create the corresponding field_list and value_list. The fields should only be related to booking activity times.
-    The values should be in the same order as the fields in the field_list. Ignore techincal fields like Host, User-Agent, etc."""
+    prompt = f"""Given this HTTP request {request}, create the corresponding field_list and value_list.
+    The fields should only be related to booking activity times. Ignore techincal fields like Host, User-Agent, IDs,
+    and things that may not be iterpretable by humans. Try to keep the list at most 10 fields and sort in order of relevance.
+    The values should be in the same order as the fields in the field_list. """
     llm = ChatOpenAI(model="gpt-4o", temperature=0)
     
     
     field_map_chain = llm.with_structured_output(FieldMap, include_raw=False)
     field_map = field_map_chain.invoke(prompt)
-    return field_map
+    request_params_map = {field: value for field, value in zip(field_map.field_list, field_map.value_list)}
+    return request_params_map
 
 
 # Works for either header or body.
@@ -56,4 +59,8 @@ if __name__ == "__main__":
         request = f.read()
     request_params_map = get_request_params_map(request)
     print(request_params_map)
-
+    # Got this from above.
+    REQUEST_PARAMS_MAP = {'date': '05/09/2024', 'interval': '30', 'timeFrom': '15', 'timeTo': '0'}
+    #TODO(0): With REQUEST_PARAMS_MAP, create a function to replace these fields in the request.
+    # - Includes creating TEST_CASES.
+    #TODO(0): Call the function to replace the fields
