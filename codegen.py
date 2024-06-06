@@ -172,9 +172,9 @@ class CodeGenerator:
             ]
 
         # Solution
-        code_solution = self.code_gen_chain.invoke({"messages": messages})['parsed']
+        code_solution = self.code_gen_chain.invoke({"messages": messages})
         if os.getenv("DEBUG_MODE") == "True":
-            print(code_solution)
+            print("code_solution: ", code_solution)
 
         messages += [
             (
