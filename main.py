@@ -9,6 +9,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import re
 
+
 # Local libs
 import prepare_request
 import extract_from_response
@@ -345,6 +346,8 @@ if __name__ == "__main__":
 
     # Extract useful information from the response.
     if response_text is not None:
+        load_dotenv()
+        os.environ["LANGCHAIN_PROJECT"] = "field_map"
         response_func = extract_from_response.generate_response_func(RESPONSE_TEST_CASES)        
         final_result = extract_from_response.extract_info_from_response(response_text, response_func)
         print("=================== AVAILABLE TIMES FROM EXAMPLE RESPONSE ======================")
