@@ -1,0 +1,646 @@
+[~/Projects/alertme] /Users/bensolis-cohen/Projects/alertme/alertbot/bin/python /Users/bensolis-cohen/Projects/alertme/main.py
+Extracting filtered request response pairs
+Checking with LLM
+response:
+ no response
+Checking with LLM
+response:
+ no response
+Checking with LLM
+response:
+ no response
+Checking with LLM
+response:
+ no response
+Checking with LLM
+response:
+ no
+Checking with LLM
+response:
+ no
+Checking with LLM
+response:
+ no
+Checking with LLM
+response:
+ no
+Checking with LLM
+response:
+ yes
+Checking with LLM
+response:
+ no response
+Total responses that matched the requirement: 1
+Total responses that did not match the requirement: 9
+Entry 1 Request:
+  Method: POST
+  URL: https://gtc.clubautomation.com/event/reserve-court-new?ajax=true
+  HTTP Version: HTTP/2
+  Headers: 19 headers
+  Query Strings: 1 items
+  Cookies: 4 cookies
+  Body Size: 718 bytes
+Entry 1 Response:
+  Status: 200 
+  HTTP Version: HTTP/2
+  Headers: 18 headers
+  Content Size: 42970 bytes
+  MIME Type: text/html; charset=UTF-8
+Extracting request params since none provided by user:  {}
+We need test cases. Using defaults response.
+Graph saved as 'data/graph.png'.
+================================ Human Message =================================
+
+Write a function to extract and list all available playing times 
+                from HTTP response content.
+                
+                Example HTTP response content:
+                <div id="reserve-court-new">
+<form method="post" id="reserve-court-filter">
+    <div id="view-reservation-list">
+    <table class="reservation-list-new" id="table-reservation-list">
+        <tr>
+            <th colspan="2">Your Reservations</th>
+            <th>Host</th>
+            <th>Activity</th>
+            <th>Players</th>
+            <th></th>
+        </tr>
+        
+<script type="text/javascript">
+    (function ($) {
+        $(document).ready(function () {
+            var isLastPage = '1';
+            if (isLastPage) {
+                $('.reservation-list-show-more').addClass('hidden');
+            } else {
+                $('.reservation-list-show-more').removeClass('hidden');
+            }
+
+            $('.court-time-cancel').unbind('click').bind('click', function() {
+                var cid = $(this).attr('cid');
+
+                $.caPost(
+                    '/event/cancel-court-time?ajax=true',
+                    {id: cid},
+                    function(response) {
+                        var popup = $('<div></div>').append(response);
+                        $('#reserve-court-new').append(popup);
+
+                        newMemberReg.popup = popup.caDialog({
+                            tit ... (truncated)
+---GENERATING CODE SOLUTION---
+Prefix: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information.
+Debug Analysis: 
+Test Case Analysis: 
+Improvement Plan: 
+Imports: from bs4 import BeautifulSoup
+Code:
+def extract_playing_times(response_content):
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table', {'id': 'times-to-reserve'})
+    playing_times = {}
+
+    if times_table:
+        rows = times_table.find_all('tr')
+        for row in rows:
+            cells = row.find_all('td')
+            for cell in cells:
+                activity = cell.find('b').text.strip(' -')
+                time_links = cell.find_all('a')
+                times = [link.text.strip() for link in time_links]
+                if activity in playing_times:
+                    playing_times[activity].extend(times)
+                else:
+                    playing_times[activity] = times
+
+    return playing_times
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+response_content = get_input()
+playing_times = extract_playing_times(response_content)
+set_output(str(playing_times))
+================================== Ai Message ==================================
+
+Here is my attempt to solve the problem: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information. 
+ Debug Analysis:  
+ Test Case Analysis:  
+ Improvement Plan:  
+Imports: from bs4 import BeautifulSoup 
+ Code: def extract_playing_times(response_content):
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table', {'id': 'times-to-reserve'})
+    playing_times = {}
+
+    if times_table:
+        rows = times_table.find_all('tr')
+        for row in rows:
+            cells = row.find_all('td')
+            for cell in cells:
+                activity = cell.find('b').text.strip(' -')
+                time_links = cell.find_all('a')
+                times = [link.text.strip() for link in time_links]
+                if activity in playing_times:
+                    playing_times[activity].extend(times)
+                else:
+                    playing_times[activity] = times
+
+    return playing_times
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+response_content = get_input()
+playing_times = extract_playing_times(response_content)
+set_output(str(playing_times))
+---CHECKING CODE---
+---CODE BLOCK CHECK: FAILED---
+---CODE BLOCK CHECK: FAILED---
+---DECISION: RE-TRY SOLUTION---
+================================ Human Message =================================
+
+Incorrect submission.
+Pass rate: 0/2
+Results:
+<test id=0>
+Wrong answer. Got exception 'NoneType' object has no attribute 'text' but expected {'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}
+</test>
+<test id=1>
+Wrong answer. Got {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm', '9:00pm', '9:30pm']} but expected {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}. Debug output: 
+</test> Reflect on these test case failures and your prior attempt to solve the
+             problem. State what you think went wrong with the prior solution. Focus on
+             the output of the debug statements that you added. Also focus on the test_case_analysis to see what you
+             should improve to get failing test cases to pass. (2) Try to solve this problem again.             
+             
+---GENERATING CODE SOLUTION---
+--------- Rewriting code with print statements -----------
+Prefix: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information. Debug statements are added to help identify issues.
+Debug Analysis: The first test case failed due to a 'NoneType' object having no attribute 'text'. This indicates that the code attempted to access the 'text' attribute of a None object. The second test case failed because the output contained duplicate times for the 'Tennis' activity. This suggests that the code did not properly handle duplicate entries.
+Test Case Analysis: For the first test case, the issue is likely due to the code not properly checking if the 'b' tag exists before attempting to access its 'text' attribute. For the second test case, the issue is likely due to the code not properly handling duplicate times for the same activity.
+Improvement Plan: 1. Add checks to ensure that the 'b' tag exists before accessing its 'text' attribute. 2. Use a set to store times for each activity to avoid duplicates. 3. Add debug statements to print important variables and verify their values.
+Imports: from bs4 import BeautifulSoup
+Code:
+def extract_playing_times(response_content):
+    global debug_output
+    debug_output = ''
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table', {'id': 'times-to-reserve'})
+    playing_times = {}
+
+    if times_table:
+        rows = times_table.find_all('tr')
+        for row in rows:
+            cells = row.find_all('td')
+            for cell in cells:
+                b_tag = cell.find('b')
+                if b_tag:
+                    activity = b_tag.text.strip(' -')
+                    time_links = cell.find_all('a')
+                    times = [link.text.strip() for link in time_links]
+                    if activity in playing_times:
+                        playing_times[activity].extend(times)
+                    else:
+                        playing_times[activity] = times
+                    debug_output += f'Activity: {activity}, Times: {times}\n'
+
+    # Remove duplicates
+    for activity in playing_times:
+        playing_times[activity] = list(set(playing_times[activity]))
+
+    debug_output += f'Final Playing Times: {playing_times}\n'
+    return playing_times
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+response_content = get_input()
+playing_times = extract_playing_times(response_content)
+set_output(str(playing_times))
+================================== Ai Message ==================================
+
+Here is my attempt to solve the problem: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information. Debug statements are added to help identify issues. 
+ Debug Analysis: The first test case failed due to a 'NoneType' object having no attribute 'text'. This indicates that the code attempted to access the 'text' attribute of a None object. The second test case failed because the output contained duplicate times for the 'Tennis' activity. This suggests that the code did not properly handle duplicate entries. 
+ Test Case Analysis: For the first test case, the issue is likely due to the code not properly checking if the 'b' tag exists before attempting to access its 'text' attribute. For the second test case, the issue is likely due to the code not properly handling duplicate times for the same activity. 
+ Improvement Plan: 1. Add checks to ensure that the 'b' tag exists before accessing its 'text' attribute. 2. Use a set to store times for each activity to avoid duplicates. 3. Add debug statements to print important variables and verify their values. 
+Imports: from bs4 import BeautifulSoup 
+ Code: def extract_playing_times(response_content):
+    global debug_output
+    debug_output = ''
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table',  ... (truncated)
+---CHECKING CODE---
+---CODE BLOCK CHECK: FAILED---
+---DECISION: RE-TRY SOLUTION---
+================================ Human Message =================================
+
+Incorrect submission.
+Pass rate: 1/2
+Results:
+<test id=0>
+Correct test case! Your output matched the expected output: {'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}. Debug output in case it with other failures: Activity: Pickleball / Mini Tennis, Times: ['9:30pm']
+Activity: Tennis, Times: ['9:30pm']
+Final Playing Times: {'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}
+
+</test>
+<test id=1>
+Wrong answer. Got {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['9:00pm', '8:00pm', '8:30pm', '9:30pm']} but expected {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}. Debug output: Activity: Pickleball / Mini Tennis, Times: ['9:00pm', '9:30pm']
+Activity: Tennis, Times: ['8:00pm', '8:30pm', '9:00pm', '9:30pm']
+Activity: Tennis, Times: ['9:00pm', '9:30pm']
+Final Playing Times: {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['9:00pm', '8:00pm', '8:30pm', '9:30pm']}
+
+</test> Reflect on these test case failures and your prior attempt to solve the
+             problem. State what you think went wrong with the prior solution. Focus on
+             the output of the debug statements that you added. Also focus on the test_case_analysis to see what you
+             should improve to get failing test cases to pass. (2) Try to solve this problem again.             
+             
+---GENERATING CODE SOLUTION---
+--------- Rewriting code with print statements -----------
+Prefix: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information. Debug statements are added to help identify issues.
+Debug Analysis: The first test case failed due to a 'NoneType' object having no attribute 'text'. This indicates that the code attempted to access the 'text' attribute of a None object. The second test case failed because the output contained duplicate times for the 'Tennis' activity. This suggests that the code did not properly handle duplicate entries.
+Test Case Analysis: For the first test case, the issue is likely due to the code not properly checking if the 'b' tag exists before attempting to access its 'text' attribute. For the second test case, the issue is likely due to the code not properly handling duplicate times for the same activity.
+Improvement Plan: 1. Add checks to ensure that the 'b' tag exists before accessing its 'text' attribute. 2. Use a set to store times for each activity to avoid duplicates. 3. Add debug statements to print important variables and verify their values.
+Imports: from bs4 import BeautifulSoup
+Code:
+def extract_playing_times(response_content):
+    global debug_output
+    debug_output = ''
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table', {'id': 'times-to-reserve'})
+    playing_times = {}
+
+    if times_table:
+        rows = times_table.find_all('tr')
+        for row in rows:
+            cells = row.find_all('td')
+            for cell in cells:
+                b_tag = cell.find('b')
+                if b_tag:
+                    activity = b_tag.text.strip(' -')
+                    time_links = cell.find_all('a')
+                    times = [link.text.strip() for link in time_links]
+                    if activity in playing_times:
+                        playing_times[activity].extend(times)
+                    else:
+                        playing_times[activity] = times
+                    debug_output += f'Activity: {activity}, Times: {times}\n'
+
+    # Remove duplicates
+    for activity in playing_times:
+        playing_times[activity] = list(set(playing_times[activity]))
+
+    debug_output += f'Final Playing Times: {playing_times}\n'
+    return playing_times
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+response_content = get_input()
+playing_times = extract_playing_times(response_content)
+set_output(str(playing_times))
+================================== Ai Message ==================================
+
+Here is my attempt to solve the problem: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information. Debug statements are added to help identify issues. 
+ Debug Analysis: The first test case failed due to a 'NoneType' object having no attribute 'text'. This indicates that the code attempted to access the 'text' attribute of a None object. The second test case failed because the output contained duplicate times for the 'Tennis' activity. This suggests that the code did not properly handle duplicate entries. 
+ Test Case Analysis: For the first test case, the issue is likely due to the code not properly checking if the 'b' tag exists before attempting to access its 'text' attribute. For the second test case, the issue is likely due to the code not properly handling duplicate times for the same activity. 
+ Improvement Plan: 1. Add checks to ensure that the 'b' tag exists before accessing its 'text' attribute. 2. Use a set to store times for each activity to avoid duplicates. 3. Add debug statements to print important variables and verify their values. 
+Imports: from bs4 import BeautifulSoup 
+ Code: def extract_playing_times(response_content):
+    global debug_output
+    debug_output = ''
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table',  ... (truncated)
+---CHECKING CODE---
+---CODE BLOCK CHECK: FAILED---
+---DECISION: RE-TRY SOLUTION---
+================================ Human Message =================================
+
+Incorrect submission.
+Pass rate: 1/2
+Results:
+<test id=0>
+Correct test case! Your output matched the expected output: {'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}. Debug output in case it with other failures: Activity: Pickleball / Mini Tennis, Times: ['9:30pm']
+Activity: Tennis, Times: ['9:30pm']
+Final Playing Times: {'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}
+
+</test>
+<test id=1>
+Wrong answer. Got {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['9:00pm', '8:00pm', '8:30pm', '9:30pm']} but expected {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}. Debug output: Activity: Pickleball / Mini Tennis, Times: ['9:00pm', '9:30pm']
+Activity: Tennis, Times: ['8:00pm', '8:30pm', '9:00pm', '9:30pm']
+Activity: Tennis, Times: ['9:00pm', '9:30pm']
+Final Playing Times: {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['9:00pm', '8:00pm', '8:30pm', '9:30pm']}
+
+</test> Reflect on these test case failures and your prior attempt to solve the
+             problem. State what you think went wrong with the prior solution. Focus on
+             the output of the debug statements that you added. Also focus on the test_case_analysis to see what you
+             should improve to get failing test cases to pass. (2) Try to solve this problem again.             
+             
+---GENERATING CODE SOLUTION---
+--------- Rewriting code with print statements -----------
+Prefix: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information. Debug statements are added to help identify issues.
+Debug Analysis: The first test case failed due to a 'NoneType' object having no attribute 'text'. This indicates that the code attempted to access the 'text' attribute of a None object. The second test case failed because the output contained duplicate times for the 'Tennis' activity. This suggests that the code did not properly handle duplicate entries.
+Test Case Analysis: For the first test case, the issue is likely due to the code not properly checking if the 'b' tag exists before attempting to access its 'text' attribute. For the second test case, the issue is likely due to the code not properly handling duplicate times for the same activity.
+Improvement Plan: 1. Add checks to ensure that the 'b' tag exists before accessing its 'text' attribute. 2. Use a set to store times for each activity to avoid duplicates. 3. Add debug statements to print important variables and verify their values.
+Imports: from bs4 import BeautifulSoup
+Code:
+def extract_playing_times(response_content):
+    global debug_output
+    debug_output = ''
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table', {'id': 'times-to-reserve'})
+    playing_times = {}
+
+    if times_table:
+        rows = times_table.find_all('tr')
+        for row in rows:
+            cells = row.find_all('td')
+            for cell in cells:
+                b_tag = cell.find('b')
+                if b_tag:
+                    activity = b_tag.text.strip(' -')
+                    time_links = cell.find_all('a')
+                    times = [link.text.strip() for link in time_links]
+                    if activity in playing_times:
+                        playing_times[activity].extend(times)
+                    else:
+                        playing_times[activity] = times
+                    debug_output += f'Activity: {activity}, Times: {times}\n'
+
+    # Remove duplicates
+    for activity in playing_times:
+        playing_times[activity] = list(set(playing_times[activity]))
+
+    debug_output += f'Final Playing Times: {playing_times}\n'
+    return playing_times
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+response_content = get_input()
+playing_times = extract_playing_times(response_content)
+set_output(str(playing_times))
+================================== Ai Message ==================================
+
+Here is my attempt to solve the problem: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information. Debug statements are added to help identify issues. 
+ Debug Analysis: The first test case failed due to a 'NoneType' object having no attribute 'text'. This indicates that the code attempted to access the 'text' attribute of a None object. The second test case failed because the output contained duplicate times for the 'Tennis' activity. This suggests that the code did not properly handle duplicate entries. 
+ Test Case Analysis: For the first test case, the issue is likely due to the code not properly checking if the 'b' tag exists before attempting to access its 'text' attribute. For the second test case, the issue is likely due to the code not properly handling duplicate times for the same activity. 
+ Improvement Plan: 1. Add checks to ensure that the 'b' tag exists before accessing its 'text' attribute. 2. Use a set to store times for each activity to avoid duplicates. 3. Add debug statements to print important variables and verify their values. 
+Imports: from bs4 import BeautifulSoup 
+ Code: def extract_playing_times(response_content):
+    global debug_output
+    debug_output = ''
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table',  ... (truncated)
+---CHECKING CODE---
+---CODE BLOCK CHECK: FAILED---
+---DECISION: RE-TRY SOLUTION---
+================================ Human Message =================================
+
+Incorrect submission.
+Pass rate: 1/2
+Results:
+<test id=0>
+Correct test case! Your output matched the expected output: {'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}. Debug output in case it with other failures: Activity: Pickleball / Mini Tennis, Times: ['9:30pm']
+Activity: Tennis, Times: ['9:30pm']
+Final Playing Times: {'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}
+
+</test>
+<test id=1>
+Wrong answer. Got {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['9:00pm', '8:00pm', '8:30pm', '9:30pm']} but expected {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}. Debug output: Activity: Pickleball / Mini Tennis, Times: ['9:00pm', '9:30pm']
+Activity: Tennis, Times: ['8:00pm', '8:30pm', '9:00pm', '9:30pm']
+Activity: Tennis, Times: ['9:00pm', '9:30pm']
+Final Playing Times: {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['9:00pm', '8:00pm', '8:30pm', '9:30pm']}
+
+</test> Reflect on these test case failures and your prior attempt to solve the
+             problem. State what you think went wrong with the prior solution. Focus on
+             the output of the debug statements that you added. Also focus on the test_case_analysis to see what you
+             should improve to get failing test cases to pass. (2) Try to solve this problem again.             
+             
+---GENERATING CODE SOLUTION---
+--------- Rewriting code with print statements -----------
+Prefix: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information. Debug statements are added to help identify issues.
+Debug Analysis: The first test case failed due to a 'NoneType' object having no attribute 'text'. This indicates that the code attempted to access the 'text' attribute of a None object. The second test case failed because the output contained duplicate times for the 'Tennis' activity. This suggests that the code did not properly handle duplicate entries.
+Test Case Analysis: For the first test case, the issue is likely due to the code not properly checking if the 'b' tag exists before attempting to access its 'text' attribute. For the second test case, the issue is likely due to the code not properly handling duplicate times for the same activity.
+Improvement Plan: 1. Add checks to ensure that the 'b' tag exists before accessing its 'text' attribute. 2. Use a set to store times for each activity to avoid duplicates. 3. Add debug statements to print important variables and verify their values.
+Imports: from bs4 import BeautifulSoup
+Code:
+def extract_playing_times(response_content):
+    global debug_output
+    debug_output = ''
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table', {'id': 'times-to-reserve'})
+    playing_times = {}
+
+    if times_table:
+        rows = times_table.find_all('tr')
+        for row in rows:
+            cells = row.find_all('td')
+            for cell in cells:
+                b_tag = cell.find('b')
+                if b_tag:
+                    activity = b_tag.text.strip(' -')
+                    time_links = cell.find_all('a')
+                    times = [link.text.strip() for link in time_links]
+                    if activity in playing_times:
+                        playing_times[activity].extend(times)
+                    else:
+                        playing_times[activity] = times
+                    debug_output += f'Activity: {activity}, Times: {times}\n'
+
+    # Remove duplicates
+    for activity in playing_times:
+        playing_times[activity] = list(set(playing_times[activity]))
+        playing_times[activity].sort(key=lambda x: (int(x.split(':')[0]) % 12, x.split(':')[1]))
+
+    debug_output += f'Final Playing Times: {playing_times}\n'
+    return playing_times
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+response_content = get_input()
+playing_times = extract_playing_times(response_content)
+set_output(str(playing_times))
+================================== Ai Message ==================================
+
+Here is my attempt to solve the problem: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information. Debug statements are added to help identify issues. 
+ Debug Analysis: The first test case failed due to a 'NoneType' object having no attribute 'text'. This indicates that the code attempted to access the 'text' attribute of a None object. The second test case failed because the output contained duplicate times for the 'Tennis' activity. This suggests that the code did not properly handle duplicate entries. 
+ Test Case Analysis: For the first test case, the issue is likely due to the code not properly checking if the 'b' tag exists before attempting to access its 'text' attribute. For the second test case, the issue is likely due to the code not properly handling duplicate times for the same activity. 
+ Improvement Plan: 1. Add checks to ensure that the 'b' tag exists before accessing its 'text' attribute. 2. Use a set to store times for each activity to avoid duplicates. 3. Add debug statements to print important variables and verify their values. 
+Imports: from bs4 import BeautifulSoup 
+ Code: def extract_playing_times(response_content):
+    global debug_output
+    debug_output = ''
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table',  ... (truncated)
+---CHECKING CODE---
+=========== CODE BLOCK CHECK: SUCCEEDED in 5 iterations ===========
+---DECISION: FINISH---
+RESULT:
+
+Prefix: The following code extracts all available playing times from the given HTTP response content. It uses BeautifulSoup to parse the HTML and extract the relevant information. Debug statements are added to help identify issues.
+Debug Analysis: The first test case failed due to a 'NoneType' object having no attribute 'text'. This indicates that the code attempted to access the 'text' attribute of a None object. The second test case failed because the output contained duplicate times for the 'Tennis' activity. This suggests that the code did not properly handle duplicate entries.
+Test Case Analysis: For the first test case, the issue is likely due to the code not properly checking if the 'b' tag exists before attempting to access its 'text' attribute. For the second test case, the issue is likely due to the code not properly handling duplicate times for the same activity.
+Improvement Plan: 1. Add checks to ensure that the 'b' tag exists before accessing its 'text' attribute. 2. Use a set to store times for each activity to avoid duplicates. 3. Add debug statements to print important variables and verify their values.
+Imports: from bs4 import BeautifulSoup
+Code:
+def extract_playing_times(response_content):
+    global debug_output
+    debug_output = ''
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table', {'id': 'times-to-reserve'})
+    playing_times = {}
+
+    if times_table:
+        rows = times_table.find_all('tr')
+        for row in rows:
+            cells = row.find_all('td')
+            for cell in cells:
+                b_tag = cell.find('b')
+                if b_tag:
+                    activity = b_tag.text.strip(' -')
+                    time_links = cell.find_all('a')
+                    times = [link.text.strip() for link in time_links]
+                    if activity in playing_times:
+                        playing_times[activity].extend(times)
+                    else:
+                        playing_times[activity] = times
+                    debug_output += f'Activity: {activity}, Times: {times}\n'
+
+    # Remove duplicates
+    for activity in playing_times:
+        playing_times[activity] = list(set(playing_times[activity]))
+        playing_times[activity].sort(key=lambda x: (int(x.split(':')[0]) % 12, x.split(':')[1]))
+
+    debug_output += f'Final Playing Times: {playing_times}\n'
+    return playing_times
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+response_content = get_input()
+playing_times = extract_playing_times(response_content)
+set_output(str(playing_times))
+
+
+====================== Executing response function ========================
+ from bs4 import BeautifulSoup
+def extract_playing_times(response_content):
+    global debug_output
+    debug_output = ''
+    soup = BeautifulSoup(response_content, 'html.parser')
+    times_table = soup.find('table', {'id': 'times-to-reserve'})
+    playing_times = {}
+
+    if times_table:
+        rows = times_table.find_all('tr')
+        for row in rows:
+            cells = row.find_all('td')
+            for cell in cells:
+                b_tag = cell.find('b')
+                if b_tag:
+                    activity = b_tag.text.strip(' -')
+                    time_links = cell.find_all('a')
+                    times = [link.text.strip() for link in time_links]
+                    if activity in playing_times:
+                        playing_times[activity].extend(times)
+                    else:
+                        playing_times[activity] = times
+                    debug_output += f'Activity: {activity}, Times: {times}\n'
+
+    # Remove duplicates
+    for activity in playing_times:
+        playing_times[activity] = list(set(playing_times[activity]))
+        playing_times[activity].sort(key=lambda x: (int(x.split(':')[0]) % 12, x.split(':')[1]))
+
+    debug_output += f'Final Playing Times: {playing_times}\n'
+    return playing_times
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+response_content = get_input()
+playing_times = extract_playing_times(response_content)
+set_output(str(playing_times))
+====================== Response content top 1000 ========================
+ <div id="reserve-court-new">
+<form method="post" id="reserve-court-filter">
+    <div id="view-reservation-list">
+    <table class="reservation-list-new" id="table-reservation-list">
+        <tr>
+            <th colspan="2">Your Reservations</th>
+            <th>Host</th>
+            <th>Activity</th>
+            <th>Players</th>
+            <th></th>
+        </tr>
+        
+<script type="text/javascript">
+    (function ($) {
+        $(document).ready(function () {
+            var isLastPage = '1';
+            if (isLastPage) {
+                $('.reservation-list-show-more').addClass('hidden');
+            } else {
+                $('.reservation-list-show-more').removeClass('hidden');
+            }
+
+            $('.court-time-cancel').unbind('click').bind('click', function() {
+                var cid = $(this).attr('cid');
+
+                $.caPost(
+                    '/event/cancel-court-time?ajax=true',
+                    {id: cid},
+                    function(response) {
+        
+=================== AVAILABLE TIMES FROM EXAMPLE RESPONSE ======================
+{'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}

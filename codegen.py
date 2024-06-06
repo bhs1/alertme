@@ -18,12 +18,15 @@ class code(BaseModel):
     """Code output"""
 
     prefix: str = Field(description="Description of the problem and approach")
+    debug_analysis: str = Field(description="Analysis of debug output for each test case.")
+    test_case_analysis: str = Field(description="Analysis of diffs between expected and actual outputs for each test case.")
+    improvement_plan: str = Field(description="Description of how this solution will be different based on debug analysis")
     imports: str = Field(description="Code block import statements")
     code: str = Field(description="Code block not including import statements")
     description = "Schema for code solutions to questions about LCEL."
 
     def __str__(self):
-        return f"Prefix: {self.prefix}\nImports: {self.imports}\nCode:\n{self.code}"
+        return f"Prefix: {self.prefix}\nDebug Analysis: {self.debug_analysis}\nTest Case Analysis: {self.test_case_analysis}\nImprovement Plan: {self.improvement_plan}\nImports: {self.imports}\nCode:\n{self.code}"
 
 class TestCase(TypedDict):
     inputs: str
@@ -64,6 +67,19 @@ def _print_event(event: dict, _printed: set, max_length=1500):
             print(msg_repr)
             _printed.add(message.id)
 
+def combined_code(code_solution: code) -> str:
+    """
+    Combines import statements and code into a single executable string.
+
+    Args:
+        imports (str): The import statements.
+        code (str): The main code block.
+
+    Returns:
+        str: The combined code.
+    """
+    return f"{code_solution.imports}\n{code_solution.code}"
+
 class CodeGenerator:
     def __init__(self):
         ###### Environment Variables ######
@@ -96,7 +112,7 @@ class CodeGenerator:
         )
 
         # Set to false to make more readable and save resource
-        self.code_gen_chain = self.code_gen_prompt_template | self.llm.with_structured_output(code, include_raw=True)
+        self.code_gen_chain = self.code_gen_prompt_template | self.llm.with_structured_output(code, include_raw=False)
         self.builder = StateGraph(GraphState)
         self._setup_graph()
 
@@ -126,7 +142,6 @@ class CodeGenerator:
 
 # Nodes
 
-
     def _generate(self, state: GraphState,):
         """
         Generate a code solution
@@ -144,6 +159,17 @@ class CodeGenerator:
         messages = state["messages"]
         iterations = state["iterations"]
         error = state["error"]
+        
+        if (error == "yes"):
+            print("--------- Rewriting code with print statements -----------")
+            messages += [
+                ("user", """Since you got some test cases wrong, when
+                 you rewrite the code include print statements for
+                 debugging the failed test cases. Don't just debug on errors, print all important variables and verify that they are what they should be for each test case.
+                 Every time a test is failed an additional time, add even more verbose print statements for more variables until you find the solution.
+                 IMPORTANT: All "print" statements for debugging should be stored in a global variable called debug_output instead of being printed.
+                 """)
+            ]
 
         # Solution
         code_solution = self.code_gen_chain.invoke({"messages": messages})['parsed']
@@ -153,7 +179,7 @@ class CodeGenerator:
         messages += [
             (
                 "assistant",
-                f"Here is my attempt to solve the problem: {code_solution.prefix} \n Imports: {code_solution.imports} \n Code: {code_solution.code}",
+                f"Here is my attempt to solve the problem: {code_solution.prefix} \n Debug Analysis: {code_solution.debug_analysis} \n Test Case Analysis: {code_solution.test_case_analysis} \n Improvement Plan: {code_solution.improvement_plan} \nImports: {code_solution.imports} \n Code: {code_solution.code}",
             )
         ]
 
@@ -185,13 +211,20 @@ class CodeGenerator:
         imports = code_solution.imports
         code = code_solution.code
 
+        # Combine imports and code using the new utility function
+        runnable_code = combined_code(code_solution)
+
         # Check imports
         try:
             exec(imports)
         except Exception as e:
             print("---CODE IMPORT CHECK: FAILED---")
             error_message = [
-                ("user", f"Your solution failed the import test. Here is the error: {e}. Reflect on these errors and your prior attempt to solve the problem. (1) State what you think went wrong with the prior solution and (2) try to solve this problem again. Return the FULL SOLUTION. Use the code tool to structure the output with a prefix, imports, and code block:")]
+                ("user", f"""Your solution failed the import test. Here is the error: {e}.
+                 Reflect on these errors and your prior attempt to solve the problem.
+                 (1) State what you think went wrong with the prior solution and (2)
+                 try to solve this problem again. Return the FULL SOLUTION. Use the code tool to
+                 structure the output with a prefix, imports, and code block:""")]
             messages += error_message
             return {
                 "code_solution": code_solution,
@@ -200,7 +233,6 @@ class CodeGenerator:
                 "error": "yes",
             }
         # Check execution
-        combined_code = f"{imports}\n{code}"
         # Use a shared scope for exec
         num_test_cases = len(test_cases)
         succeeded = 0
@@ -208,21 +240,22 @@ class CodeGenerator:
         for test_case in test_cases:
             global_scope = {
                 "global_input": test_case["inputs"],
-                "global_output": ""
+                "global_output": "",
+                "debug_output": ""
             }
             try:
-                exec(combined_code, global_scope)
+                exec(runnable_code, global_scope)
                 if str(global_scope["global_output"]) == str(test_case["outputs"]):
-                    test_results.append(f"Correct test case! Your output matched the expected output: {test_case['outputs']}")
+                    test_results.append(f"Correct test case! Your output matched the expected output: {test_case['outputs']}. Debug output in case it with other failures: {global_scope['debug_output']}")
                     succeeded += 1
                 else:
-                    test_results.append(f"Wrong answer. Got {global_scope['global_output']} but expected {test_case['outputs']}")
+                    test_results.append(f"Wrong answer. Got {global_scope['global_output']} but expected {test_case['outputs']}. Debug output: {global_scope['debug_output']}")
             except Exception as e:
                 print("---CODE BLOCK CHECK: FAILED---")
                 test_results.append(f"Wrong answer. Got exception {e} but expected {test_case['outputs']}")
             pass_rate = succeeded / num_test_cases if num_test_cases else "N/A"
         if succeeded == num_test_cases:
-            print("---CODE BLOCK CHECK: SUCCEEDED---")
+            print("=========== CODE BLOCK CHECK: SUCCEEDED in", iterations, "iterations ===========")
             return {
                 "code_solution": code_solution,
                 "messages": messages,
@@ -233,7 +266,11 @@ class CodeGenerator:
         responses = "\n".join([f"<test id={i}>\n{r}\n</test>" for i, r in enumerate(test_results)])
         response = f"Incorrect submission.\nPass rate: {succeeded}/{num_test_cases}\nResults:\n{responses}"
         error_message = [
-            ("user", f"{response} Reflect on these test case failures and your prior attempt to solve the problem. (1) State what you think went wrong with the prior solution and (2) try to solve this problem again. Return the FULL SOLUTION. Use the code tool to structure the output with a prefix, imports, and code block:")]
+            ("user", f"""{response} Reflect on these test case failures and your prior attempt to solve the
+             problem. State what you think went wrong with the prior solution. Focus on
+             the output of the debug statements that you added. Also focus on the test_case_analysis to see what you
+             should improve to get failing test cases to pass. (2) Try to solve this problem again.             
+             """)]
         messages += error_message
         return {
             "code_solution": code_solution,
@@ -288,33 +325,4 @@ class CodeGenerator:
         for event in events:
             _print_event(event, _printed)
         return event['code_solution']
-
-if __name__ == "__main__":
-    # Run it
-    import utils
-
-    response_content1 = utils.load_response_data('data/response.txt')
-    response_content2 = utils.load_response_data('data/response2.txt')
-
-    # Find a few more interesting cases.
-    # If they fail or take many iterations, try with a debug node.
-    USER_PROMPT = f"""Write a function to extract and list all available playing times 
-                from HTTP response content.
-                
-                Example HTTP response content:
-                {response_content1}
-
-                If there are multiple activity types, use a dictionary instead of a list and associate times
-                with the correct activity.            
-
-                Please pay attention to the system message above to see how to format your response.
-                """
-
-    TEST_CASES = [
-                {"inputs": f"{response_content1}", "outputs": "{'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}"},
-                {"inputs": f"{response_content2}", "outputs": "{'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}"},
-            ]
-
-    code_solution = CodeGenerator().generate_code(USER_PROMPT, TEST_CASES)
-    print("RESULT:\n\n" + str(code_solution) + "\n\n")
 
