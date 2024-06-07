@@ -1,8 +1,10 @@
 from codegen import CodeGenerator, combined_code
+import os
 
 def generate_response_func(test_cases):
     # Find a few more interesting cases.
     # If they fail or take many iterations, try with a debug node.
+    os.environ["LANGCHAIN_PROJECT"] = "generate_response_func"
     USER_PROMPT = f"""Write a function to extract and list all available playing times 
                 from HTTP response content.
                 

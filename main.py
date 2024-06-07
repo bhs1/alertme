@@ -1,6 +1,8 @@
 # Step 1: Export HAR file which contains all browsers HTTP requests/responses
 # Step 2: Run the script to find the releveant request to be translated to python code.
 
+# TODO(0): just debug the main execution.
+
 from bs4 import BeautifulSoup
 import requests
 import json
@@ -346,7 +348,6 @@ if __name__ == "__main__":
     # Extract useful information from the response.
     if response_text is not None:
         load_dotenv()
-        os.environ["LANGCHAIN_PROJECT"] = "field_map"
         response_func = extract_from_response.generate_response_func(RESPONSE_TEST_CASES)        
         final_result = extract_from_response.extract_info_from_response(response_text, response_func)
         print("=================== AVAILABLE TIMES FROM EXAMPLE RESPONSE ======================")

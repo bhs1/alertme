@@ -7,11 +7,22 @@ import os
 
 
 def get_request_replace_func(request_params_map, test_cases):
+    os.environ["LANGCHAIN_PROJECT"] = "request_replace_func"
     # Define the prompt for the LLM
-    prompt = f"""Write a Python function named 'replace_fields' that takes an HTTP request string and a
+    prompt = f"""Write a Python function named that takes an HTTP request string and a
     dictionary where keys are field names and values are the new values for these fields. The function should
     return the updated HTTP request string. The fields to replace are: {', '.join(request_params_map)}. Here
-    is the HTTP request: {test_cases[0]['inputs']}"""
+    is an example test input {test_cases[0]['inputs']}. Note: the field names may not directly correspond
+    to fields names in the HTTP request so it's up to you to figure out how to parse and replace the correct fields.
+    You may need to use regex to find the fields you are looking for. You may also need to translate the inputs
+    into the correct format for the fields.
+    
+    Expected input format:
+    
+    <dictionary>
+    
+    <HTTP request>
+    """
 
     code_solution = CodeGenerator().generate_code(prompt, test_cases)
     print("RESULT:\n\n" + str(combined_code(code_solution)) + "\n\n")
@@ -29,8 +40,7 @@ class FieldMap(BaseModel):
 
 
 def get_request_params_map(request):
-    load_dotenv()
-    os.environ["LANGCHAIN_PROJECT"] = "codegen"
+    os.environ["LANGCHAIN_PROJECT"] = "request_param_map"
     # Returns a dictionary with the field names that can be optionally customized by the user.
     prompt = f"""Given this HTTP request {request}, create the corresponding field_list and value_list.
     The fields should only be related to booking activity times. Ignore techincal fields like Host, User-Agent, IDs,
@@ -54,13 +64,4 @@ def replace_fields(request, request_params_map, func):
                 )
 
 
-if __name__ == "__main__":
-    with open("data/request.txt", "r") as f:
-        request = f.read()
-    request_params_map = get_request_params_map(request)
-    print(request_params_map)
-    # Got this from above.
-    REQUEST_PARAMS_MAP = {'date': '05/09/2024', 'interval': '30', 'timeFrom': '15', 'timeTo': '0'}
-    #TODO(0): With REQUEST_PARAMS_MAP, create a function to replace these fields in the request.
-    # - Includes creating TEST_CASES.
-    #TODO(0): Call the function to replace the fields
+

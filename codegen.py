@@ -13,20 +13,17 @@ from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
 
-# Data model
-class code(BaseModel):
-    """Code output"""
 
-    prefix: str = Field(description="Description of the problem and approach")
-    debug_analysis: str = Field(description="Analysis of debug output for each test case.")
-    test_case_analysis: str = Field(description="Analysis of diffs between expected and actual outputs for each test case.")
-    improvement_plan: str = Field(description="Description of how this solution will be different based on debug analysis")
+# Data model
+
+
+class Code(BaseModel):
+    """Code output"""
+    correction_summary: str = Field(
+        description="Summary of what was corrected to produce this code.")
     imports: str = Field(description="Code block import statements")
     code: str = Field(description="Code block not including import statements")
-    description = "Schema for code solutions to questions about LCEL."
 
-    def __str__(self):
-        return f"Prefix: {self.prefix}\nDebug Analysis: {self.debug_analysis}\nTest Case Analysis: {self.test_case_analysis}\nImprovement Plan: {self.improvement_plan}\nImports: {self.imports}\nCode:\n{self.code}"
 
 class TestCase(TypedDict):
     inputs: str
@@ -36,26 +33,26 @@ class TestCase(TypedDict):
 class GraphState(TypedDict):
     """
     Represents the state of our graph.
-
-    Attributes:
-        error : Binary flag for control flow to indicate whether test error was tripped
-        messages : With user question, error messages, reasoning
-        code_solution : Code solution
-        iterations : Number of tries
-        test_cases : List of test cases
     """
 
-    error: str
-    messages: Annotated[list[AnyMessage], add_messages]
+    error: str  # Flag for control flow to indicate whether test error was tripped
+    last_test_results: str
+    # Each element is [reflection_summary, correction_summary]
+    previous_corrections: list[list[str]]
     code_solution: str
     iterations: int
     test_cases: list[TestCase]
-    
+    reflection_prompt: str
+    reflection_summary: str
+
 # Utilities
+
+
 def _print_event(event: dict, _printed: set, max_length=1500):
     current_state = event.get("dialog_state")
     if current_state:
         print(f"Currently in: ", current_state[-1])
+    # Is this from state? If so it may not work..
     message = event.get("messages")
     if message:
         if isinstance(message, list):
@@ -67,7 +64,8 @@ def _print_event(event: dict, _printed: set, max_length=1500):
             print(msg_repr)
             _printed.add(message.id)
 
-def combined_code(code_solution: code) -> str:
+
+def combined_code(code_solution: Code) -> str:
     """
     Combines import statements and code into a single executable string.
 
@@ -80,57 +78,59 @@ def combined_code(code_solution: code) -> str:
     """
     return f"{code_solution.imports}\n{code_solution.code}"
 
+
 class CodeGenerator:
     def __init__(self):
         ###### Environment Variables ######
         load_dotenv()
-        os.environ["LANGCHAIN_PROJECT"] = "codegen"
         ###### End Environment Variables ######
 
         # Select LLM
         self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
-
         self.code_gen_prompt_template = ChatPromptTemplate.from_messages(
             [
                 ("system",
-         """
+                 """
          You are an expert programmer. Ensure any code you provide can be executed with all
          required imports and variables defined. Structure your answer: 1) a prefix describing
          the code solution, 2) the imports, 3) the functioning code block.
          - The imports should only contain import statements. E.g. import math, import sys, etc., not actual code.
-         
+
          - Instead of input from stdin, assume input is provided as an immutable string global variable "global_input".
          - Be sure that your solution is modular so that it's not dependent on the gloabl_input variable, that should be
          extracted in a separate function. DO NOT HARDCODE global_input in your solution, you must extract is from global global_input.
-         - Likewise, instead of printing to stdout, return the result as a string global variable "global_output". 
+         - Likewise, instead of printing to stdout, return the result as a string global variable "global_output".
          Storing output in global_output should also be separated from the core business logic function.
          Here is the user question:
          """
-                ),
+                 ),
                 ("placeholder", "{messages}"),
             ]
         )
 
         # Set to false to make more readable and save resource
-        self.code_gen_chain = self.code_gen_prompt_template | self.llm.with_structured_output(code, include_raw=False)
+        self.code_gen_chain = self.code_gen_prompt_template | self.llm.with_structured_output(
+            Code, include_raw=False)
         self.builder = StateGraph(GraphState)
         self._setup_graph()
 
-
     def _setup_graph(self):
         # Define the nodes
-        self.builder.add_node("generate", self._generate)  # code_solution solution
+        # code_solution solution
+        self.builder.add_node("generate", self._generate)
         self.builder.add_node("check_code", self._code_check)  # check code
+        self.builder.add_node("reflect", self._reflect)
 
         # Build graph
         self.builder.set_entry_point("generate")
         self.builder.add_edge("generate", "check_code")
+        self.builder.add_edge("reflect", "generate")
         self.builder.add_conditional_edges(
             "check_code",
             self._decide_to_finish,
             {
                 "end": END,
-                "generate": "generate",
+                "retry": "reflect",
             },
         )
 
@@ -140,6 +140,45 @@ class CodeGenerator:
         # Parameters
         self.max_iterations = 10
 
+    def correction_list_to_string(self, correction_list: List[tuple]):
+        return """\n\n================================================\n
+    """.join([f"Correction Summary: {correction[0]}\nImports:\n{correction[1]}\nCode:\n{correction[2]}" for correction in correction_list])
+
+    # TODO: Add a field called context that is the context we want to keep. This should be distinct from messages
+    # Which is only the directive for the next instruction.
+    def _reflect(self, state: GraphState):
+        """
+        Reflect on the test case failures and debug analysis.
+
+        Args:
+            state (GraphState): The current graph state
+
+        Returns:
+            GraphState: Updated state with reflection summary
+        """
+        previous_corrections = state["previous_corrections"]
+        last_test_results = state["last_test_results"]
+
+        print(
+            "---REFLECTING ON ERRORS, DEBUG STATEMENTS, and FORMULATING IMPROVEMENT PLAN---")
+        # Ensure only the last three corrections are used, or fewer if less than three exist
+        last_three_corrections = previous_corrections[-3:] if len(previous_corrections) >= 3 else previous_corrections
+        context = f"""\
+    Previous Corrections, Reflections and Code diffs:\n\n {self.correction_list_to_string(last_three_corrections)}
+        """
+        prompt = f"""
+    (1) Determine what went wrong in each of the following test results: {last_test_results}.
+    How does the actual output diff from the expected output and why do you think that is?
+    Explain for each failing test case. If useful, consider the debugoutput when reasoning about your response.
+     
+    (2) Construct an improvement plan to fix the test failures. When formulating this plan, observe the previous solutions
+    shown above and try not to repeat fixes that we already know do not lead to a fix.
+        
+    (3) Sketch out the specific pseudocode of the fixes you plan to implement. Feel free to include actual code snipits."""
+        messages = [self.system_prompt_tuple,
+                    ("assistant", context), ("user", prompt)]
+        reflection_summary = self.llm.invoke(messages).content
+        return {"reflection_prompt": prompt, "reflection_summary": reflection_summary, "error": "yes"}
 # Nodes
 
     def _generate(self, state: GraphState,):
@@ -154,39 +193,31 @@ class CodeGenerator:
         """
 
         print("---GENERATING CODE SOLUTION---")
+        # TODO(P2): Cap lookback at previous solutions to 3 as shown to work in the AlphaCodium paper.
 
-        # State
-        messages = state["messages"]
+        # Correction includes reflection, code diff
         iterations = state["iterations"]
         error = state["error"]
-        
+        reflection_prompt = state["reflection_prompt"]
+        reflection_summary = state["reflection_summary"]
+        messages = [self.system_prompt_tuple]
         if (error == "yes"):
             print("--------- Rewriting code with print statements -----------")
             messages += [
-                ("user", """Since you got some test cases wrong, when
-                 you rewrite the code include print statements for
-                 debugging the failed test cases. Don't just debug on errors, print all important variables and verify that they are what they should be for each test case.
-                 Every time a test is failed an additional time, add even more verbose print statements for more variables until you find the solution.
-                 IMPORTANT: All "print" statements for debugging should be stored in a global variable called debug_output instead of being printed.
-                 """)
-            ]
+                ("user", f"""We just gave you this prompt:\n\n {reflection_prompt} \n\n and as a result \
+        of the above prompt you gave this relfection summary:\n\n {reflection_summary}\n
+        Main directive: Rewrite the code to fix the test cases. Be sure to follow the plan \
+        in the reflection summary.
+                 """)]
 
         # Solution
-        code_solution = self.code_gen_chain.invoke({"messages": messages})
-        if os.getenv("DEBUG_MODE") == "True":
-            print("code_solution: ", code_solution)
-
-        messages += [
-            (
-                "assistant",
-                f"Here is my attempt to solve the problem: {code_solution.prefix} \n Debug Analysis: {code_solution.debug_analysis} \n Test Case Analysis: {code_solution.test_case_analysis} \n Improvement Plan: {code_solution.improvement_plan} \nImports: {code_solution.imports} \n Code: {code_solution.code}",
-            )
-        ]
+        code = self.code_gen_chain.invoke({"messages": messages})            
+        previous_corrections = state["previous_corrections"]
+        previous_corrections.append([code.correction_summary, code.imports, code.code])
 
         # Increment
         iterations = iterations + 1
-        return {"code_solution": code_solution, "messages": messages, "iterations": iterations}
-
+        return {"previous_correction": previous_corrections, "code_solution": code, "iterations": iterations}
 
     def _code_check(self, state: GraphState):
         """
@@ -202,14 +233,12 @@ class CodeGenerator:
         print("---CHECKING CODE---")
 
         # State
-        messages = state["messages"]
         code_solution = state["code_solution"]
-        iterations = state["iterations"]
         test_cases = state["test_cases"]
+        iterations = state["iterations"]
 
         # Get solution components
         imports = code_solution.imports
-        code = code_solution.code
 
         # Combine imports and code using the new utility function
         runnable_code = combined_code(code_solution)
@@ -219,6 +248,7 @@ class CodeGenerator:
             exec(imports)
         except Exception as e:
             print("---CODE IMPORT CHECK: FAILED---")
+            # TODO update this if it becomes a problem, for now keep it simple. Maybe want to just unify it with the code flow below.
             error_message = [
                 ("user", f"""Your solution failed the import test. Here is the error: {e}.
                  Reflect on these errors and your prior attempt to solve the problem.
@@ -228,8 +258,6 @@ class CodeGenerator:
             messages += error_message
             return {
                 "code_solution": code_solution,
-                "messages": messages,
-                "iterations": iterations,
                 "error": "yes",
             }
         # Check execution
@@ -246,41 +274,47 @@ class CodeGenerator:
             try:
                 exec(runnable_code, global_scope)
                 if str(global_scope["global_output"]) == str(test_case["outputs"]):
-                    test_results.append(f"Correct test case! Your output matched the expected output: {test_case['outputs']}. Debug output in case it with other failures: {global_scope['debug_output']}")
+                    test_results.append(
+                        f"Correct test case! Your output matched the expected output: {test_case['outputs']}. Successful debug output in case it's useful: {global_scope['debug_output']}")
                     succeeded += 1
                 else:
-                    test_results.append(f"Wrong answer. Got {global_scope['global_output']} but expected {test_case['outputs']}. Debug output: {global_scope['debug_output']}")
+                    # TODO(opt): Do we need test case input? It is rather large...maybe an LLM summary of test input?
+                    test_results.append(
+                        f"""Failed test case.
+                Actual test case output:
+                {global_scope['global_output'] if global_scope['global_output'] else "EMPTY"}
+                Expected test case output:
+                {test_case['outputs']}
+                Debug test case output:
+                {global_scope['debug_output']}""")
             except Exception as e:
-                print("---CODE BLOCK CHECK: FAILED---")
-                test_results.append(f"Wrong answer. Got exception {e} but expected {test_case['outputs']}")
+                test_results.append(f"""Failed test case.
+                            Actual test case output:
+                            Exception {e}
+                            Expected test case output:
+                            {test_case['outputs']}
+                            Debug test case output:
+                            {global_scope['debug_output']}""")
             pass_rate = succeeded / num_test_cases if num_test_cases else "N/A"
         if succeeded == num_test_cases:
-            print("=========== CODE BLOCK CHECK: SUCCEEDED in", iterations, "iterations ===========")
+            print(
+                f"=========== CODE BLOCK CHECK: SUCCEEDED in {iterations} iterations ===========")
             return {
-                "code_solution": code_solution,
-                "messages": messages,
-                "iterations": iterations,
                 "error": "no",
             }
         print("---CODE BLOCK CHECK: FAILED---")
-        responses = "\n".join([f"<test id={i}>\n{r}\n</test>" for i, r in enumerate(test_results)])
-        response = f"Incorrect submission.\nPass rate: {succeeded}/{num_test_cases}\nResults:\n{responses}"
-        error_message = [
-            ("user", f"""{response} Reflect on these test case failures and your prior attempt to solve the
-             problem. State what you think went wrong with the prior solution. Focus on
-             the output of the debug statements that you added. Also focus on the test_case_analysis to see what you
-             should improve to get failing test cases to pass. (2) Try to solve this problem again.             
-             """)]
-        messages += error_message
+        responses = "\n".join(
+            [f"<test case {i} begin >\n{r}\n</test case>" for i, r in enumerate(test_results)])
+        test_result_message = f"""Incorrect submission.\nPass rate: {succeeded}/{num_test_cases}\nResults:\n{responses}"""
         return {
-            "code_solution": code_solution,
-            "messages": messages,
-            "iterations": iterations,
+            "last_test_results": test_result_message,
             "error": "yes",
         }
 
 
 # Conditional edges
+
+
     def _decide_to_finish(self, state: GraphState):
         """
         Determines whether to finish.
@@ -299,8 +333,8 @@ class CodeGenerator:
             return "end"
         else:
             print("---DECISION: RE-TRY SOLUTION---")
-            return "generate"
-    
+            return "retry"
+
     def _generate_graph_image(self):
         try:
             graph_image = self.graph.get_graph().draw_mermaid_png()
@@ -311,6 +345,8 @@ class CodeGenerator:
             print(f"Failed to save graph: {e}")
 
     def generate_code(self, user_prompt, test_cases):
+        self.system_prompt_tuple = (
+            "system", f"Overall task to solve: {user_prompt}")
         _printed = set()
         thread_id = str(uuid.uuid4())
         config = {
@@ -320,9 +356,28 @@ class CodeGenerator:
             }
         }
         events = self.graph.stream(
-            {"messages": [("user", user_prompt)], "iterations": 0, "test_cases": test_cases}, config, stream_mode="values"
+            {"previous_corrections": [], "iterations": 0, "test_cases": test_cases}, config, stream_mode="values"
         )
         for event in events:
             _print_event(event, _printed)
         return event['code_solution']
 
+
+if __name__ == "__main__":
+    from prepare_request import get_request_params_map, get_request_replace_func
+    load_dotenv()
+    with open("data/request.txt", "r") as f:
+        request = f.read()
+    with open("data/request_output.txt", "r") as f:
+        expected_output = f.read()
+    request_params_map = get_request_params_map(request)
+    print(request_params_map)
+    # Got this from above.
+    REQUEST_PARAMS_MAP = {'date': '06/15/2024',
+                          'interval': '60', 'timeFrom': '45', 'timeTo': '60'}
+    test_cases = [{'inputs': str(
+        REQUEST_PARAMS_MAP) + "\n\n" + request, 'outputs': expected_output}]
+    # Go to langsmith, remove duplicate messages and make sure the LLM is being prompted with the right info especailly failing test cases.
+    # Potentially add a separate reflect and write stage before packaging into the code object.
+    print(get_request_replace_func(REQUEST_PARAMS_MAP, test_cases))
+    # TODO(0): Call the function to replace the fields
