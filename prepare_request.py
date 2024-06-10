@@ -47,21 +47,19 @@ def get_request_params_map(request):
     and things that may not be iterpretable by humans. Try to keep the list at most 10 fields and sort in order of relevance.
     The values should be in the same order as the fields in the field_list. """
     llm = ChatOpenAI(model="gpt-4o", temperature=0)
-    
-    
+
     field_map_chain = llm.with_structured_output(FieldMap, include_raw=False)
     field_map = field_map_chain.invoke(prompt)
-    request_params_map = {field: value for field, value in zip(field_map.field_list, field_map.value_list)}
+    request_params_map = {field: value for field, value in zip(
+        field_map.field_list, field_map.value_list)}
     return request_params_map
 
 
 # Works for either header or body.
 def replace_fields(request, request_params_map, func):
-    return exec(func,
-                {"global_input":
-                 {"request": request, "request_params_map": request_params_map}
-                 }
-                )
-
-
-
+    args = {"global_input": str(request_params_map) + "\n\n" + request,
+            "global_output": "",
+            "debug_output": ""
+            }
+    exec(func, args)
+    return args["global_output"]

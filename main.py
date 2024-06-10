@@ -1,7 +1,9 @@
 # Step 1: Export HAR file which contains all browsers HTTP requests/responses
 # Step 2: Run the script to find the releveant request to be translated to python code.
 
-# TODO(0): just debug the main execution.
+# TODO (0): Put codegen main into here.
+# TODO(0): Go through main execution and try to get it to work for real!
+# TODO: Tuesday afternoon go to park and read the papers.
 
 from bs4 import BeautifulSoup
 import requests
@@ -18,6 +20,7 @@ import extract_from_response
 
 DEBUG_CONTEXT_SIZE = 500
 LLM_CONTEXT_WINDOW_SIZE = 2048
+debug_mode = os.getenv("DEBUG_MODE", "False").lower() in ('true', '1', 't')
 
 ############################################################################################
 ######################### FIND RELEVANT TIMES REQUEST/RESPONSE #############################
@@ -38,7 +41,7 @@ def split_text_into_chunks(text, words_per_chunk):
 
 
 def check_with_llm(text):
-    print("Checking with LLM")
+    global debug_mode
     # Split the text into chunks of a specified number of words
     chunks = split_text_into_chunks(text, LLM_CONTEXT_WINDOW_SIZE)
 
@@ -86,6 +89,7 @@ def extract_filtered_request_response_pairs(har_data):
 
 
 def print_request_response_summary(pairs, total_entries):
+    global debug_mode
     total_matched = len(pairs)
     total_not_matched = total_entries - total_matched
 
@@ -93,23 +97,24 @@ def print_request_response_summary(pairs, total_entries):
     print(
         f"Total responses that did not match the requirement: {total_not_matched}")
 
-    for i, (request, response) in enumerate(pairs):
-        print(f"Entry {i+1} Request:")
-        print(f"  Method: {request['method']}")
-        print(f"  URL: {request['url']}")
-        print(f"  HTTP Version: {request['httpVersion']}")
-        print(f"  Headers: {len(request['headers'])} headers")
-        print(f"  Query Strings: {len(request.get('queryString', []))} items")
-        print(f"  Cookies: {len(request.get('cookies', []))} cookies")
-        print(f"  Body Size: {request['bodySize']} bytes")
+    if debug_mode:
+        for i, (request, response) in enumerate(pairs):
+            print(f"Entry {i+1} Request:")
+            print(f"  Method: {request['method']}")
+            print(f"  URL: {request['url']}")
+            print(f"  HTTP Version: {request['httpVersion']}")
+            print(f"  Headers: {len(request['headers'])} headers")
+            print(f"  Query Strings: {len(request.get('queryString', []))} items")
+            print(f"  Cookies: {len(request.get('cookies', []))} cookies")
+            print(f"  Body Size: {request['bodySize']} bytes")
 
-        print(f"Entry {i+1} Response:")
-        print(f"  Status: {response['status']} {response['statusText']}")
-        print(f"  HTTP Version: {response['httpVersion']}")
-        print(f"  Headers: {len(response['headers'])} headers")
-        print(
-            f"  Content Size: {response['content'].get('size', 'Unknown')} bytes")
-        print(f"  MIME Type: {response['content'].get('mimeType', 'Unknown')}")
+            print(f"Entry {i+1} Response:")
+            print(f"  Status: {response['status']} {response['statusText']}")
+            print(f"  HTTP Version: {response['httpVersion']}")
+            print(f"  Headers: {len(response['headers'])} headers")
+            print(
+                f"  Content Size: {response['content'].get('size', 'Unknown')} bytes")
+            print(f"  MIME Type: {response['content'].get('mimeType', 'Unknown')}")
 
 # Writing the first relevant request and response to a file
 def write_first_response_to_file(filtered_pairs, file_path='data/response.txt'):
@@ -299,7 +304,6 @@ if __name__ == "__main__":
     load_dotenv()  # This loads the environment variables from the .env file
     # Initialize the OpenAI client with your API key
     client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-    debug_mode = os.getenv("DEBUG_MODE", "False").lower() in ('true', '1', 't')
 
     # Read HAR file
     har_file_path = 'data/example2.har'

@@ -244,27 +244,21 @@ class CodeGenerator:
         runnable_code = combined_code(code_solution)
 
         # Check imports
+        test_results = []
         try:
             exec(imports)
         except Exception as e:
             print("---CODE IMPORT CHECK: FAILED---")
             # TODO update this if it becomes a problem, for now keep it simple. Maybe want to just unify it with the code flow below.
-            error_message = [
-                ("user", f"""Your solution failed the import test. Here is the error: {e}.
-                 Reflect on these errors and your prior attempt to solve the problem.
-                 (1) State what you think went wrong with the prior solution and (2)
-                 try to solve this problem again. Return the FULL SOLUTION. Use the code tool to
-                 structure the output with a prefix, imports, and code block:""")]
-            messages += error_message
+            test_result_message = f"""Your solution failed the import test. Here is the error: {e}."""
             return {
-                "code_solution": code_solution,
+                "last_test_results": test_result_message,
                 "error": "yes",
             }
         # Check execution
         # Use a shared scope for exec
         num_test_cases = len(test_cases)
         succeeded = 0
-        test_results = []
         for test_case in test_cases:
             global_scope = {
                 "global_input": test_case["inputs"],
@@ -364,20 +358,22 @@ class CodeGenerator:
 
 
 if __name__ == "__main__":
-    from prepare_request import get_request_params_map, get_request_replace_func
+    from prepare_request import get_request_params_map, get_request_replace_func, replace_fields
     load_dotenv()
     with open("data/request.txt", "r") as f:
         request = f.read()
     with open("data/request_output.txt", "r") as f:
         expected_output = f.read()
-    request_params_map = get_request_params_map(request)
-    print(request_params_map)
+    #request_params_map = get_request_params_map(request)
+    #print(request_params_map)
     # Got this from above.
     REQUEST_PARAMS_MAP = {'date': '06/15/2024',
                           'interval': '60', 'timeFrom': '45', 'timeTo': '60'}
     test_cases = [{'inputs': str(
         REQUEST_PARAMS_MAP) + "\n\n" + request, 'outputs': expected_output}]
-    # Go to langsmith, remove duplicate messages and make sure the LLM is being prompted with the right info especailly failing test cases.
-    # Potentially add a separate reflect and write stage before packaging into the code object.
-    print(get_request_replace_func(REQUEST_PARAMS_MAP, test_cases))
-    # TODO(0): Call the function to replace the fields
+    #func_str = get_request_replace_func(REQUEST_PARAMS_MAP, test_cases)
+    with open("data/succesful_func.txt", "r") as f:
+        func_str = f.read()
+    print("Output:\n", replace_fields(request, REQUEST_PARAMS_MAP, func_str))
+    
+
