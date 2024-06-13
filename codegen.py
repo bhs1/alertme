@@ -13,6 +13,7 @@ from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
 import json
+import deepdiff
 
 # Data model
 
@@ -76,6 +77,40 @@ def combined_code(code_solution: Code) -> str:
         str: The combined code.
     """
     return f"{code_solution.imports}\n{code_solution.code}"
+
+def check_code(global_output, expected_output):
+    """
+    Compares the actual output from the code execution to the expected output from the test case.
+    If the expected output is valid JSON, compares as JSON objects, ignoring field ordering and formatting.
+    Otherwise, compares as strings.
+
+    Args:
+        global_output (str): The output from code execution.
+        expected_output (str): The expected output from the test case.
+
+    Returns:
+        tuple: (bool, str) - True if outputs match, False otherwise, and differences as a string.
+    """
+    try:
+        # Try to parse both outputs as JSON
+        json_global_output = json.loads(global_output)
+        json_expected_output = json.loads(expected_output)
+        # Compare as JSON objects
+        differences = deepdiff.DeepDiff(json_global_output, json_expected_output, ignore_order=True)
+        if differences == {}:
+            log("Comparing as JSON objects: Match")
+            return True, ""
+        else:
+            log(f"Comparing as JSON objects: No Match. Differences: {differences}")
+            return False, str(differences)
+    except json.JSONDecodeError as e:
+        # If either output is not valid JSON, compare as strings
+        if str(global_output) == str(expected_output):
+            log("Comparing as strings: Match")
+            return True, ""
+        else:
+            log(f"Comparing as strings: No Match. Exception: {e}")
+            return False, f"Expected: {expected_output}, Got: {global_output}"
 
 
 def validate_test_cases_json(test_cases: List[TestCase]) -> bool:
@@ -311,7 +346,8 @@ the issue. Remember to define "global debug_output" at the top of any scope that
             }
             try:
                 exec(runnable_code, global_scope)
-                if str(global_scope["global_output"]) == str(test_case["outputs"]):
+                output_match, differences = check_code(global_scope["global_output"], test_case["outputs"])
+                if output_match:
                     test_results.append(
                         f"Correct test case! Your output matched the expected output: {test_case['outputs']}. Successful debug output in case it's useful: {global_scope['debug_output']}")
                     succeeded += 1
@@ -319,31 +355,33 @@ the issue. Remember to define "global debug_output" at the top of any scope that
                     # TODO(opt): Do we need test case input? It is rather large...maybe an LLM summary of test input?
                     test_results.append(
                         f"""Failed test case.
-                Actual test case output:
-                {global_scope['global_output'] if global_scope['global_output'] else "EMPTY"}
-                Expected test case output:
-                {test_case['outputs']}
-                Debug test case output:
-                {global_scope['debug_output']}""")
+            Actual test case output:
+            {global_scope['global_output'] if global_scope['global_output'] else "EMPTY"}
+            Expected test case output:
+            {test_case['outputs']}
+            Debug test case output:
+            {global_scope['debug_output']}
+            Differences:
+            {differences}""")
             except Exception as e:
                 test_results.append(f"""Failed test case.
-                            Actual test case output:
-                            Exception {e}
-                            Expected test case output:
-                            {test_case['outputs']}
-                            Debug test case output:
-                            {global_scope['debug_output']}""")
-            pass_rate = succeeded / num_test_cases if num_test_cases else "N/A"
+            Actual test case output:
+            Exception {e}
+            Expected test case output:
+            {test_case['outputs']}
+            Debug test case output:
+            {global_scope['debug_output']}""")
         if succeeded == num_test_cases:
             log(
                 f"=========== CODE BLOCK CHECK: SUCCEEDED in {iterations} iterations ===========")
             return {
                 "error": "no",
             }
+        pass_rate = succeeded / num_test_cases if num_test_cases else "N/A"
         log("---CODE BLOCK CHECK: FAILED---")
         responses = "\n".join(
             [f"<test case {i} begin >\n{r}\n</test case>" for i, r in enumerate(test_results)])
-        test_result_message = f"""Incorrect submission.\nPass rate: {succeeded}/{num_test_cases}\nResults:\n{responses}"""
+        test_result_message = f"""Incorrect submission.\nPass rate: {pass_rate}\nResults:\n{responses}"""
         log("Code:\n" + runnable_code)
         log("Test results:\n" + test_result_message)
         return {
@@ -351,10 +389,7 @@ the issue. Remember to define "global debug_output" at the top of any scope that
             "error": "yes",
         }
 
-
 # Conditional edges
-
-
     def _decide_to_finish(self, state: GraphState):
         """
         Determines whether to finish.
@@ -445,3 +480,4 @@ if __name__ == "__main__":
     #with open("data/succesful_func.txt", "r") as f:
     #    func_str = f.read()
     log("Output:\n" + replace_fields(request, REQUEST_PARAMS_MAP, func_str))
+

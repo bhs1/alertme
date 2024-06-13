@@ -1,9 +1,7 @@
 # Step 1: Export HAR file which contains all browsers HTTP requests/responses
 # Step 2: Run the script to find the releveant request to be translated to python code.
 
-# TODO(0): Go through main execution and try to get it to work for real!
-# TODO: Add and clean up logs
-# TODO: Tuesday afternoon go to park and read the papers.
+# TODO(0): Read the paper and see if you can get request fn to work consistently using their ideas.
 
 from bs4 import BeautifulSoup
 import requests
