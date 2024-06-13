@@ -204,7 +204,7 @@ class CodeGenerator:
 output and why do you think that is? If useful, consider the Debug Output when reasoning \
 about your response.
     
-    Note: To save resource, try to avoid printing entire HTTP requests or json, instead only print parts that may be useful for debugging\ 
+    Note: To save resource, try to avoid printing entire HTTP requests or json, instead only print parts that may be useful for debugging \
     you may wish to summarize the structure in plain text the parts that you choose leave out.
      
     (2) Construct an improvement plan to fix the test failures. When formulating this plan, observe the previous solutions
