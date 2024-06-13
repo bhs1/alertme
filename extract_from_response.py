@@ -21,7 +21,7 @@ def generate_response_func(test_cases):
                 """
 
     code_solution = CodeGenerator().generate_code(USER_PROMPT, test_cases)
-    print("RESULT:\n\n" + str(code_solution) + "\n\n")
+    print("RESULT:\n\n" + str(combined_code(code_solution)) + "\n\n")
     return combined_code(code_solution)
 
 def extract_info_from_response(response_content, response_func):

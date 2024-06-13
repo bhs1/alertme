@@ -1,8 +1,8 @@
 # Step 1: Export HAR file which contains all browsers HTTP requests/responses
 # Step 2: Run the script to find the releveant request to be translated to python code.
 
-# TODO (0): Put codegen main into here.
 # TODO(0): Go through main execution and try to get it to work for real!
+# TODO: Add and clean up logs
 # TODO: Tuesday afternoon go to park and read the papers.
 
 from bs4 import BeautifulSoup
@@ -12,15 +12,52 @@ import os
 from openai import OpenAI
 from dotenv import load_dotenv
 import re
+import utils
 
 
 # Local libs
 import prepare_request
 import extract_from_response
 
-DEBUG_CONTEXT_SIZE = 500
+DEBUG_CONTEXT_SIZE = 500 
 LLM_CONTEXT_WINDOW_SIZE = 2048
 debug_mode = os.getenv("DEBUG_MODE", "False").lower() in ('true', '1', 't')
+
+# =============================== USER INPUT BEGIN ===============================
+# USER_INPUT (Temp)
+HEADER_FIELDS_TO_REPLACE = {
+    "logged_in_phpsessid": '''PHPSESSID=bv7smnpjcavo9f1ksqt2kes003; __cf_bm=y94bfz7zVOCAB5ZZ\
+    Vyr4xyDp8aLX2eTk8VERHywlV8-1715922970-1.0.1.1-kmirNpFXvlwYkcoDYHPIsD0RmHtFSUm71MLjBmZ\
+DciFZyYgpHA8isACN2PWL_yyUIXkdet82CH6AhlhmIAt.zA; isLoggedIn=1; SessionExpirationTime=17\
+15951794'''
+}
+
+# Read HAR file
+har_file_path = 'data/example2.har'
+
+# USER INPUT
+REQUEST_PARAMS_MAP = {"date": "06/15/2024",
+                      "interval": "30", "timeFrom": "17", "timeTo": "0"}
+#REQUEST_PARAMS_MAP = {} # must replace this.
+# USER_INPUT
+with open("data/request.json", "r") as f:
+    request = f.read()
+with open("data/request_output.json", "r") as f:
+    expected_output = f.read()
+REQUEST_TEST_CASES = [{'inputs': str(
+    REQUEST_PARAMS_MAP) + "\n\n" + request, 'outputs': expected_output}]
+
+# USER_INPUT
+response_content1 = utils.load_response_data('data/response.txt')
+response_content2 = utils.load_response_data('data/response2.txt')
+RESPONSE_TEST_CASES = [
+    {"inputs": f"{response_content1}",
+        "outputs": "{'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}"},
+    {"inputs": f"{response_content2}",
+        "outputs": "{'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}"},
+]
+# =============================== USER INPUT END ===============================
+
 
 ############################################################################################
 ######################### FIND RELEVANT TIMES REQUEST/RESPONSE #############################
@@ -146,11 +183,6 @@ def write_first_request_to_file(filtered_pairs, file_path='data/request.txt'):
         else:
             file.write("No request available.")
 
-############################################################################################
-############## RESEND THE REQUEST AS IS AND TEST RESPONSE IS THE SAME #######################
-############################################################################################
-
-
 def update_to_logged_in_cookie(headers, loggged_in_phpsessid):
     """
     Updates the PHPSESSID in a cookie string with a new PHPSESSID value.
@@ -232,7 +264,7 @@ def prepare_body(first_request, request_params_map, process_request_func_str, mo
     body = first_request.get('postData', {}).get('text', '')
     print(f"old body: {body}")
     if (mode == "LLM"):
-        body = prepare_request.replace_fields(first_request, request_params_map, process_request_func_str)
+        body = prepare_request.replace_fields(str(first_request), request_params_map, process_request_func_str)
     elif (mode == "MANUAL"):
         body = replace_date(body, '5/22/2024')
     else:
@@ -270,46 +302,18 @@ def print_and_log(har_data, filtered_request_response_pairs):
     write_first_request_to_file(filtered_request_response_pairs)
 
 
-def get_request_replace_func(request_params_map, test_cases):
-    return ""
-
-
 if __name__ == "__main__":
 
     import utils
-    # USER_INPUT (Temp)
-    HEADER_FIELDS_TO_REPLACE = {
-        "logged_in_phpsessid": '''PHPSESSID=bv7smnpjcavo9f1ksqt2kes003; __cf_bm=y94bfz7zVOCAB5ZZ\
-        Vyr4xyDp8aLX2eTk8VERHywlV8-1715922970-1.0.1.1-kmirNpFXvlwYkcoDYHPIsD0RmHtFSUm71MLjBmZ\
-    DciFZyYgpHA8isACN2PWL_yyUIXkdet82CH6AhlhmIAt.zA; isLoggedIn=1; SessionExpirationTime=17\
-    15951794'''
-    }
-
-    # USER INPUT
-    REQUEST_PARAMS_MAP = {}
-    # USER_INPUT
-    REQUEST_TEST_CASES = {}
-
-    # USER_INPUT
-    response_content1 = utils.load_response_data('data/response.txt')
-    response_content2 = utils.load_response_data('data/response2.txt')
-    RESPONSE_TEST_CASES = [
-        {"inputs": f"{response_content1}",
-            "outputs": "{'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}"},
-        {"inputs": f"{response_content2}",
-         "outputs": "{'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}"},
-    ]
-
     # Setup
     load_dotenv()  # This loads the environment variables from the .env file
+    print(os.environ['LANGCHAIN_PROJECT'])
+    print(os.environ)
     # Initialize the OpenAI client with your API key
     client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-    # Read HAR file
-    har_file_path = 'data/example2.har'
+    # Extract the relevant request/response pair using LLM
     har_data = read_har_file(har_file_path)
-
-    # Extract the relevant request/response pair using LLM    
     filtered_request_response_pairs = extract_filtered_request_response_pairs(
         har_data)
 
@@ -322,12 +326,17 @@ if __name__ == "__main__":
         first_request = filtered_request_response_pairs[0][0]
 
         # Extract request params map if no defaults provided by user.
+        # Then exit and ask user to run again
         if len(REQUEST_PARAMS_MAP) == 0:
             print("Extracting request params since none provided by user: ", REQUEST_PARAMS_MAP)
             request_map = prepare_request.get_request_params_map(first_request)
+            print("""Terminating program (success).
+                  Rerun using the correct subset of this request params map and enter
+                  desired values:\n""", request_map)
+            exit()
         else:
-            # On second run use cached REQUEST_PARAMS_MAP.
-            print("Using default request params map provided by user. REQUEST_PARAMS_MAP: ", REQUEST_PARAMS_MAP)
+            # On second run use cached REQUEST_PARAMS_MAP entered by user.
+            print("Using request params map provided by user. REQUEST_PARAMS_MAP: ", REQUEST_PARAMS_MAP)
             request_map = REQUEST_PARAMS_MAP
 
         if len(REQUEST_TEST_CASES) == 0:
@@ -335,14 +344,20 @@ if __name__ == "__main__":
             with open('data/response.txt', 'r', encoding='utf-8') as file:
                 response_text = file.read()
         else:
-            # TODO: Implement request generation with LLM
-            process_request_func_str = prepare_request.get_request_replace_func(
-                REQUEST_PARAMS_MAP, REQUEST_TEST_CASES)
+            print("Getting request replace function...")
+            # TODO: Debug this and potentially incorporate new paper.
+            #process_request_func_str = prepare_request.get_request_replace_func(
+                #REQUEST_TEST_CASES)
+            with open("data/succesful_func.txt", "r") as f:
+                process_request_func_str = f.read()
             # TODO: Handle get_request_replace_func failure, in that case, we should use the default response.
+            # TODO: prepare_headers is not general, fix login flow.
+            print("replacing fields in header and body...")
             headers = prepare_headers(first_request, HEADER_FIELDS_TO_REPLACE)
             body = prepare_body(first_request, REQUEST_PARAMS_MAP, process_request_func_str, mode = "LLM")
+            print("Resending updated request...")
             response_text = process_request(
-                first_request, headers, body, REQUEST_PARAMS_MAP, process_request_func_strmode="MANUAL")
+                first_request, headers, body, REQUEST_PARAMS_MAP, process_request_func_str, mode="MANUAL")
             print(f"Resent Request, Response Text: {response_text}")
     else:
         with open('data/response.txt', 'r', encoding='utf-8') as file:
@@ -351,8 +366,10 @@ if __name__ == "__main__":
 
     # Extract useful information from the response.
     if response_text is not None:
-        load_dotenv()
-        response_func = extract_from_response.generate_response_func(RESPONSE_TEST_CASES)        
+        print("Getting response parsing function...")
+        response_func = extract_from_response.generate_response_func(RESPONSE_TEST_CASES)
+        print("Parsing results from response...")      
         final_result = extract_from_response.extract_info_from_response(response_text, response_func)
         print("=================== AVAILABLE TIMES FROM EXAMPLE RESPONSE ======================")
+        # TODO: Get this to show nonempty by fixing cookie (tempfix)
         print(final_result)

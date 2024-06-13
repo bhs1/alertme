@@ -6,22 +6,22 @@ from dotenv import load_dotenv
 import os
 
 
-def get_request_replace_func(request_params_map, test_cases):
+def get_request_replace_func(test_cases):
     os.environ["LANGCHAIN_PROJECT"] = "request_replace_func"
     # Define the prompt for the LLM
     prompt = f"""Write a Python function named that takes an HTTP request string and a
     dictionary where keys are field names and values are the new values for these fields. The function should
-    return the updated HTTP request string. The fields to replace are: {', '.join(request_params_map)}. Here
-    is an example test input {test_cases[0]['inputs']}. Note: the field names may not directly correspond
+    return the updated HTTP request string. Here is an example test input {test_cases[0]['inputs']}.
+    
+    The request_params_map will be the first element of the dictionary, it will be used to decide which fields to
+    replace in the http request. The request_data will be the second item of the dictionary, the output should be
+    the updated request_data without the request_params_map.
+        
+    Note: the field names in request_params_map may not directly correspond
     to fields names in the HTTP request so it's up to you to figure out how to parse and replace the correct fields.
     You may need to use regex to find the fields you are looking for. You may also need to translate the inputs
     into the correct format for the fields.
-    
-    Expected input format:
-    
-    <dictionary>
-    
-    <HTTP request>
+
     """
 
     code_solution = CodeGenerator().generate_code(prompt, test_cases)
@@ -54,7 +54,6 @@ def get_request_params_map(request):
         field_map.field_list, field_map.value_list)}
     return request_params_map
 
-
 # Works for either header or body.
 def replace_fields(request, request_params_map, func):
     args = {"global_input": str(request_params_map) + "\n\n" + request,
@@ -63,3 +62,4 @@ def replace_fields(request, request_params_map, func):
             }
     exec(func, args)
     return args["global_output"]
+

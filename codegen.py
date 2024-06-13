@@ -12,10 +12,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
-
+import json
 
 # Data model
-
 
 class Code(BaseModel):
     """Code output"""
@@ -51,7 +50,7 @@ class GraphState(TypedDict):
 def _print_event(event: dict, _printed: set, max_length=1500):
     current_state = event.get("dialog_state")
     if current_state:
-        print(f"Currently in: ", current_state[-1])
+        log(f"Currently in: ", current_state[-1])
     # Is this from state? If so it may not work..
     message = event.get("messages")
     if message:
@@ -61,7 +60,7 @@ def _print_event(event: dict, _printed: set, max_length=1500):
             msg_repr = message.pretty_repr(html=True)
             if len(msg_repr) > max_length:
                 msg_repr = msg_repr[:max_length] + " ... (truncated)"
-            print(msg_repr)
+            log(msg_repr)
             _printed.add(message.id)
 
 
@@ -78,6 +77,36 @@ def combined_code(code_solution: Code) -> str:
     """
     return f"{code_solution.imports}\n{code_solution.code}"
 
+
+def validate_test_cases_json(test_cases: List[TestCase]) -> bool:
+    """
+    Validates that all 'inputs' in the test cases are valid JSON.
+
+    Args:
+        test_cases (List[TestCase]): List of test cases to validate.
+
+    Returns:
+        bool: True if all 'inputs' are valid JSON, False otherwise.
+    """
+    import json
+    for test_case in test_cases:
+        try:
+            log("validating inputs is json:\n" + test_case['inputs'])
+            json.loads(test_case['inputs'])
+        except json.JSONDecodeError:
+            return False
+    return True
+
+# Global variable to track if the log file has been cleared
+log_file_initialized = False
+
+def log(message: str):
+    global log_file_initialized
+    mode = 'a' if log_file_initialized else 'w'
+    print(message)
+    with open("data/langchain_trace.txt", mode) as file:
+        file.write(str(message) + "\n")
+    log_file_initialized = True
 
 class CodeGenerator:
     def __init__(self):
@@ -101,6 +130,8 @@ class CodeGenerator:
          extracted in a separate function. DO NOT HARDCODE global_input in your solution, you must extract is from global global_input.
          - Likewise, instead of printing to stdout, return the result as a string global variable "global_output".
          Storing output in global_output should also be separated from the core business logic function.
+         - IMPORTANT: For malformed input, instead of validating the input and catching exceptions, you should try to
+         update your code in order to parse the input as best you can.
          Here is the user question:
          """
                  ),
@@ -157,19 +188,24 @@ class CodeGenerator:
             GraphState: Updated state with reflection summary
         """
         previous_corrections = state["previous_corrections"]
-        last_test_results = state["last_test_results"]
+        last_test_results = state["last_test_results"]        
 
-        print(
+        log(
             "---REFLECTING ON ERRORS, DEBUG STATEMENTS, and FORMULATING IMPROVEMENT PLAN---")
         # Ensure only the last three corrections are used, or fewer if less than three exist
         last_three_corrections = previous_corrections[-3:] if len(previous_corrections) >= 3 else previous_corrections
         context = f"""\
     Previous Corrections, Reflections and Code diffs:\n\n {self.correction_list_to_string(last_three_corrections)}
         """
+        log("Context:\n" + context)
         prompt = f"""
     (1) Determine what went wrong in each of the following test results: {last_test_results}.
-    How does the actual output diff from the expected output and why do you think that is?
-    Explain for each failing test case. If useful, consider the debugoutput when reasoning about your response.
+    Explain for each failing test case how does the actual output differ from the expected \
+output and why do you think that is? If useful, consider the Debug Output when reasoning \
+about your response.
+    
+    Note: To save resource, try to avoid printing entire HTTP requests or json, instead only print parts that may be useful for debugging\ 
+    you may wish to summarize the structure in plain text the parts that you choose leave out.
      
     (2) Construct an improvement plan to fix the test failures. When formulating this plan, observe the previous solutions
     shown above and try not to repeat fixes that we already know do not lead to a fix.
@@ -192,7 +228,7 @@ class CodeGenerator:
             state (dict): New key added to state, code_solution
         """
 
-        print("---GENERATING CODE SOLUTION---")
+        log("---GENERATING CODE SOLUTION---")
         # TODO(P2): Cap lookback at previous solutions to 3 as shown to work in the AlphaCodium paper.
 
         # Correction includes reflection, code diff
@@ -202,15 +238,23 @@ class CodeGenerator:
         reflection_summary = state["reflection_summary"]
         messages = [self.system_prompt_tuple]
         if (error == "yes"):
-            print("--------- Rewriting code with print statements -----------")
+            log("--------- Rewriting code with print statements -----------")
+            prompt = f"""We just gave you this prompt:\n\n {reflection_prompt} \n\n and as a result \
+of the above prompt you gave this relfection summary:\n\n {reflection_summary}\n
+Main directive: Rewrite the code to fix the test cases. Be sure to follow the plan \
+in the reflection summary.
+        
+IMPORTANT: Also, print out intermediate variable names for debugging purposes. Instead of print() append \
+to global variable debug_output. At first debug_output can be simple, but as you fail a test \
+more times, you should add more and more details and variables to debug_output until we find \
+the issue. Remember to define "global debug_output" at the top of any scope that updates debug_output.
+                 """
+            log("Generating solution using prompt:")
+            log(prompt)
             messages += [
-                ("user", f"""We just gave you this prompt:\n\n {reflection_prompt} \n\n and as a result \
-        of the above prompt you gave this relfection summary:\n\n {reflection_summary}\n
-        Main directive: Rewrite the code to fix the test cases. Be sure to follow the plan \
-        in the reflection summary.
-                 """)]
+                ("user", prompt)]
 
-        # Solution
+        # Solution        
         code = self.code_gen_chain.invoke({"messages": messages})            
         previous_corrections = state["previous_corrections"]
         previous_corrections.append([code.correction_summary, code.imports, code.code])
@@ -230,7 +274,7 @@ class CodeGenerator:
             state (dict): New key added to state, error
         """
 
-        print("---CHECKING CODE---")
+        log("---CHECKING CODE---")
 
         # State
         code_solution = state["code_solution"]
@@ -248,7 +292,7 @@ class CodeGenerator:
         try:
             exec(imports)
         except Exception as e:
-            print("---CODE IMPORT CHECK: FAILED---")
+            log("---CODE IMPORT CHECK: FAILED---")
             # TODO update this if it becomes a problem, for now keep it simple. Maybe want to just unify it with the code flow below.
             test_result_message = f"""Your solution failed the import test. Here is the error: {e}."""
             return {
@@ -291,15 +335,17 @@ class CodeGenerator:
                             {global_scope['debug_output']}""")
             pass_rate = succeeded / num_test_cases if num_test_cases else "N/A"
         if succeeded == num_test_cases:
-            print(
+            log(
                 f"=========== CODE BLOCK CHECK: SUCCEEDED in {iterations} iterations ===========")
             return {
                 "error": "no",
             }
-        print("---CODE BLOCK CHECK: FAILED---")
+        log("---CODE BLOCK CHECK: FAILED---")
         responses = "\n".join(
             [f"<test case {i} begin >\n{r}\n</test case>" for i, r in enumerate(test_results)])
         test_result_message = f"""Incorrect submission.\nPass rate: {succeeded}/{num_test_cases}\nResults:\n{responses}"""
+        log("Code:\n" + runnable_code)
+        log("Test results:\n" + test_result_message)
         return {
             "last_test_results": test_result_message,
             "error": "yes",
@@ -323,10 +369,10 @@ class CodeGenerator:
         iterations = state["iterations"]
 
         if error == "no" or iterations == self.max_iterations:
-            print("---DECISION: FINISH---")
+            log("---DECISION: FINISH---")
             return "end"
         else:
-            print("---DECISION: RE-TRY SOLUTION---")
+            log("---DECISION: RE-TRY SOLUTION---")
             return "retry"
 
     def _generate_graph_image(self):
@@ -334,9 +380,9 @@ class CodeGenerator:
             graph_image = self.graph.get_graph().draw_mermaid_png()
             with open("data/graph.png", "wb") as f:
                 f.write(graph_image)
-            print("Graph saved as 'data/graph.png'.")
+            log("Graph saved as 'data/graph.png'.")
         except Exception as e:
-            print(f"Failed to save graph: {e}")
+            log(f"Failed to save graph: {e}")
 
     def generate_code(self, user_prompt, test_cases):
         self.system_prompt_tuple = (
@@ -347,7 +393,8 @@ class CodeGenerator:
             "configurable": {
                 # Checkpoints are accessed by thread_id
                 "thread_id": thread_id,
-            }
+            },
+            "recursion_limit": 50
         }
         events = self.graph.stream(
             {"previous_corrections": [], "iterations": 0, "test_cases": test_cases}, config, stream_mode="values"
@@ -356,24 +403,45 @@ class CodeGenerator:
             _print_event(event, _printed)
         return event['code_solution']
 
+import json
+
+def combine_request_data(request_params_map, request_data):
+    """
+    Combines request parameters map and request data into a single dictionary with a specific order.
+
+    Args:
+        request_params_map (dict): Parameters to prepend.
+        request_data (dict): Original request data.
+
+    Returns:
+        dict: Combined data with 'request_params_map' as the first element and 'request_data' as the second.
+    """
+    # Create a new dictionary with 'request_params_map' and 'request_data' as keys
+    combined_data = {
+        "request_params_map": request_params_map,
+        "request_data": request_data
+    }
+    return combined_data
 
 if __name__ == "__main__":
     from prepare_request import get_request_params_map, get_request_replace_func, replace_fields
     load_dotenv()
-    with open("data/request.txt", "r") as f:
-        request = f.read()
-    with open("data/request_output.txt", "r") as f:
+    with open("data/request.json", "r") as f:
+        request = json.load(f)
+    with open("data/request_output.json", "r") as f:
         expected_output = f.read()
     #request_params_map = get_request_params_map(request)
     #print(request_params_map)
     # Got this from above.
-    REQUEST_PARAMS_MAP = {'date': '06/15/2024',
-                          'interval': '60', 'timeFrom': '45', 'timeTo': '60'}
-    test_cases = [{'inputs': str(
-        REQUEST_PARAMS_MAP) + "\n\n" + request, 'outputs': expected_output}]
-    #func_str = get_request_replace_func(REQUEST_PARAMS_MAP, test_cases)
-    with open("data/succesful_func.txt", "r") as f:
-        func_str = f.read()
-    print("Output:\n", replace_fields(request, REQUEST_PARAMS_MAP, func_str))
-    
-
+    REQUEST_PARAMS_MAP = {"date": "06/15/2024",
+                          "interval": "60", "timeFrom": "45", "timeTo": "60"}
+    # Combine the data
+    combined_data = combine_request_data(REQUEST_PARAMS_MAP, request)
+    json_output = json.dumps(combined_data, indent=4)
+    log("Output:\n" + json_output)
+    test_cases = [{'inputs': json_output, 'outputs': expected_output}]
+    log(validate_test_cases_json(test_cases))
+    func_str = get_request_replace_func(test_cases)
+    #with open("data/succesful_func.txt", "r") as f:
+    #    func_str = f.read()
+    log("Output:\n" + replace_fields(request, REQUEST_PARAMS_MAP, func_str))
