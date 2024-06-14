@@ -135,11 +135,11 @@ def validate_test_cases_json(test_cases: List[TestCase]) -> bool:
 # Global variable to track if the log file has been cleared
 log_file_initialized = False
 
-def log(message: str):
+def log(message: str, filename="data/langchain_trace.txt"):
     global log_file_initialized
     mode = 'a' if log_file_initialized else 'w'
     print(message)
-    with open("data/langchain_trace.txt", mode) as file:
+    with open(filename, mode) as file:
         file.write(str(message) + "\n")
     log_file_initialized = True
 

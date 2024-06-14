@@ -55,6 +55,7 @@ def get_request_params_map(request):
     return request_params_map
 
 # Works for either header or body.
+# TODO: Move the global_output, global_input stuff outside of the function that the LLM writes.
 def replace_fields(request, request_params_map, func):
     args = {"global_input": str(request_params_map) + "\n\n" + request,
             "global_output": "",

@@ -2,6 +2,8 @@
 # Step 2: Run the script to find the releveant request to be translated to python code.
 
 # TODO(0): Read the paper and see if you can get request fn to work consistently using their ideas.
+# TODO(0): But actually for request error the issue could just be the comparison??
+# - Or maybe just forcing the LLM to look at a more precise diff between expected and actual.
 
 from bs4 import BeautifulSoup
 import requests
@@ -21,21 +23,29 @@ DEBUG_CONTEXT_SIZE = 500
 LLM_CONTEXT_WINDOW_SIZE = 2048
 debug_mode = os.getenv("DEBUG_MODE", "False").lower() in ('true', '1', 't')
 
+# Global variable to track if the log file has been cleared
+log_file_initialized = False
+
+def log(message: str, filename="data/main_trace.txt"):
+    global log_file_initialized
+    mode = 'a' if log_file_initialized else 'w'
+    print(message)
+    with open(filename, mode) as file:
+        file.write(str(message) + "\n")
+    log_file_initialized = True
+
 # =============================== USER INPUT BEGIN ===============================
 # USER_INPUT (Temp)
 HEADER_FIELDS_TO_REPLACE = {
-    "logged_in_phpsessid": '''PHPSESSID=bv7smnpjcavo9f1ksqt2kes003; __cf_bm=y94bfz7zVOCAB5ZZ\
-    Vyr4xyDp8aLX2eTk8VERHywlV8-1715922970-1.0.1.1-kmirNpFXvlwYkcoDYHPIsD0RmHtFSUm71MLjBmZ\
-DciFZyYgpHA8isACN2PWL_yyUIXkdet82CH6AhlhmIAt.zA; isLoggedIn=1; SessionExpirationTime=17\
-15951794'''
+    "logged_in_phpsessid": '''PHPSESSID=vrcrq45jqhvqdtb2l9csdqom3h; __cf_bm=0.kvkWTUpR2o4P..e4tyyJaR_zV5NdGWDFqVsvrasrE-1718394559-1.0.1.1-qbaDEe6cWBYGJl3PqhxdthB77OCez466VHOQ5evlp8OsXB9mhRm00kkkHiT8gUQ6795RDRvsxKL_lUyAvSvYfA; isLoggedIn=1; SessionExpirationTime=1718423366'''
 }
 
 # Read HAR file
 har_file_path = 'data/example2.har'
 
 # USER INPUT
-REQUEST_PARAMS_MAP = {"date": "06/15/2024",
-                      "interval": "30", "timeFrom": "17", "timeTo": "0"}
+REQUEST_PARAMS_MAP = {"date": "06/16/2024",
+                      "interval": "30", "timeFrom": "12", "timeTo": "0"}
 #REQUEST_PARAMS_MAP = {} # must replace this.
 # USER_INPUT
 with open("data/request.json", "r") as f:
@@ -107,7 +117,7 @@ def meets_requirement(text):
 
 
 def extract_filtered_request_response_pairs(har_data):
-    print("Extracting filtered request response pairs")
+    log("Extracting filtered request response pairs")
     filtered_pairs = []
     if 'log' in har_data and 'entries' in har_data['log']:
         entries = har_data['log']['entries']
@@ -119,7 +129,7 @@ def extract_filtered_request_response_pairs(har_data):
             if meets_requirement(response_text):
                 filtered_pairs.append((request, response))
     else:
-        print("\033[1;31mERROR: No entries found in HAR file.\033[0m")
+        log("\033[1;31mERROR: No entries found in HAR file.\033[0m")
     return filtered_pairs
 
 
@@ -128,28 +138,28 @@ def print_request_response_summary(pairs, total_entries):
     total_matched = len(pairs)
     total_not_matched = total_entries - total_matched
 
-    print(f"Total responses that matched the requirement: {total_matched}")
-    print(
+    log(f"Total responses that matched the requirement: {total_matched}")
+    log(
         f"Total responses that did not match the requirement: {total_not_matched}")
 
     if debug_mode:
         for i, (request, response) in enumerate(pairs):
-            print(f"Entry {i+1} Request:")
-            print(f"  Method: {request['method']}")
-            print(f"  URL: {request['url']}")
-            print(f"  HTTP Version: {request['httpVersion']}")
-            print(f"  Headers: {len(request['headers'])} headers")
-            print(f"  Query Strings: {len(request.get('queryString', []))} items")
-            print(f"  Cookies: {len(request.get('cookies', []))} cookies")
-            print(f"  Body Size: {request['bodySize']} bytes")
+            log(f"Entry {i+1} Request:")
+            log(f"  Method: {request['method']}")
+            log(f"  URL: {request['url']}")
+            log(f"  HTTP Version: {request['httpVersion']}")
+            log(f"  Headers: {len(request['headers'])} headers")
+            log(f"  Query Strings: {len(request.get('queryString', []))} items")
+            log(f"  Cookies: {len(request.get('cookies', []))} cookies")
+            log(f"  Body Size: {request['bodySize']} bytes")
 
-            print(f"Entry {i+1} Response:")
-            print(f"  Status: {response['status']} {response['statusText']}")
-            print(f"  HTTP Version: {response['httpVersion']}")
-            print(f"  Headers: {len(response['headers'])} headers")
-            print(
+            log(f"Entry {i+1} Response:")
+            log(f"  Status: {response['status']} {response['statusText']}")
+            log(f"  HTTP Version: {response['httpVersion']}")
+            log(f"  Headers: {len(response['headers'])} headers")
+            log(
                 f"  Content Size: {response['content'].get('size', 'Unknown')} bytes")
-            print(f"  MIME Type: {response['content'].get('mimeType', 'Unknown')}")
+            log(f"  MIME Type: {response['content'].get('mimeType', 'Unknown')}")
 
 # Writing the first relevant request and response to a file
 def write_first_response_to_file(filtered_pairs, file_path='data/response.txt'):
@@ -228,7 +238,7 @@ def extract_playing_times_with_llm(html_content):
         model="gpt-4-turbo",
     )
     response = chat_completion.choices[0].message.content
-    print("Extracted Playing Times:", response)
+    log("Extracted Playing Times:" + response)
 # Note this was created by the LLM call above!
 
 
@@ -240,9 +250,9 @@ def extract_playing_times(html_content):
     if times_table:
         for td in times_table.find_all('td'):
             activity_name = td.find('b').text.strip()
-            print(activity_name)
+            log(activity_name)
             times = [a.text.strip() for a in td.find_all('a')]
-            print(times)
+            log(times)
             if activity_name in activities:
                 activities[activity_name].extend(times)
             else:
@@ -260,14 +270,14 @@ def prepare_headers(first_request, header_fields_to_replace):
 
 def prepare_body(first_request, request_params_map, process_request_func_str, mode = "LLM"):
     body = first_request.get('postData', {}).get('text', '')
-    print(f"old body: {body}")
+    log(f"old body: {body}")
     if (mode == "LLM"):
         body = prepare_request.replace_fields(str(first_request), request_params_map, process_request_func_str)
     elif (mode == "MANUAL"):
         body = replace_date(body, '5/22/2024')
     else:
         raise ValueError(f"Invalid mode: {mode}. Please use 'LLM' or 'MANUAL'.")
-    print(f"new body: {body}")
+    log(f"new body: {body}")
     return body
 
 
@@ -287,7 +297,7 @@ def process_request(first_request, headers, body, request_params_map = {}, heade
 
 
     response = send_request(method, url, headers, body)
-    print(f"Resent Request Status: {response.status_code}")
+    log(f"Resent Request Status: {response.status_code}")
     return response.text
 
 
@@ -305,8 +315,6 @@ if __name__ == "__main__":
     import utils
     # Setup
     load_dotenv()  # This loads the environment variables from the .env file
-    print(os.environ['LANGCHAIN_PROJECT'])
-    print(os.environ)
     # Initialize the OpenAI client with your API key
     client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
@@ -326,23 +334,23 @@ if __name__ == "__main__":
         # Extract request params map if no defaults provided by user.
         # Then exit and ask user to run again
         if len(REQUEST_PARAMS_MAP) == 0:
-            print("Extracting request params since none provided by user: ", REQUEST_PARAMS_MAP)
+            log("Extracting request params since none provided by user: " + str(REQUEST_PARAMS_MAP))
             request_map = prepare_request.get_request_params_map(first_request)
-            print("""Terminating program (success).
+            log("""Terminating program (success).
                   Rerun using the correct subset of this request params map and enter
-                  desired values:\n""", request_map)
+                  desired values:\n""" + str(request_map))
             exit()
         else:
             # On second run use cached REQUEST_PARAMS_MAP entered by user.
-            print("Using request params map provided by user. REQUEST_PARAMS_MAP: ", REQUEST_PARAMS_MAP)
+            log("Using request params map provided by user. REQUEST_PARAMS_MAP: " + str(REQUEST_PARAMS_MAP))
             request_map = REQUEST_PARAMS_MAP
 
         if len(REQUEST_TEST_CASES) == 0:
-            print("We need test cases. Using defaults response.")
+            log("We need test cases. Using defaults response.")
             with open('data/response.txt', 'r', encoding='utf-8') as file:
                 response_text = file.read()
         else:
-            print("Getting request replace function...")
+            log("Getting request replace function...")
             # TODO: Debug this and potentially incorporate new paper.
             #process_request_func_str = prepare_request.get_request_replace_func(
                 #REQUEST_TEST_CASES)
@@ -350,24 +358,27 @@ if __name__ == "__main__":
                 process_request_func_str = f.read()
             # TODO: Handle get_request_replace_func failure, in that case, we should use the default response.
             # TODO: prepare_headers is not general, fix login flow.
-            print("replacing fields in header and body...")
+            log("replacing fields in header and body...")
             headers = prepare_headers(first_request, HEADER_FIELDS_TO_REPLACE)
             body = prepare_body(first_request, REQUEST_PARAMS_MAP, process_request_func_str, mode = "LLM")
-            print("Resending updated request...")
+            log("Resending updated request...")
             response_text = process_request(
                 first_request, headers, body, REQUEST_PARAMS_MAP, process_request_func_str, mode="MANUAL")
-            print(f"Resent Request, Response Text: {response_text}")
+            log(f"Re-sent Request, Response Text: {response_text}")
     else:
         with open('data/response.txt', 'r', encoding='utf-8') as file:
             response_text = file.read()
-        print("No request-response pairs available to resend. Using default response.")
+        log("No request-response pairs available to resend. Using default response.")
 
+    # Override response for demo (remove this)
+    with open('data/response.txt', 'r', encoding='utf-8') as file:
+            response_text = file.read()
     # Extract useful information from the response.
     if response_text is not None:
-        print("Getting response parsing function...")
+        log("Getting response parsing function...")
         response_func = extract_from_response.generate_response_func(RESPONSE_TEST_CASES)
-        print("Parsing results from response...")      
+        log("Parsing results from response...")      
         final_result = extract_from_response.extract_info_from_response(response_text, response_func)
-        print("=================== AVAILABLE TIMES FROM EXAMPLE RESPONSE ======================")
+        log("=================== AVAILABLE TIMES FROM EXAMPLE RESPONSE ======================")
         # TODO: Get this to show nonempty by fixing cookie (tempfix)
-        print(final_result)
+        log(final_result)
