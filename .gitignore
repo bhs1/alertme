@@ -1,6 +1,5 @@
 alertme
 .DS_Store
-data
 .env
 scratch
 venv
