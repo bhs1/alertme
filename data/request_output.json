@@ -207,19 +207,19 @@
             },
             {
                 "name": "date",
-                "value": "06/15/2024"
+                "value": "06/25/2024"
             },
             {
                 "name": "interval",
-                "value": "60"
+                "value": "30"
             },
             {
                 "name": "timeFrom",
-                "value": "45"
+                "value": "0"
             },
             {
                 "name": "timeTo",
-                "value": "60"
+                "value": "24"
             },
             {
                 "name": "time-reserve",
@@ -241,7 +241,7 @@
                 "name": "join-waitlist-case",
                 "value": "0"
             }
-        ],
-        "text": "reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F15%2F2024&interval=60&timeFrom=45&timeTo=60&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"
+        ]
     }
 }
+

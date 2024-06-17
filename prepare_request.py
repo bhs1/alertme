@@ -4,9 +4,10 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import List
 from dotenv import load_dotenv
 import os
+import json
 
 
-def get_request_replace_func(test_cases):
+def get_request_replace_func(test_cases):    
     os.environ["LANGCHAIN_PROJECT"] = "request_replace_func"
     # Define the prompt for the LLM
     prompt = f"""Write a Python function named that takes an HTTP request string and a
@@ -16,9 +17,7 @@ def get_request_replace_func(test_cases):
     The request_params_map will be the first element of the dictionary, it will be used to decide which fields to
     replace in the http request. The request_data will be the second item of the dictionary, the output should be
     the updated request_data without the request_params_map.
-        
-    Note: the field names in request_params_map may not directly correspond
-    to fields names in the HTTP request so it's up to you to figure out how to parse and replace the correct fields.
+
     You may need to use regex to find the fields you are looking for. You may also need to translate the inputs
     into the correct format for the fields.
 
@@ -57,10 +56,67 @@ def get_request_params_map(request):
 # Works for either header or body.
 # TODO: Move the global_output, global_input stuff outside of the function that the LLM writes.
 def replace_fields(request, request_params_map, func):
-    args = {"global_input": str(request_params_map) + "\n\n" + request,
-            "global_output": "",
-            "debug_output": ""
-            }
+    """
+    Executes a function to replace fields in an HTTP request using a combined request parameters map and request data.
+    
+    Args:
+        request (dict): Original request data.
+        request_params_map (dict): Parameters to prepend.
+        func (str): Function string to replace fields in the HTTP request.
+    
+    Returns:
+        str: The updated HTTP request after field replacement.
+    """
+    # Combine the request data and parameters
+    combined_data = combine_request_data(request_params_map, request)
+    
+    # Prepare the execution environment
+    args = {
+        "global_input": str(combined_data),
+        "global_output": "",
+        "debug_output": ""
+    }
+    
+    # Execute the function
     exec(func, args)
     return args["global_output"]
 
+
+def combine_request_data(request_params_map, request):
+    """
+    Combines request parameters map and request data into a single dictionary and validates the combined JSON.
+    
+    Args:
+        request_params_map (dict): Parameters to prepend.
+        request (dict): Original request data.
+    
+    Returns:
+        dict: Combined request data if valid, None otherwise.
+    """
+    combined_data = {
+        "request_params_map": request_params_map,
+        "request_data": request
+    }
+    json_output = json.dumps(combined_data, indent=4)
+    if validate_json(json_output):
+        return combined_data
+    else:
+        return None
+
+def validate_json(json_data):
+    """
+    Validates JSON data to ensure it is correctly formatted.
+    
+    Args:
+        json_data (str): JSON data as a string.
+    
+    Returns:
+        bool: True if the JSON is valid, False otherwise.
+    """
+    try:
+        json.loads(json_data)  # Attempt to parse the JSON
+        print("JSON Validation: Success")
+        return True
+    except json.JSONDecodeError as e:
+        print(f"JSON Validation Error: {str(e)}")
+        return False
