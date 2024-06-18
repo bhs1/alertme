@@ -1,7 +1,7 @@
 from codegen import CodeGenerator, combined_code
 import os
 
-def generate_response_func(test_cases):
+def generate_response_func(code_generator, test_cases):
     # Find a few more interesting cases.
     # If they fail or take many iterations, try with a debug node.
     os.environ["LANGCHAIN_PROJECT"] = "generate_response_func"

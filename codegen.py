@@ -13,14 +13,32 @@ from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
 import json
+from difflib import ndiff
 import deepdiff
 
-# Data model
 
+# Constants
+
+CODE_SUFFIX = """
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+input = get_input()
+result = func(input)
+set_output(str(result))
+"""
+# Data model
 class Code(BaseModel):
     """Code output"""
     correction_summary: str = Field(
-        description="Summary of what was corrected to produce this code.")
+        description="Summary of what was corrected to produce this code. Include the ### Improvement Plan from the reflection.")
     imports: str = Field(description="Code block import statements")
     code: str = Field(description="Code block not including import statements")
 
@@ -58,7 +76,7 @@ def combined_code(code_solution: Code) -> str:
     Returns:
         str: The combined code.
     """
-    return f"{code_solution.imports}\n{code_solution.code}"
+    return f"{code_solution.imports}\n{code_solution.code}" + CODE_SUFFIX
 
 
 class CodeGenerator:
@@ -75,26 +93,27 @@ class CodeGenerator:
         self.code_gen_prompt_template = ChatPromptTemplate.from_messages(
             [
                 ("user",
-                 """
+                 f"""
     Coding agent general guideance:
          - You are an expert programmer. Ensure any code you provide can be executed with all
          required imports and variables defined. Structure your answer: 1) a prefix describing
          any corrections, 2) the imports, 3) the functioning code block. The imports should only
          contain import statements. E.g. import math, import sys, etc., not actual code.
          - Note that you will be outputing this in JSON format so all strings especially in the code block
-         must be escaped.
-         
-    I/O handling:
-         - Instead of input from stdin, assume input is provided as an immutable string global variable "global_input".
-         - Be sure that your solution is modular so that it's not dependent on the gloabl_input variable, that should be
-         extracted in a separate function. DO NOT HARDCODE global_input in your solution, you must extract is from global global_input.
-         - Likewise, instead of printing to stdout, return the result as a string global variable "global_output".
-         Storing output in global_output should also be separated from the core business logic function.
+         must be escaped. Also, make sure that in your code, if you are trying to parse anything as json, you first replace single \
+         quotes with double quotes so you don't get "Expecting property name enclosed in double quotes" error. The output should use \
+         double quotes as well since otherwise it is not valid json.
+    Formatting the function you will write:
+         - We will append the following code suffix to whatever code you generate:
+         {CODE_SUFFIX} so make sure you call your function "func" and expect it to be called as such with a string argument.
+         Don't generate the code suffix, we will append it for you after you generate func(str).
 
     Other guideance:         
          - IMPORTANT: For malformed input, instead of validating the input and catching exceptions, you should try to
          update your code in order to parse the input as best you can. E.g. if there is a json parsing error, try to
-         update the code to parse the input as a string first and transform it to be valid json.
+         update the code to parse the input as a string first and transform it to be valid json. Moreover, if there is a string
+         that you're trying to parse as json, be sure to add it to the global debug_output so you can debug which character caused
+         the issue. It MUST be called "debug_output" and it MUST be a string.
          Here is the user question:
          """
                  ),
@@ -165,12 +184,18 @@ class CodeGenerator:
 Explain for each failing test case how does the actual output differ from the expected \
 output (be very specific here, feel free to take multiple sentences)? And why do you think that is? \
 If useful, consider the Debug Output when reasoning about your response.
+
+Note: You are allowed to be skeptical of the test case. If you have high confidence that there is an issue with the test \
+case expected output e.g. incorrectly set fields, you should say so. The same is true for input. But please don't stop \
+just call it out and continue. In this case you should output SUSPECT_BAD_TEST_CASE, REASON: <reason>.
+
     
     Note: To save resource, try to avoid printing entire HTTP requests or json, instead only print parts that may be useful for debugging \
     you may wish to summarize the structure in plain text the parts that you choose leave out.
      
     (2) Construct an improvement plan to fix the test failures. When formulating this plan, observe the previous solutions
-    shown above and try not to repeat fixes that we already know do not lead to a fix.
+    shown above and try not to repeat fixes that we already know do not lead to passing the test cases. Relfect explicitly on what
+    we've tried before and whether it made a difference. If it did not make a difference, why not?
         
     (3) Sketch out the specific pseudocode of the fixes you plan to implement. Feel free to include actual code snipits."""
         messages = [self.system_prompt_tuple,
@@ -331,6 +356,42 @@ the issue. Remember to define "global debug_output" at the top of any scope that
                     msg_repr = msg_repr[:max_length] + " ... (truncated)"
                 self.log(msg_repr)
                 _printed.add(message.id)
+
+    def generate_diff(self, old_value, new_value):
+        # Split the strings into individual characters for a character-level diff
+        diff = list(ndiff(old_value, new_value))
+        # Filter to only include lines that start with '+ ' or '- ' to show differences
+        filtered_diff = [line for line in diff if line.startswith('+ ') or line.startswith('- ')]
+        return filtered_diff
+
+    def char_diff(self, str1, str2):
+        # Use difflib.ndiff to get the diff
+        diff = list(ndiff(str1, str2))
+        # Process the diff to group and format differing characters
+        differences = []
+        current_diff = []
+        last_op = None
+
+        for item in diff:
+            op, char = item[0], item[2]
+            if op in ('-', '+'):
+                if op != last_op:
+                    if current_diff:
+                        differences.append(''.join(current_diff))
+                        current_diff = []
+                    last_op = op
+                current_diff.append(op + char)
+            else:
+                if current_diff:
+                    differences.append(''.join(current_diff))
+                    current_diff = []
+                last_op = None
+
+        if current_diff:
+            differences.append(''.join(current_diff))
+
+        return ' '.join(differences)
+
     def check_code(self, global_output, expected_output):
         """
         Compares the actual output from the code execution to the expected output from the test case.
@@ -354,8 +415,20 @@ the issue. Remember to define "global debug_output" at the top of any scope that
                 self.log("Comparing as JSON objects: Match")
                 return True, ""
             else:
-                self.log(f"Comparing as JSON objects: No Match. Differences: {differences}")
-                return False, str(differences)
+                detailed_differences = {}
+                for key, value in differences.items():
+                    if 'values_changed' in key:
+                        for subkey, change in value.items():
+                            old_value, new_value = change['old_value'], change['new_value']
+                            # Generate character-level differences
+                            char_diff = self.char_diff(old_value, new_value)
+                            detailed_differences[subkey] = {
+                                'old_value': old_value,
+                                'new_value': new_value,
+                                'character_diff': char_diff
+                            }
+                self.log(f"Comparing as JSON objects: No Match. Differences: {detailed_differences}")
+                return False, str(detailed_differences)
         except json.JSONDecodeError as e:
             # If either output is not valid JSON, compare as strings
             if str(global_output) == str(expected_output):
@@ -455,7 +528,7 @@ if __name__ == "__main__":
     #print(request_params_map)
     # Got this from above.
     REQUEST_PARAMS_MAP = {"date": "06/25/2024",
-                          "interval": "30", "timeFrom": "0", "timeTo": "24"}
+                          "interval": "30", "timeFrom": "14", "timeTo": "0"}
     # Combine the data    
     combined_data = combine_request_data(REQUEST_PARAMS_MAP, request)
     test_cases = [{'inputs': combined_data, 'outputs': expected_output}]

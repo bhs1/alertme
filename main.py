@@ -35,25 +35,29 @@ def log(message: str, filename="data/main_trace.txt"):
     log_file_initialized = True
 
 # =============================== USER INPUT BEGIN ===============================
+# Options
+USE_CACHED_REQUEST_FUNC = True
+USE_CACHED_RESPONSE_FUNC = True
+
+
 # USER_INPUT (Temp)
 HEADER_FIELDS_TO_REPLACE = {
-    "logged_in_phpsessid": '''PHPSESSID=vrcrq45jqhvqdtb2l9csdqom3h; __cf_bm=0.kvkWTUpR2o4P..e4tyyJaR_zV5NdGWDFqVsvrasrE-1718394559-1.0.1.1-qbaDEe6cWBYGJl3PqhxdthB77OCez466VHOQ5evlp8OsXB9mhRm00kkkHiT8gUQ6795RDRvsxKL_lUyAvSvYfA; isLoggedIn=1; SessionExpirationTime=1718423366'''
+    "logged_in_phpsessid": '''PHPSESSID=94jvsojuojt2cvo66smu0puor5; __cf_bm=I9bnj.tJU8BIG3wP4SucQYUhj8DBiO8qwPJKcz3AlRY-1718659823-1.0.1.1-R2E7HSg1U9zS6eG2ukrPKth9nzsxQ9sXXHgycyKDkDPpA2J4FkmCjiq1_4Z00Np8rGiLiQhPH1RPok70VONytw; isLoggedIn=1; SessionExpirationTime=1718688689'''
 }
 
 # Read HAR file
 har_file_path = 'data/example2.har'
 
 # USER INPUT
-REQUEST_PARAMS_MAP = {"date": "06/16/2024",
-                      "interval": "30", "timeFrom": "12", "timeTo": "0"}
+REQUEST_PARAMS_MAP = {"date": "06/25/2024",
+                      "interval": "30", "timeFrom": "14", "timeTo": "0"}
 #REQUEST_PARAMS_MAP = {} # must replace this.
 # USER_INPUT
-with open("data/request.json", "r") as f:
+with open("data/request.txt", "r") as f:
     request = f.read()
-with open("data/request_output.json", "r") as f:
+with open("data/request_output.txt", "r") as f:
     expected_output = f.read()
-REQUEST_TEST_CASES = [{'inputs': str(
-    REQUEST_PARAMS_MAP) + "\n\n" + request, 'outputs': expected_output}]
+REQUEST_TEST_CASES = [(request, expected_output),]
 
 # USER_INPUT
 response_content1 = utils.load_response_data('data/response.txt')
@@ -76,7 +80,6 @@ def read_har_file(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         har_data = json.load(file)
     return har_data
-
 
 def split_text_into_chunks(text, words_per_chunk):
     words = text.split()
@@ -260,41 +263,70 @@ def extract_playing_times(html_content):
 
     return activities
 
-def prepare_headers(first_request, header_fields_to_replace):
+def prepare_logged_in_fields(first_request, header_fields_to_replace):
     headers = {header['name']: header['value']
         for header in first_request['headers']}
+    print(first_request['headers'])
     # TODO: Update this to be generic after taking care of login flow.
     update_to_logged_in_cookie(headers, header_fields_to_replace['logged_in_phpsessid'])
-    return headers
+    
+    # Update the headers in the first_request with the new headers
+    first_request['headers'] = [{'name': k, 'value': v} for k, v in headers.items()]
+    return first_request
 
 
-def prepare_body(first_request, request_params_map, process_request_func_str, mode = "LLM"):
-    body = first_request.get('postData', {}).get('text', '')
-    log(f"old body: {body}")
-    if (mode == "LLM"):
-        body = prepare_request.replace_fields(str(first_request), request_params_map, process_request_func_str)
-    elif (mode == "MANUAL"):
-        body = replace_date(body, '5/22/2024')
+def prepare_new_request(first_request, request_params_map, process_request_func_str, mode = "LLM"):
+    # TODO: may want to get coding agent to replace the text field as well.
+    log(f"old request: {first_request}")
+    first_request = prepare_request.replace_fields(str(first_request), request_params_map, process_request_func_str)
+    log(f"new request: {first_request}")
+    return first_request
+
+
+def send_request(method, url, headers, body=None):
+    # Convert list of headers to dictionary if it's not already a dictionary
+    if isinstance(headers, list):
+        headers_dict = {header['name']: header['value'] for header in headers}
     else:
-        raise ValueError(f"Invalid mode: {mode}. Please use 'LLM' or 'MANUAL'.")
-    log(f"new body: {body}")
-    return body
-
-
-def send_request(method, url, headers, body):
-    if method.lower() == 'get':
-        response = requests.get(url, headers=headers)
-    elif method.lower() == 'post':
-        response = requests.post(url, headers=headers, data=body)
+        headers_dict = headers
+    
+    # Check the method and call the appropriate function from requests
+    if method.upper() == 'POST':
+        response = requests.post(url, headers=headers_dict, data=body)
+    elif method.upper() == 'GET':
+        response = requests.get(url, headers=headers_dict)
     else:
-        response = requests.request(method, url, headers=headers, data=body)
+        raise ValueError(f"Unsupported HTTP method: {method}")
+    
     return response
 
 
-def process_request(first_request, headers, body, request_params_map = {}, header_params_map = {}, process_header_func_str = "", process_request_func_str = "", mode = "LLM"):
-    method = first_request['method']
-    url = first_request['url']
+import json
 
+def process_request(request_str):
+    try:
+        # Convert the string representation of the dictionary into an actual dictionary
+        request_dict = json.loads(request_str)
+        print("Converted request to dictionary:", request_dict)
+        # Continue processing with request_dict...
+    except json.JSONDecodeError as e:
+        print("Error parsing request string to dictionary:", e)
+        return None
+
+    if 'method' in request_dict:
+        method = request_dict['method']
+    url = request_dict['url']
+    headers = request_dict['headers']
+    if 'body' in request_dict:
+        body = request_dict['body']
+    else:
+        body = ""
+    log(f"""Sending request:
+        Method: {method}
+        URL: {url}
+        Headers: {headers}
+        Body: {body}
+        """)
 
     response = send_request(method, url, headers, body)
     log(f"Resent Request Status: {response.status_code}")
@@ -305,14 +337,22 @@ def print_and_log(har_data, filtered_request_response_pairs):
     total_entries = len(
         har_data['log']['entries']) if 'log' in har_data and 'entries' in har_data['log'] else 0
     print_request_response_summary(
-        filtered_request_response_pairs, total_entries)
-    #write_first_response_to_file(filtered_request_response_pairs)
+        filtered_request_response_pairs, total_entries)    
     write_first_request_to_file(filtered_request_response_pairs)
 
+
+def write_function_to_file(func_str, file_path='data/successful_func.txt'):
+    if func_str:
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write(func_str)
+            log(f"Written successful request function to {file_path}")
+    else:
+        log("No successful request function to write.")
 
 if __name__ == "__main__":
 
     import utils
+    import codegen
     # Setup
     load_dotenv()  # This loads the environment variables from the .env file
     # Initialize the OpenAI client with your API key
@@ -327,6 +367,9 @@ if __name__ == "__main__":
     print_and_log(har_data, filtered_request_response_pairs)
 
     response_text = ""
+    
+    code_generator = codegen.CodeGenerator()
+    
     # Replace fields in the request and resend it.
     if filtered_request_response_pairs:
         first_request = filtered_request_response_pairs[0][0]
@@ -351,19 +394,24 @@ if __name__ == "__main__":
                 response_text = file.read()
         else:
             log("Getting request replace function...")
-            # TODO: Debug this and potentially incorporate new paper.
-            #process_request_func_str = prepare_request.get_request_replace_func(
-                #REQUEST_TEST_CASES)
-            with open("data/succesful_func.txt", "r") as f:
-                process_request_func_str = f.read()
-            # TODO: Handle get_request_replace_func failure, in that case, we should use the default response.
+            if USE_CACHED_REQUEST_FUNC:
+                with open("data/successful_request_replace_func.py", "r") as f:
+                    process_request_func_str = f.read()
+            else:
+                process_request_func_str = prepare_request.get_request_replace_func(code_generator,
+                    REQUEST_TEST_CASES, request_map)
+                # If not an empty string, write successful request func to file
+                write_function_to_file(process_request_func_str, "data/successful_request_replace_func.py")
+            
+            #In case you want to use default succesful_fun.
+            #with open("data/succesful_func.txt", "r") as f:
+            #    process_request_func_str = f.read()            
             # TODO: prepare_headers is not general, fix login flow.
             log("replacing fields in header and body...")
-            headers = prepare_headers(first_request, HEADER_FIELDS_TO_REPLACE)
-            body = prepare_body(first_request, REQUEST_PARAMS_MAP, process_request_func_str, mode = "LLM")
+            first_request = prepare_logged_in_fields(first_request, HEADER_FIELDS_TO_REPLACE)
+            first_request = prepare_new_request(first_request, REQUEST_PARAMS_MAP, process_request_func_str)
             log("Resending updated request...")
-            response_text = process_request(
-                first_request, headers, body, REQUEST_PARAMS_MAP, process_request_func_str, mode="MANUAL")
+            response_text = process_request(first_request)
             log(f"Re-sent Request, Response Text: {response_text}")
     else:
         with open('data/response.txt', 'r', encoding='utf-8') as file:
@@ -371,12 +419,18 @@ if __name__ == "__main__":
         log("No request-response pairs available to resend. Using default response.")
 
     # Override response for demo (remove this)
-    with open('data/response.txt', 'r', encoding='utf-8') as file:
-            response_text = file.read()
+    #with open('data/response.txt', 'r', encoding='utf-8') as file:
+    #    response_text = file.read()
     # Extract useful information from the response.
     if response_text is not None:
         log("Getting response parsing function...")
-        response_func = extract_from_response.generate_response_func(RESPONSE_TEST_CASES)
+        if USE_CACHED_RESPONSE_FUNC:
+            with open("data/successful_response_func.py", "r") as f:
+                response_func = f.read()
+        else:
+            response_func = extract_from_response.generate_response_func(code_generator, RESPONSE_TEST_CASES)
+            # If not an empty string, write successful response func to file
+            write_function_to_file(response_func, "data/successful_response_func.py")
         log("Parsing results from response...")      
         final_result = extract_from_response.extract_info_from_response(response_text, response_func)
         log("=================== AVAILABLE TIMES FROM EXAMPLE RESPONSE ======================")
