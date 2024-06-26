@@ -1,31 +1,32 @@
 import json
-import re
 def func(input_str):
     global debug_output
     debug_output = ""
-    
     try:
-        # Attempt to parse the input string as JSON
-        input_data = json.loads(input_str.replace("'", '"'))
+        data = json.loads(input_str)
     except json.JSONDecodeError as e:
-        debug_output = str(e)
+        debug_output += f"JSONDecodeError: {str(e)}\n"
         return ""
     
-    request_params_map = input_data.get('request_params_map', {})
-    request_data = input_data.get('request_data', {})
+    request_params_map = data.get("request_params_map", {})
+    request_data = data.get("request_data", {})
     
-    # Update the postData params
-    if 'postData' in request_data and 'params' in request_data['postData']:
-        for param in request_data['postData']['params']:
-            if param['name'] in request_params_map:
-                param['value'] = request_params_map[param['name']]
+    debug_output += f"request_params_map: {request_params_map}\n"
+    debug_output += f"request_data: {request_data}\n"
     
-    # Update the postData text
-    if 'postData' in request_data and 'text' in request_data['postData']:
-        post_data_text = request_data['postData']['text']
-        for key, value in request_params_map.items():
-            post_data_text = re.sub(f"{key}=[^&]*", f"{key}={value}", post_data_text)
-        request_data['postData']['text'] = post_data_text
+    # Update the postData params based on request_params_map
+    if "postData" in request_data and "params" in request_data["postData"]:
+        for param in request_data["postData"]["params"]:
+            if param["name"] in request_params_map:
+                param["value"] = request_params_map[param["name"]]
+        
+        # Generate the text field without URL-encoding
+        params = request_data["postData"]["params"]
+        text = "&".join(f"{param['name']}={param['value']}" for param in params)
+        request_data["postData"]["text"] = text
+        
+        debug_output += f"Updated params: {params}\n"
+        debug_output += f"Generated text: {text}\n"
     
     return json.dumps(request_data)
 

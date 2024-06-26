@@ -1,39 +1,40 @@
-import re
 from bs4 import BeautifulSoup
-global debug_output
 debug_output = ""
 
-def func(html_content):
+def func(input_str):
     global debug_output
-    try:
-        # Parse the HTML content
-        soup = BeautifulSoup(html_content, 'html.parser')
-        debug_output += "Parsed HTML content.\n"
+    
+    # Parse the input HTML content
+    soup = BeautifulSoup(input_str, 'html.parser')
+    
+    # Initialize the result dictionary
+    result = {}
+    
+    # Find all the time slots
+    time_slots = soup.select('table#times-to-reserve a')
+    
+    for slot in time_slots:
+        activity_info = slot.find_previous('b').text.strip()
+        time = slot.text.strip()
         
-        # Find all the time slots
-        time_slots = soup.select('#times-to-reserve a')
-        debug_output += f"Found {len(time_slots)} time slots.\n"
+        # Extract the activity name and correctly strip the ' - '
+        if activity_info.endswith(' -'):
+            activity_name = activity_info[:-2].strip()
+        else:
+            activity_name = activity_info.strip()
         
-        # Initialize the result dictionary
-        result = {}
+        # Debugging statement
+        debug_output += f"Activity Info: {activity_info}, Activity Name: {activity_name}, Time: {time}\n"
         
-        # Extract times and activities
-        for slot in time_slots:
-            activity = slot.find_previous('b').text.strip().replace(' -', '')
-            time = slot.text.strip()
-            debug_output += f"Activity: {activity}, Time: {time}\n"
-            if activity not in result:
-                result[activity] = []
-            if time not in result[activity]:  # Ensure no duplicates
-                result[activity].append(time)
-                debug_output += f"Added time {time} to activity {activity}.\n"
-            else:
-                debug_output += f"Duplicate time {time} for activity {activity} ignored.\n"
+        if activity_name not in result:
+            result[activity_name] = []
         
-        return result
-    except Exception as e:
-        debug_output += f"Exception occurred: {str(e)}\n"
-        return {}
+        # Add the time to the list if it's not already present
+        if time not in result[activity_name]:
+            result[activity_name].append(time)
+    
+    return result
+
 def get_input():
     global global_input
     return global_input

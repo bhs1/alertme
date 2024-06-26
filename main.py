@@ -6,7 +6,7 @@
 # - Or maybe just forcing the LLM to look at a more precise diff between expected and actual.
 
 from bs4 import BeautifulSoup
-import requests
+import httpx  # Add this import
 import json
 import os
 from openai import OpenAI
@@ -38,26 +38,30 @@ def log(message: str, filename="data/main_trace.txt"):
 # Options
 USE_CACHED_REQUEST_FUNC = True
 USE_CACHED_RESPONSE_FUNC = True
-
+USE_REQUEST_FROM_FILE = False
 
 # USER_INPUT (Temp)
 HEADER_FIELDS_TO_REPLACE = {
-    "logged_in_phpsessid": '''PHPSESSID=94jvsojuojt2cvo66smu0puor5; __cf_bm=I9bnj.tJU8BIG3wP4SucQYUhj8DBiO8qwPJKcz3AlRY-1718659823-1.0.1.1-R2E7HSg1U9zS6eG2ukrPKth9nzsxQ9sXXHgycyKDkDPpA2J4FkmCjiq1_4Z00Np8rGiLiQhPH1RPok70VONytw; isLoggedIn=1; SessionExpirationTime=1718688689'''
+    "logged_in_phpsessid": '''PHPSESSID=qdn271jpc729o7in4krmhnh2k4; __cf_bm=I9bnj.tJU8BIG3wP4SucQYUhj8DBiO8qwPJKcz3AlRY-1718659823-1.0.1.1-R2E7HSg1U9zS6eG2ukrPKth9nzsxQ9sXXHgycyKDkDPpA2J4FkmCjiq1_4Z00Np8rGiLiQhPH1RPok70VONytw; isLoggedIn=1; SessionExpirationTime=1718688689'''
 }
 
 # Read HAR file
-har_file_path = 'data/example2.har'
+har_file_path = 'data/example3.har'
 
 # USER INPUT
 REQUEST_PARAMS_MAP = {"date": "06/25/2024",
-                      "interval": "30", "timeFrom": "14", "timeTo": "0"}
+                      "interval": "60", "timeFrom": "16", "timeTo": "0"}
 #REQUEST_PARAMS_MAP = {} # must replace this.
 # USER_INPUT
-with open("data/request.txt", "r") as f:
+with open("data/request_test1.json", "r") as f:
     request = f.read()
 with open("data/request_output.txt", "r") as f:
     expected_output = f.read()
-REQUEST_TEST_CASES = [(request, expected_output),]
+    
+# Note output should be a json.dumps string, not a dic. Input is a dict.
+REQUEST_TEST_CASES = [(json.loads(request), expected_output),]
+print("Expected output: " + str(type(expected_output)))
+print("Expected output: " + expected_output)
 
 # USER_INPUT
 response_content1 = utils.load_response_data('data/response.txt')
@@ -68,6 +72,8 @@ RESPONSE_TEST_CASES = [
     {"inputs": f"{response_content2}",
         "outputs": "{'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}"},
 ]
+
+
 # =============================== USER INPUT END ===============================
 
 
@@ -124,7 +130,7 @@ def extract_filtered_request_response_pairs(har_data):
     filtered_pairs = []
     if 'log' in har_data and 'entries' in har_data['log']:
         entries = har_data['log']['entries']
-        for entry in entries:
+        for entry in entries:            
             request = entry['request']
             response = entry['response']
             response_text = response['content'].get('text', '')
@@ -164,22 +170,8 @@ def print_request_response_summary(pairs, total_entries):
                 f"  Content Size: {response['content'].get('size', 'Unknown')} bytes")
             log(f"  MIME Type: {response['content'].get('mimeType', 'Unknown')}")
 
-# Writing the first relevant request and response to a file
-def write_first_response_to_file(filtered_pairs, file_path='data/response.txt'):
-    """
-    Writes the first response text from filtered request-response pairs to a file.
 
-    Args:
-        filtered_pairs (list): List of filtered request-response pairs.
-        file_path (str): Path to the file where the response will be written.
-    """
-    with open(file_path, 'w', encoding='utf-8') as file:
-        first_response = filtered_pairs[0][1]['content'].get(
-            'text', '') if filtered_pairs else "No response available."
-        file.write(first_response)
-
-
-def write_first_request_to_file(filtered_pairs, file_path='data/request.txt'):
+def write_first_request_to_file(filtered_pairs, file_path='data/request.json'):
     """
     Writes the first request details from filtered request-response pairs to a file.
 
@@ -274,40 +266,102 @@ def prepare_logged_in_fields(first_request, header_fields_to_replace):
     first_request['headers'] = [{'name': k, 'value': v} for k, v in headers.items()]
     return first_request
 
+def log_curl_command(request_dict, label):
+    curl_command = request_to_curl(request_dict)
+    log(f"Curl command for {label}:\n{curl_command}")
 
 def prepare_new_request(first_request, request_params_map, process_request_func_str, mode = "LLM"):
-    # TODO: may want to get coding agent to replace the text field as well.
+    log_curl_command(first_request, "old request")
     log(f"old request: {first_request}")
-    first_request = prepare_request.replace_fields(str(first_request), request_params_map, process_request_func_str)
+    first_request = json.loads(prepare_request.replace_fields(first_request, request_params_map, process_request_func_str))
+    log_curl_command(first_request, "new request")
     log(f"new request: {first_request}")
     return first_request
 
-
 def send_request(method, url, headers, body=None):
+    # List of headers to exclude (typically handled by the HTTP library)
+    exclude_headers = {':method', ':path', ':scheme', ':authority', 'host', 'content-length'}
+
     # Convert list of headers to dictionary if it's not already a dictionary
     if isinstance(headers, list):
-        headers_dict = {header['name']: header['value'] for header in headers}
+        headers_dict = {
+            header['name'].lower(): header['value']
+            for header in headers
+            if header['name'].lower() not in exclude_headers
+        }
     else:
-        headers_dict = headers
+        headers_dict = {
+            k.lower(): v
+            for k, v in headers.items()
+            if k.lower() not in exclude_headers
+        }
     
-    # Check the method and call the appropriate function from requests
-    if method.upper() == 'POST':
-        response = requests.post(url, headers=headers_dict, data=body)
-    elif method.upper() == 'GET':
-        response = requests.get(url, headers=headers_dict)
-    else:
-        raise ValueError(f"Unsupported HTTP method: {method}")
+    # Decode byte strings if necessary
+    headers_dict = {
+        k.decode() if isinstance(k, bytes) else k: 
+        v.decode() if isinstance(v, bytes) else v
+        for k, v in headers_dict.items()
+    }
+    
+    # Use httpx.Client() for making requests
+    with httpx.Client(http2=True) as client:
+        # Check the method and call the appropriate function from httpx
+        if method.upper() == 'POST':
+            response = client.post(url, headers=headers_dict, data=body)
+        elif method.upper() == 'GET':
+            response = client.get(url, headers=headers_dict)
+        else:
+            raise ValueError(f"Unsupported HTTP method: {method}")
     
     return response
 
-
 import json
 
-def process_request(request_str):
+def request_to_curl(request_dict):
+    """
+    Convert a request dictionary to a curl command string.
+    """
+    method = request_dict.get('method', 'POST')
+    url = request_dict['url']
+    headers = request_dict.get('headers', [])
+    body = request_dict.get('postData', {}).get('text', '')
+
+    curl_command = f"curl -X {method} '{url}'"
+
+    for header in headers:
+        curl_command += f" -H '{header['name']}: {header['value']}'"
+
+    if body:
+        curl_command += f" -d '{body}'"
+
+    return curl_command
+
+def write_request_dict_to_file(request_dict, file_path='data/request_text.txt'):
+    """
+    Writes the request dictionary as JSON to a file.
+
+    Args:
+        request_dict (dict): The request dictionary to be written.
+        file_path (str): Path to the file where the JSON will be written.
+    """
+    with open(file_path, 'w', encoding='utf-8') as file:
+        json.dump(request_dict, file, indent=2)
+    log(f"Request dictionary written as JSON to {file_path}")
+
+def process_request(request):
     try:
-        # Convert the string representation of the dictionary into an actual dictionary
-        request_dict = json.loads(request_str)
+        if isinstance(request, str):
+            request_dict = json.loads(request)
+        elif isinstance(request, dict):
+            request_dict = request
+        else:
+            raise ValueError("Input must be a JSON string or a dictionary")
+        
         print("Converted request to dictionary:", request_dict)
+        
+        # Write request_dict as JSON to file
+        write_request_dict_to_file(request_dict)
+        
         # Continue processing with request_dict...
     except json.JSONDecodeError as e:
         print("Error parsing request string to dictionary:", e)
@@ -317,10 +371,7 @@ def process_request(request_str):
         method = request_dict['method']
     url = request_dict['url']
     headers = request_dict['headers']
-    if 'body' in request_dict:
-        body = request_dict['body']
-    else:
-        body = ""
+    body = request_dict.get('postData', {}).get('text', '')
     log(f"""Sending request:
         Method: {method}
         URL: {url}
@@ -349,7 +400,27 @@ def write_function_to_file(func_str, file_path='data/successful_func.txt'):
     else:
         log("No successful request function to write.")
 
-if __name__ == "__main__":
+def write_response_test_cases_to_file(test_cases, file_path='data/response_test_cases.txt'):
+    """
+    Writes the response test cases to a text file with pretty print.
+
+    Args:
+        test_cases (list): List of response test cases.
+        file_path (str): Path to the file where the test cases will be written.
+    """
+    with open(file_path, 'w', encoding='utf-8') as file:
+        for test_case in test_cases:
+            file.write(f"{test_case}\n\n")
+    log(f"Response test cases written to {file_path}")
+
+def write_response_to_file(response_text, filename='data/response_text.txt'):
+    with open(filename, 'w', encoding='utf-8') as file:
+        file.write(response_text)
+    log(f"Response text written to {filename}")
+
+if __name__ == "__main__":    
+    # Write response test cases to a file
+    write_response_test_cases_to_file(RESPONSE_TEST_CASES)
 
     import utils
     import codegen
@@ -409,10 +480,16 @@ if __name__ == "__main__":
             # TODO: prepare_headers is not general, fix login flow.
             log("replacing fields in header and body...")
             first_request = prepare_logged_in_fields(first_request, HEADER_FIELDS_TO_REPLACE)
-            first_request = prepare_new_request(first_request, REQUEST_PARAMS_MAP, process_request_func_str)
+            if USE_REQUEST_FROM_FILE:
+                log("Using request from file...")
+                with open('data/request.json', 'r') as f:
+                    first_request = json.loads(f.read())
+            else:
+                first_request = prepare_new_request(first_request, REQUEST_PARAMS_MAP, process_request_func_str)
             log("Resending updated request...")
             response_text = process_request(first_request)
-            log(f"Re-sent Request, Response Text: {response_text}")
+            write_response_to_file(response_text)
+            
     else:
         with open('data/response.txt', 'r', encoding='utf-8') as file:
             response_text = file.read()
@@ -433,6 +510,6 @@ if __name__ == "__main__":
             write_function_to_file(response_func, "data/successful_response_func.py")
         log("Parsing results from response...")      
         final_result = extract_from_response.extract_info_from_response(response_text, response_func)
-        log("=================== AVAILABLE TIMES FROM EXAMPLE RESPONSE ======================")
+        log("=================== AVAILABLE TIMES FROM RESPONSE ======================")
         # TODO: Get this to show nonempty by fixing cookie (tempfix)
         log(final_result)

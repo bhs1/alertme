@@ -1,6 +1,1 @@
 Graph saved as 'data/graph.png'.
----GENERATING CODE SOLUTION---
----CHECKING CODE---
-Comparing as JSON objects: Match
-=========== CODE BLOCK CHECK: SUCCEEDED in 1 iterations ===========
----DECISION: FINISH---

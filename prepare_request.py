@@ -15,7 +15,9 @@ def process_request_test_cases(test_case_tuples, request_params_map):
 
 # TODO: I had to manually replace 06/25/2024 instead of 05%2F09%2F2024 since the llm could not figure out it had to use %2F instead of /.
 def get_request_replace_func(code_generator, test_cases, request_params_map):
+    print(test_cases)
     test_cases = process_request_test_cases(test_cases, request_params_map)
+    print(test_cases)
     os.environ["LANGCHAIN_PROJECT"] = "request_replace_func"
     # Define the prompt for the LLM
     prompt = f"""Write a Python function called "func" that takes a single str param which contains
@@ -109,8 +111,11 @@ def combine_request_data(request_params_map, request):
     Returns:
         dict: Combined request data if valid, None otherwise.
     """
-    request = json.loads(request.replace("'", '"'))
-    print("Request = " + str(request))
+    # Ensure both inputs are dictionaries
+    if not isinstance(request_params_map, dict) or not isinstance(request, dict):
+        print("Error: Both request_params_map and request must be dictionaries")
+        return None
+
     combined_data = {
         "request_params_map": request_params_map,
         "request_data": request
