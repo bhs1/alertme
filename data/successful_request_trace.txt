@@ -1,0 +1,1155 @@
+Graph saved as 'data/graph.png'.
+---GENERATING CODE SOLUTION---
+---CHECKING CODE---
+Comparing as JSON objects: No Match. Differences: {}
+---CODE BLOCK CHECK: FAILED---
+Code:
+import json
+import re
+
+global debug_output
+
+debug_output = ""
+
+def func(input_str):
+    global debug_output
+    try:
+        # Parse the input string to a dictionary
+        input_str = input_str.replace("'", '"')
+        input_data = json.loads(input_str)
+        request_params_map = input_data['request_params_map']
+        request_data = input_data['request_data']
+
+        # Parse the request_data to a dictionary
+        request_data = json.loads(request_data)
+
+        # Update the request_data based on request_params_map
+        for param, new_value in request_params_map.items():
+            for item in request_data['postData']['params']:
+                if item['name'] == param:
+                    item['value'] = new_value
+
+        # Convert the updated request_data back to a JSON string
+        updated_request_data = json.dumps(request_data, indent=4)
+        return updated_request_data
+    except Exception as e:
+        debug_output = str(e)
+        return ""
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+input = get_input()
+result = func(input)
+set_output(str(result))
+
+Test results:
+Incorrect submission.
+Pass rate: 0.0
+Results:
+<test case 0 begin >
+Failed test case.
+            Actual test case output:
+            {
+    "bodySize": 718,
+    "method": "POST",
+    "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true",
+    "httpVersion": "HTTP/2",
+    "headers": [
+        {
+            "name": "Host",
+            "value": "gtc.clubautomation.com"
+        },
+        {
+            "name": "User-Agent",
+            "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"
+        },
+        {
+            "name": "Accept",
+            "value": "*/*"
+        },
+        {
+            "name": "Accept-Language",
+            "value": "en-US,en;q=0.5"
+        },
+        {
+            "name": "Accept-Encoding",
+            "value": "gzip, deflate, br"
+        },
+        {
+            "name": "Referer",
+            "value": "https://gtc.clubautomation.com/event/reserve-court-new"
+        },
+        {
+            "name": "Content-Type",
+            "value": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        {
+            "name": "X-Requested-With",
+            "value": "XMLHttpRequest"
+        },
+        {
+            "name": "X-INSTANA-T",
+            "value": "a2dff8e1914fbae9"
+        },
+        {
+            "name": "X-INSTANA-S",
+            "value": "a2dff8e1914fbae9"
+        },
+        {
+            "name": "X-INSTANA-L",
+            "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"
+        },
+        {
+            "name": "Content-Length",
+            "value": "718"
+        },
+        {
+            "name": "Origin",
+            "value": "https://gtc.clubautomation.com"
+        },
+        {
+            "name": "Connection",
+            "value": "keep-alive"
+        },
+        {
+            "name": "Cookie",
+            "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"
+        },
+        {
+            "name": "Sec-Fetch-Dest",
+            "value": "empty"
+        },
+        {
+            "name": "Sec-Fetch-Mode",
+            "value": "cors"
+        },
+        {
+            "name": "Sec-Fetch-Site",
+            "value": "same-origin"
+        },
+        {
+            "name": "TE",
+            "value": "trailers"
+        }
+    ],
+    "cookies": [
+        {
+            "name": "PHPSESSID",
+            "value": "ultj1akb8cjhknu2l8k36e1f8a"
+        },
+        {
+            "name": "__cf_bm",
+            "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"
+        },
+        {
+            "name": "SessionExpirationTime",
+            "value": "1715323192"
+        },
+        {
+            "name": "isLoggedIn",
+            "value": "1"
+        }
+    ],
+    "queryString": [
+        {
+            "name": "ajax",
+            "value": "true"
+        }
+    ],
+    "headersSize": 966,
+    "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+            {
+                "name": "reservation-list-page",
+                "value": "1"
+            },
+            {
+                "name": "user_id",
+                "value": "25397"
+            },
+            {
+                "name": "event_member_token_reserve_court",
+                "value": "21f55e9e90592d561f192cc2c86e019b"
+            },
+            {
+                "name": "current_guest_count",
+                "value": "0"
+            },
+            {
+                "name": "component",
+                "value": "2"
+            },
+            {
+                "name": "club",
+                "value": "-1"
+            },
+            {
+                "name": "location",
+                "value": "-1"
+            },
+            {
+                "name": "surface",
+                "value": "-1"
+            },
+            {
+                "name": "host",
+                "value": "25397"
+            },
+            {
+                "name": "add-new-child-to-guest_1",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_2",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_3",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_4",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_5",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_6",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_7",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_8",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_9",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_10",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_11",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_12",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_13",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_14",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_15",
+                "value": ""
+            },
+            {
+                "name": "date",
+                "value": "06/25/2024"
+            },
+            {
+                "name": "interval",
+                "value": "30"
+            },
+            {
+                "name": "timeFrom",
+                "value": "14"
+            },
+            {
+                "name": "timeTo",
+                "value": "0"
+            },
+            {
+                "name": "time-reserve",
+                "value": ""
+            },
+            {
+                "name": "location-reserve",
+                "value": ""
+            },
+            {
+                "name": "surface-reserve",
+                "value": ""
+            },
+            {
+                "name": "courtsnotavailable",
+                "value": ""
+            },
+            {
+                "name": "join-waitlist-case",
+                "value": "0"
+            }
+        ]
+    }
+}
+            Expected test case output:
+            {"bodySize": 718, "method": "POST", "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true", "httpVersion": "HTTP/2", "headers": [{"name": "Host", "value": "gtc.clubautomation.com"}, {"name": "User-Agent", "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"}, {"name": "Accept", "value": "*/*"}, {"name": "Accept-Language", "value": "en-US,en;q=0.5"}, {"name": "Accept-Encoding", "value": "gzip, deflate, br"}, {"name": "Referer", "value": "https://gtc.clubautomation.com/event/reserve-court-new"}, {"name": "Content-Type", "value": "application/x-www-form-urlencoded; charset=UTF-8"}, {"name": "X-Requested-With", "value": "XMLHttpRequest"}, {"name": "X-INSTANA-T", "value": "a2dff8e1914fbae9"}, {"name": "X-INSTANA-S", "value": "a2dff8e1914fbae9"}, {"name": "X-INSTANA-L", "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"}, {"name": "Content-Length", "value": "718"}, {"name": "Origin", "value": "https://gtc.clubautomation.com"}, {"name": "Connection", "value": "keep-alive"}, {"name": "Cookie", "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"}, {"name": "Sec-Fetch-Dest", "value": "empty"}, {"name": "Sec-Fetch-Mode", "value": "cors"}, {"name": "Sec-Fetch-Site", "value": "same-origin"}, {"name": "TE", "value": "trailers"}], "cookies": [{"name": "PHPSESSID", "value": "ultj1akb8cjhknu2l8k36e1f8a"}, {"name": "__cf_bm", "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"}, {"name": "SessionExpirationTime", "value": "1715323192"}, {"name": "isLoggedIn", "value": "1"}], "queryString": [{"name": "ajax", "value": "true"}], "headersSize": 966, "postData": {"mimeType": "application/x-www-form-urlencoded", "params": [{"name": "reservation-list-page", "value": "1"}, {"name": "user_id", "value": "25397"}, {"name": "event_member_token_reserve_court", "value": "21f55e9e90592d561f192cc2c86e019b"}, {"name": "current_guest_count", "value": "0"}, {"name": "component", "value": "2"}, {"name": "club", "value": "-1"}, {"name": "location", "value": "-1"}, {"name": "surface", "value": "-1"}, {"name": "host", "value": "25397"}, {"name": "add-new-child-to-guest_1", "value": ""}, {"name": "add-new-child-to-guest_2", "value": ""}, {"name": "add-new-child-to-guest_3", "value": ""}, {"name": "add-new-child-to-guest_4", "value": ""}, {"name": "add-new-child-to-guest_5", "value": ""}, {"name": "add-new-child-to-guest_6", "value": ""}, {"name": "add-new-child-to-guest_7", "value": ""}, {"name": "add-new-child-to-guest_8", "value": ""}, {"name": "add-new-child-to-guest_9", "value": ""}, {"name": "add-new-child-to-guest_10", "value": ""}, {"name": "add-new-child-to-guest_11", "value": ""}, {"name": "add-new-child-to-guest_12", "value": ""}, {"name": "add-new-child-to-guest_13", "value": ""}, {"name": "add-new-child-to-guest_14", "value": ""}, {"name": "add-new-child-to-guest_15", "value": ""}, {"name": "date", "value": "06/25/2024"}, {"name": "interval", "value": "30"}, {"name": "timeFrom", "value": "14"}, {"name": "timeTo", "value": "0"}, {"name": "time-reserve", "value": ""}, {"name": "location-reserve", "value": ""}, {"name": "surface-reserve", "value": ""}, {"name": "courtsnotavailable", "value": ""}, {"name": "join-waitlist-case", "value": "0"}], "text": "reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06/25/2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"}}
+            Debug test case output:
+            
+            Differences:
+            {}
+</test case>
+---DECISION: RE-TRY SOLUTION---
+---REFLECTING ON ERRORS, DEBUG STATEMENTS, and FORMULATING IMPROVEMENT PLAN---
+Context:
+    Previous Corrections, Reflections and Code diffs:
+
+ Correction Summary: Created a function 'func' that takes a JSON string as input, parses it, updates the HTTP request string based on the provided parameters, and returns the updated HTTP request string. The function handles malformed input by attempting to correct it and includes a debug output for troubleshooting.
+Imports:
+import json
+Code:
+import re
+
+global debug_output
+
+debug_output = ""
+
+def func(input_str):
+    global debug_output
+    try:
+        # Parse the input string to a dictionary
+        input_str = input_str.replace("'", '"')
+        input_data = json.loads(input_str)
+        request_params_map = input_data['request_params_map']
+        request_data = input_data['request_data']
+
+        # Parse the request_data to a dictionary
+        request_data = json.loads(request_data)
+
+        # Update the request_data based on request_params_map
+        for param, new_value in request_params_map.items():
+            for item in request_data['postData']['params']:
+                if item['name'] == param:
+                    item['value'] = new_value
+
+        # Convert the updated request_data back to a JSON string
+        updated_request_data = json.dumps(request_data, indent=4)
+        return updated_request_data
+    except Exception as e:
+        debug_output = str(e)
+        return ""
+        
+---GENERATING CODE SOLUTION---
+--------- Rewriting code with print statements -----------
+Generating solution using prompt:
+We just gave you this prompt:
+
+ (1) Determine what went wrong in each of the following test results: Incorrect submission.
+Pass rate: 0.0
+Results:
+<test case 0 begin >
+Failed test case.
+            Actual test case output:
+            {
+    "bodySize": 718,
+    "method": "POST",
+    "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true",
+    "httpVersion": "HTTP/2",
+    "headers": [
+        {
+            "name": "Host",
+            "value": "gtc.clubautomation.com"
+        },
+        {
+            "name": "User-Agent",
+            "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"
+        },
+        {
+            "name": "Accept",
+            "value": "*/*"
+        },
+        {
+            "name": "Accept-Language",
+            "value": "en-US,en;q=0.5"
+        },
+        {
+            "name": "Accept-Encoding",
+            "value": "gzip, deflate, br"
+        },
+        {
+            "name": "Referer",
+            "value": "https://gtc.clubautomation.com/event/reserve-court-new"
+        },
+        {
+            "name": "Content-Type",
+            "value": "application/x-www-form-urlencoded; charset=UTF-8"
+        },
+        {
+            "name": "X-Requested-With",
+            "value": "XMLHttpRequest"
+        },
+        {
+            "name": "X-INSTANA-T",
+            "value": "a2dff8e1914fbae9"
+        },
+        {
+            "name": "X-INSTANA-S",
+            "value": "a2dff8e1914fbae9"
+        },
+        {
+            "name": "X-INSTANA-L",
+            "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"
+        },
+        {
+            "name": "Content-Length",
+            "value": "718"
+        },
+        {
+            "name": "Origin",
+            "value": "https://gtc.clubautomation.com"
+        },
+        {
+            "name": "Connection",
+            "value": "keep-alive"
+        },
+        {
+            "name": "Cookie",
+            "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"
+        },
+        {
+            "name": "Sec-Fetch-Dest",
+            "value": "empty"
+        },
+        {
+            "name": "Sec-Fetch-Mode",
+            "value": "cors"
+        },
+        {
+            "name": "Sec-Fetch-Site",
+            "value": "same-origin"
+        },
+        {
+            "name": "TE",
+            "value": "trailers"
+        }
+    ],
+    "cookies": [
+        {
+            "name": "PHPSESSID",
+            "value": "ultj1akb8cjhknu2l8k36e1f8a"
+        },
+        {
+            "name": "__cf_bm",
+            "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"
+        },
+        {
+            "name": "SessionExpirationTime",
+            "value": "1715323192"
+        },
+        {
+            "name": "isLoggedIn",
+            "value": "1"
+        }
+    ],
+    "queryString": [
+        {
+            "name": "ajax",
+            "value": "true"
+        }
+    ],
+    "headersSize": 966,
+    "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+            {
+                "name": "reservation-list-page",
+                "value": "1"
+            },
+            {
+                "name": "user_id",
+                "value": "25397"
+            },
+            {
+                "name": "event_member_token_reserve_court",
+                "value": "21f55e9e90592d561f192cc2c86e019b"
+            },
+            {
+                "name": "current_guest_count",
+                "value": "0"
+            },
+            {
+                "name": "component",
+                "value": "2"
+            },
+            {
+                "name": "club",
+                "value": "-1"
+            },
+            {
+                "name": "location",
+                "value": "-1"
+            },
+            {
+                "name": "surface",
+                "value": "-1"
+            },
+            {
+                "name": "host",
+                "value": "25397"
+            },
+            {
+                "name": "add-new-child-to-guest_1",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_2",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_3",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_4",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_5",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_6",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_7",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_8",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_9",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_10",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_11",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_12",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_13",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_14",
+                "value": ""
+            },
+            {
+                "name": "add-new-child-to-guest_15",
+                "value": ""
+            },
+            {
+                "name": "date",
+                "value": "06/25/2024"
+            },
+            {
+                "name": "interval",
+                "value": "30"
+            },
+            {
+                "name": "timeFrom",
+                "value": "14"
+            },
+            {
+                "name": "timeTo",
+                "value": "0"
+            },
+            {
+                "name": "time-reserve",
+                "value": ""
+            },
+            {
+                "name": "location-reserve",
+                "value": ""
+            },
+            {
+                "name": "surface-reserve",
+                "value": ""
+            },
+            {
+                "name": "courtsnotavailable",
+                "value": ""
+            },
+            {
+                "name": "join-waitlist-case",
+                "value": "0"
+            }
+        ]
+    }
+}
+            Expected test case output:
+            {"bodySize": 718, "method": "POST", "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true", "httpVersion": "HTTP/2", "headers": [{"name": "Host", "value": "gtc.clubautomation.com"}, {"name": "User-Agent", "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"}, {"name": "Accept", "value": "*/*"}, {"name": "Accept-Language", "value": "en-US,en;q=0.5"}, {"name": "Accept-Encoding", "value": "gzip, deflate, br"}, {"name": "Referer", "value": "https://gtc.clubautomation.com/event/reserve-court-new"}, {"name": "Content-Type", "value": "application/x-www-form-urlencoded; charset=UTF-8"}, {"name": "X-Requested-With", "value": "XMLHttpRequest"}, {"name": "X-INSTANA-T", "value": "a2dff8e1914fbae9"}, {"name": "X-INSTANA-S", "value": "a2dff8e1914fbae9"}, {"name": "X-INSTANA-L", "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"}, {"name": "Content-Length", "value": "718"}, {"name": "Origin", "value": "https://gtc.clubautomation.com"}, {"name": "Connection", "value": "keep-alive"}, {"name": "Cookie", "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"}, {"name": "Sec-Fetch-Dest", "value": "empty"}, {"name": "Sec-Fetch-Mode", "value": "cors"}, {"name": "Sec-Fetch-Site", "value": "same-origin"}, {"name": "TE", "value": "trailers"}], "cookies": [{"name": "PHPSESSID", "value": "ultj1akb8cjhknu2l8k36e1f8a"}, {"name": "__cf_bm", "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"}, {"name": "SessionExpirationTime", "value": "1715323192"}, {"name": "isLoggedIn", "value": "1"}], "queryString": [{"name": "ajax", "value": "true"}], "headersSize": 966, "postData": {"mimeType": "application/x-www-form-urlencoded", "params": [{"name": "reservation-list-page", "value": "1"}, {"name": "user_id", "value": "25397"}, {"name": "event_member_token_reserve_court", "value": "21f55e9e90592d561f192cc2c86e019b"}, {"name": "current_guest_count", "value": "0"}, {"name": "component", "value": "2"}, {"name": "club", "value": "-1"}, {"name": "location", "value": "-1"}, {"name": "surface", "value": "-1"}, {"name": "host", "value": "25397"}, {"name": "add-new-child-to-guest_1", "value": ""}, {"name": "add-new-child-to-guest_2", "value": ""}, {"name": "add-new-child-to-guest_3", "value": ""}, {"name": "add-new-child-to-guest_4", "value": ""}, {"name": "add-new-child-to-guest_5", "value": ""}, {"name": "add-new-child-to-guest_6", "value": ""}, {"name": "add-new-child-to-guest_7", "value": ""}, {"name": "add-new-child-to-guest_8", "value": ""}, {"name": "add-new-child-to-guest_9", "value": ""}, {"name": "add-new-child-to-guest_10", "value": ""}, {"name": "add-new-child-to-guest_11", "value": ""}, {"name": "add-new-child-to-guest_12", "value": ""}, {"name": "add-new-child-to-guest_13", "value": ""}, {"name": "add-new-child-to-guest_14", "value": ""}, {"name": "add-new-child-to-guest_15", "value": ""}, {"name": "date", "value": "06/25/2024"}, {"name": "interval", "value": "30"}, {"name": "timeFrom", "value": "14"}, {"name": "timeTo", "value": "0"}, {"name": "time-reserve", "value": ""}, {"name": "location-reserve", "value": ""}, {"name": "surface-reserve", "value": ""}, {"name": "courtsnotavailable", "value": ""}, {"name": "join-waitlist-case", "value": "0"}], "text": "reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06/25/2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"}}
+            Debug test case output:
+            
+            Differences:
+            {}
+</test case>.
+Explain for each failing test case how does the actual output differ from the expected output (be very specific here, feel free to take multiple sentences)? And why do you think that is? If useful, consider the Debug Output when reasoning about your response.
+
+Note: You are allowed to be skeptical of the test case. If you have high confidence that there is an issue with the test case expected output e.g. incorrectly set fields, you should say so. The same is true for input. But please don't stop just call it out and continue. In this case you should output SUSPECT_BAD_TEST_CASE, REASON: <reason>.
+
+    
+    Note: To save resource, try to avoid printing entire HTTP requests or json, instead only print parts that may be useful for debugging     you may wish to summarize the structure in plain text the parts that you choose leave out.
+     
+    (2) Construct an improvement plan to fix the test failures. When formulating this plan, observe the previous solutions
+    shown above and try not to repeat fixes that we already know do not lead to passing the test cases. Relfect explicitly on what
+    we've tried before and whether it made a difference. If it did not make a difference, why not?
+        
+    (3) Sketch out the specific pseudocode of the fixes you plan to implement. Feel free to include actual code snipits. 
+
+ and as a result of the above prompt you gave this relfection summary:
+
+ ### Analysis of Test Failure
+
+#### Differences Between Actual and Expected Output
+
+1. **Formatting Differences**:
+   - The actual output is formatted with indentation and new lines, while the expected output is a single-line JSON string.
+   - The expected output includes a `text` field in the `postData` section, which is a URL-encoded string of the parameters. This field is missing in the actual output.
+
+2. **Missing `text` Field**:
+   - The `text` field in the `postData` section is a URL-encoded representation of the parameters. This field is not present in the actual output.
+
+### Improvement Plan
+
+1. **Ensure Correct Formatting**:
+   - Convert the updated request data back to a single-line JSON string to match the expected output format.
+
+2. **Add `text` Field**:
+   - Generate the `text` field in the `postData` section by URL-encoding the parameters.
+
+### Pseudocode for Fixes
+
+1. **Parse Input**:
+   - Parse the input JSON string to a dictionary.
+   - Extract `request_params_map` and `request_data`.
+
+2. **Update Parameters**:
+   - Parse `request_data` to a dictionary.
+   - Update the parameters in `request_data['postData']['params']` based on `request_params_map`.
+
+3. **Generate `text` Field**:
+   - Create a URL-encoded string of the parameters in `request_data['postData']['params']`.
+   - Add this string as the `text` field in `request_data['postData']`.
+
+4. **Convert to Single-Line JSON**:
+   - Convert the updated `request_data` dictionary back to a single-line JSON string.
+
+### Implementation
+
+```python
+import json
+import urllib.parse
+
+def func(input_str):
+    try:
+        # Parse the input string to a dictionary
+        input_data = json.loads(input_str)
+        request_params_map = input_data['request_params_map']
+        request_data = json.loads(input_data['request_data'])
+
+        # Update the request_data based on request_params_map
+        for param, new_value in request_params_map.items():
+            for item in request_data['postData']['params']:
+                if item['name'] == param:
+                    item['value'] = new_value
+
+        # Generate the 'text' field in postData
+        params = request_data['postData']['params']
+        encoded_params = urllib.parse.urlencode({item['name']: item['value'] for item in params})
+        request_data['postData']['text'] = encoded_params
+
+        # Convert the updated request_data back to a single-line JSON string
+        updated_request_data = json.dumps(request_data, separators=(',', ':'))
+        return updated_request_data
+    except Exception as e:
+        return f"SUSPECT_BAD_TEST_CASE, REASON: {str(e)}"
+
+# Example usage
+input_str = '{"request_params_map":{"date":"06/25/2024","interval":"30","timeFrom":"14","timeTo":"0"},"request_data":"{\\"bodySize\\":718,\\"method\\":\\"POST\\",\\"url\\":\\"https://gtc.clubautomation.com/event/reserve-court-new?ajax=true\\",\\"httpVersion\\":\\"HTTP/2\\",\\"headers\\":[{\\"name\\":\\"Host\\",\\"value\\":\\"gtc.clubautomation.com\\"},{\\"name\\":\\"User-Agent\\",\\"value\\":\\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0\\"},{\\"name\\":\\"Accept\\",\\"value\\":\\"*/*\\"},{\\"name\\":\\"Accept-Language\\",\\"value\\":\\"en-US,en;q=0.5\\"},{\\"name\\":\\"Accept-Encoding\\",\\"value\\":\\"gzip, deflate, br\\"},{\\"name\\":\\"Referer\\",\\"value\\":\\"https://gtc.clubautomation.com/event/reserve-court-new\\"},{\\"name\\":\\"Content-Type\\",\\"value\\":\\"application/x-www-form-urlencoded; charset=UTF-8\\"},{\\"name\\":\\"X-Requested-With\\",\\"value\\":\\"XMLHttpRequest\\"},{\\"name\\":\\"X-INSTANA-T\\",\\"value\\":\\"a2dff8e1914fbae9\\"},{\\"name\\":\\"X-INSTANA-S\\",\\"value\\":\\"a2dff8e1914fbae9\\"},{\\"name\\":\\"X-INSTANA-L\\",\\"value\\":\\"1,correlationType=web;correlationId=a2dff8e1914fbae9\\"},{\\"name\\":\\"Content-Length\\",\\"value\\":\\"718\\"},{\\"name\\":\\"Origin\\",\\"value\\":\\"https://gtc.clubautomation.com\\"},{\\"name\\":\\"Connection\\",\\"value\\":\\"keep-alive\\"},{\\"name\\":\\"Cookie\\",\\"value\\":\\"PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1\\"},{\\"name\\":\\"Sec-Fetch-Dest\\",\\"value\\":\\"empty\\"},{\\"name\\":\\"Sec-Fetch-Mode\\",\\"value\\":\\"cors\\"},{\\"name\\":\\"Sec-Fetch-Site\\",\\"value\\":\\"same-origin\\"},{\\"name\\":\\"TE\\",\\"value\\":\\"trailers\\"}],\\"cookies\\":[{\\"name\\":\\"PHPSESSID\\",\\"value\\":\\"ultj1akb8cjhknu2l8k36e1f8a\\"},{\\"name\\":\\"__cf_bm\\",\\"value\\":\\"TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g\\"},{\\"name\\":\\"SessionExpirationTime\\",\\"value\\":\\"1715323192\\"},{\\"name\\":\\"isLoggedIn\\",\\"value\\":\\"1\\"}],\\"queryString\\":[{\\"name\\":\\"ajax\\",\\"value\\":\\"true\\"}],\\"headersSize\\":966,\\"postData\\":{\\"mimeType\\":\\"application/x-www-form-urlencoded\\",\\"params\\":[{\\"name\\":\\"reservation-list-page\\",\\"value\\":\\"1\\"},{\\"name\\":\\"user_id\\",\\"value\\":\\"25397\\"},{\\"name\\":\\"event_member_token_reserve_court\\",\\"value\\":\\"21f55e9e90592d561f192cc2c86e019b\\"},{\\"name\\":\\"current_guest_count\\",\\"value\\":\\"0\\"},{\\"name\\":\\"component\\",\\"value\\":\\"2\\"},{\\"name\\":\\"club\\",\\"value\\":\\"-1\\"},{\\"name\\":\\"location\\",\\"value\\":\\"-1\\"},{\\"name\\":\\"surface\\",\\"value\\":\\"-1\\"},{\\"name\\":\\"host\\",\\"value\\":\\"25397\\"},{\\"name\\":\\"add-new-child-to-guest_1\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_2\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_3\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_4\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_5\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_6\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_7\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_8\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_9\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_10\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_11\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_12\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_13\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_14\\",\\"value\\":\\"\\"},{\\"name\\":\\"add-new-child-to-guest_15\\",\\"value\\":\\"\\"},{\\"name\\":\\"date\\",\\"value\\":\\"05/09/2024\\"},{\\"name\\":\\"interval\\",\\"value\\":\\"30\\"},{\\"name\\":\\"timeFrom\\",\\"value\\":\\"15\\"},{\\"name\\":\\"timeTo\\",\\"value\\":\\"0\\"},{\\"name\\":\\"time-reserve\\",\\"value\\":\\"\\"},{\\"name\\":\\"location-reserve\\",\\"value\\":\\"\\"},{\\"name\\":\\"surface-reserve\\",\\"value\\":\\"\\"},{\\"name\\":\\"courtsnotavailable\\",\\"value\\":\\"\\"},{\\"name\\":\\"join-waitlist-case\\",\\"value\\":\\"0\\"}]}}"}'
+print(func(input_str))
+```
+
+### Explanation
+
+1. **Parsing Input**:
+   - The input JSON string is parsed to a dictionary.
+   - The `request_params_map` and `request_data` are extracted from the dictionary.
+
+2. **Updating Parameters**:
+   - The `request_data` is parsed to a dictionary.
+   - The parameters in `request_data['postData']['params']` are updated based on `request_params_map`.
+
+3. **Generating `text` Field**:
+   - A URL-encoded string of the parameters is created.
+   - This string is added as the `text` field in `request_data['postData']`.
+
+4. **Converting to Single-Line JSON**:
+   - The updated `request_data` dictionary is converted back to a single-line JSON string using `json.dumps` with `separators` to remove unnecessary whitespace.
+
+This approach ensures that the output matches the expected format and includes the necessary `text` field.
+
+Main directive: Rewrite the code to fix the test cases. Be sure to follow the plan in the reflection summary.
+        
+IMPORTANT: Also, print out intermediate variable names for debugging purposes. Instead of print() append to global variable debug_output. At first debug_output can be simple, but as you fail a test more times, you should add more and more details and variables to debug_output until we find the issue. Remember to define "global debug_output" at the top of any scope that updates debug_output.
+                 
+---CHECKING CODE---
+Comparing as JSON objects: No Match. Differences: {"root['postData']['text']": {'old_value': 'reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F25%2F2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0', 'new_value': 'reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06/25/2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0', 'character_diff': '-% +/ +5+/+2+0+2+4+&+i+n+t+e+r+v+a+l+=+3+0+&+t+i+m+e +r+o+m+=+1 -2-5-%-2-F-2-0-2 -i-n +i+m+e+T+o+=+0+&+t+i+m+e+-+r+e+s -a-l-=-3-0-&-t-i-m -F-r-o-m -1-4 +l -t-i-m-e-T +c+a -=-0-& -m-e +o+n -l-o-c +s+u+r+f +c+e -t-i-o-n -s-u-r-f-a -e-- +o+u -e +t -e-r +n+o+t+a -e-=-&-c-o-u-r-t-s-n-o-t-a-v'}}
+---CODE BLOCK CHECK: FAILED---
+Code:
+import json
+import urllib.parse
+debug_output = ""
+
+def func(input_str):
+    global debug_output
+    try:
+        # Parse the input string to a dictionary
+        input_data = json.loads(input_str)
+        request_params_map = input_data['request_params_map']
+        request_data = json.loads(input_data['request_data'])
+
+        debug_output += f"Parsed input data: {input_data}\n"
+        debug_output += f"Request params map: {request_params_map}\n"
+        debug_output += f"Request data before update: {request_data}\n"
+
+        # Update the request_data based on request_params_map
+        for param, new_value in request_params_map.items():
+            for item in request_data['postData']['params']:
+                if item['name'] == param:
+                    item['value'] = new_value
+
+        debug_output += f"Request data after update: {request_data}\n"
+
+        # Generate the 'text' field in postData
+        params = request_data['postData']['params']
+        encoded_params = urllib.parse.urlencode({item['name']: item['value'] for item in params})
+        request_data['postData']['text'] = encoded_params
+
+        debug_output += f"Encoded params: {encoded_params}\n"
+
+        # Convert the updated request_data back to a single-line JSON string
+        updated_request_data = json.dumps(request_data, separators=(',', ':'))
+        debug_output += f"Updated request data: {updated_request_data}\n"
+        return updated_request_data
+    except Exception as e:
+        debug_output += f"Error: {str(e)}\n"
+        return f"SUSPECT_BAD_TEST_CASE, REASON: {str(e)}"
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+# Main execution
+input = get_input()
+result = func(input)
+set_output(str(result))
+
+Test results:
+Incorrect submission.
+Pass rate: 0.0
+Results:
+<test case 0 begin >
+Failed test case.
+            Actual test case output:
+            {"bodySize":718,"method":"POST","url":"https://gtc.clubautomation.com/event/reserve-court-new?ajax=true","httpVersion":"HTTP/2","headers":[{"name":"Host","value":"gtc.clubautomation.com"},{"name":"User-Agent","value":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"},{"name":"Accept","value":"*/*"},{"name":"Accept-Language","value":"en-US,en;q=0.5"},{"name":"Accept-Encoding","value":"gzip, deflate, br"},{"name":"Referer","value":"https://gtc.clubautomation.com/event/reserve-court-new"},{"name":"Content-Type","value":"application/x-www-form-urlencoded; charset=UTF-8"},{"name":"X-Requested-With","value":"XMLHttpRequest"},{"name":"X-INSTANA-T","value":"a2dff8e1914fbae9"},{"name":"X-INSTANA-S","value":"a2dff8e1914fbae9"},{"name":"X-INSTANA-L","value":"1,correlationType=web;correlationId=a2dff8e1914fbae9"},{"name":"Content-Length","value":"718"},{"name":"Origin","value":"https://gtc.clubautomation.com"},{"name":"Connection","value":"keep-alive"},{"name":"Cookie","value":"PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"},{"name":"Sec-Fetch-Dest","value":"empty"},{"name":"Sec-Fetch-Mode","value":"cors"},{"name":"Sec-Fetch-Site","value":"same-origin"},{"name":"TE","value":"trailers"}],"cookies":[{"name":"PHPSESSID","value":"ultj1akb8cjhknu2l8k36e1f8a"},{"name":"__cf_bm","value":"TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"},{"name":"SessionExpirationTime","value":"1715323192"},{"name":"isLoggedIn","value":"1"}],"queryString":[{"name":"ajax","value":"true"}],"headersSize":966,"postData":{"mimeType":"application/x-www-form-urlencoded","params":[{"name":"reservation-list-page","value":"1"},{"name":"user_id","value":"25397"},{"name":"event_member_token_reserve_court","value":"21f55e9e90592d561f192cc2c86e019b"},{"name":"current_guest_count","value":"0"},{"name":"component","value":"2"},{"name":"club","value":"-1"},{"name":"location","value":"-1"},{"name":"surface","value":"-1"},{"name":"host","value":"25397"},{"name":"add-new-child-to-guest_1","value":""},{"name":"add-new-child-to-guest_2","value":""},{"name":"add-new-child-to-guest_3","value":""},{"name":"add-new-child-to-guest_4","value":""},{"name":"add-new-child-to-guest_5","value":""},{"name":"add-new-child-to-guest_6","value":""},{"name":"add-new-child-to-guest_7","value":""},{"name":"add-new-child-to-guest_8","value":""},{"name":"add-new-child-to-guest_9","value":""},{"name":"add-new-child-to-guest_10","value":""},{"name":"add-new-child-to-guest_11","value":""},{"name":"add-new-child-to-guest_12","value":""},{"name":"add-new-child-to-guest_13","value":""},{"name":"add-new-child-to-guest_14","value":""},{"name":"add-new-child-to-guest_15","value":""},{"name":"date","value":"06/25/2024"},{"name":"interval","value":"30"},{"name":"timeFrom","value":"14"},{"name":"timeTo","value":"0"},{"name":"time-reserve","value":""},{"name":"location-reserve","value":""},{"name":"surface-reserve","value":""},{"name":"courtsnotavailable","value":""},{"name":"join-waitlist-case","value":"0"}],"text":"reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F25%2F2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"}}
+            Expected test case output:
+            {"bodySize": 718, "method": "POST", "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true", "httpVersion": "HTTP/2", "headers": [{"name": "Host", "value": "gtc.clubautomation.com"}, {"name": "User-Agent", "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"}, {"name": "Accept", "value": "*/*"}, {"name": "Accept-Language", "value": "en-US,en;q=0.5"}, {"name": "Accept-Encoding", "value": "gzip, deflate, br"}, {"name": "Referer", "value": "https://gtc.clubautomation.com/event/reserve-court-new"}, {"name": "Content-Type", "value": "application/x-www-form-urlencoded; charset=UTF-8"}, {"name": "X-Requested-With", "value": "XMLHttpRequest"}, {"name": "X-INSTANA-T", "value": "a2dff8e1914fbae9"}, {"name": "X-INSTANA-S", "value": "a2dff8e1914fbae9"}, {"name": "X-INSTANA-L", "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"}, {"name": "Content-Length", "value": "718"}, {"name": "Origin", "value": "https://gtc.clubautomation.com"}, {"name": "Connection", "value": "keep-alive"}, {"name": "Cookie", "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"}, {"name": "Sec-Fetch-Dest", "value": "empty"}, {"name": "Sec-Fetch-Mode", "value": "cors"}, {"name": "Sec-Fetch-Site", "value": "same-origin"}, {"name": "TE", "value": "trailers"}], "cookies": [{"name": "PHPSESSID", "value": "ultj1akb8cjhknu2l8k36e1f8a"}, {"name": "__cf_bm", "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"}, {"name": "SessionExpirationTime", "value": "1715323192"}, {"name": "isLoggedIn", "value": "1"}], "queryString": [{"name": "ajax", "value": "true"}], "headersSize": 966, "postData": {"mimeType": "application/x-www-form-urlencoded", "params": [{"name": "reservation-list-page", "value": "1"}, {"name": "user_id", "value": "25397"}, {"name": "event_member_token_reserve_court", "value": "21f55e9e90592d561f192cc2c86e019b"}, {"name": "current_guest_count", "value": "0"}, {"name": "component", "value": "2"}, {"name": "club", "value": "-1"}, {"name": "location", "value": "-1"}, {"name": "surface", "value": "-1"}, {"name": "host", "value": "25397"}, {"name": "add-new-child-to-guest_1", "value": ""}, {"name": "add-new-child-to-guest_2", "value": ""}, {"name": "add-new-child-to-guest_3", "value": ""}, {"name": "add-new-child-to-guest_4", "value": ""}, {"name": "add-new-child-to-guest_5", "value": ""}, {"name": "add-new-child-to-guest_6", "value": ""}, {"name": "add-new-child-to-guest_7", "value": ""}, {"name": "add-new-child-to-guest_8", "value": ""}, {"name": "add-new-child-to-guest_9", "value": ""}, {"name": "add-new-child-to-guest_10", "value": ""}, {"name": "add-new-child-to-guest_11", "value": ""}, {"name": "add-new-child-to-guest_12", "value": ""}, {"name": "add-new-child-to-guest_13", "value": ""}, {"name": "add-new-child-to-guest_14", "value": ""}, {"name": "add-new-child-to-guest_15", "value": ""}, {"name": "date", "value": "06/25/2024"}, {"name": "interval", "value": "30"}, {"name": "timeFrom", "value": "14"}, {"name": "timeTo", "value": "0"}, {"name": "time-reserve", "value": ""}, {"name": "location-reserve", "value": ""}, {"name": "surface-reserve", "value": ""}, {"name": "courtsnotavailable", "value": ""}, {"name": "join-waitlist-case", "value": "0"}], "text": "reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06/25/2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"}}
+            Debug test case output:
+            Parsed input data: {'request_params_map': {'date': '06/25/2024', 'interval': '30', 'timeFrom': '14', 'timeTo': '0'}, 'request_data': '{\n    "bodySize": 718,\n    "method": "POST",\n    "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true",\n    "httpVersion": "HTTP/2",\n    "headers": [\n        {\n            "name": "Host",\n            "value": "gtc.clubautomation.com"\n        },\n        {\n            "name": "User-Agent",\n            "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"\n        },\n        {\n            "name": "Accept",\n            "value": "*/*"\n        },\n        {\n            "name": "Accept-Language",\n            "value": "en-US,en;q=0.5"\n        },\n        {\n            "name": "Accept-Encoding",\n            "value": "gzip, deflate, br"\n        },\n        {\n            "name": "Referer",\n            "value": "https://gtc.clubautomation.com/event/reserve-court-new"\n        },\n        {\n            "name": "Content-Type",\n            "value": "application/x-www-form-urlencoded; charset=UTF-8"\n        },\n        {\n            "name": "X-Requested-With",\n            "value": "XMLHttpRequest"\n        },\n        {\n            "name": "X-INSTANA-T",\n            "value": "a2dff8e1914fbae9"\n        },\n        {\n            "name": "X-INSTANA-S",\n            "value": "a2dff8e1914fbae9"\n        },\n        {\n            "name": "X-INSTANA-L",\n            "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"\n        },\n        {\n            "name": "Content-Length",\n            "value": "718"\n        },\n        {\n            "name": "Origin",\n            "value": "https://gtc.clubautomation.com"\n        },\n        {\n            "name": "Connection",\n            "value": "keep-alive"\n        },\n        {\n            "name": "Cookie",\n            "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"\n        },\n        {\n            "name": "Sec-Fetch-Dest",\n            "value": "empty"\n        },\n        {\n            "name": "Sec-Fetch-Mode",\n            "value": "cors"\n        },\n        {\n            "name": "Sec-Fetch-Site",\n            "value": "same-origin"\n        },\n        {\n            "name": "TE",\n            "value": "trailers"\n        }\n    ],\n    "cookies": [\n        {\n            "name": "PHPSESSID",\n            "value": "ultj1akb8cjhknu2l8k36e1f8a"\n        },\n        {\n            "name": "__cf_bm",\n            "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"\n        },\n        {\n            "name": "SessionExpirationTime",\n            "value": "1715323192"\n        },\n        {\n            "name": "isLoggedIn",\n            "value": "1"\n        }\n    ],\n    "queryString": [\n        {\n            "name": "ajax",\n            "value": "true"\n        }\n    ],\n    "headersSize": 966,\n    "postData": {\n        "mimeType": "application/x-www-form-urlencoded",\n        "params": [\n            {\n                "name": "reservation-list-page",\n                "value": "1"\n            },\n            {\n                "name": "user_id",\n                "value": "25397"\n            },\n            {\n                "name": "event_member_token_reserve_court",\n                "value": "21f55e9e90592d561f192cc2c86e019b"\n            },\n            {\n                "name": "current_guest_count",\n                "value": "0"\n            },\n            {\n                "name": "component",\n                "value": "2"\n            },\n            {\n                "name": "club",\n                "value": "-1"\n            },\n            {\n                "name": "location",\n                "value": "-1"\n            },\n            {\n                "name": "surface",\n                "value": "-1"\n            },\n            {\n                "name": "host",\n                "value": "25397"\n            },\n            {\n                "name": "add-new-child-to-guest_1",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_2",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_3",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_4",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_5",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_6",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_7",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_8",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_9",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_10",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_11",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_12",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_13",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_14",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_15",\n                "value": ""\n            },\n            {\n                "name": "date",\n                "value": "05/09/2024"\n            },\n            {\n                "name": "interval",\n                "value": "30"\n            },\n            {\n                "name": "timeFrom",\n                "value": "15"\n            },\n            {\n                "name": "timeTo",\n                "value": "0"\n            },\n            {\n                "name": "time-reserve",\n                "value": ""\n            },\n            {\n                "name": "location-reserve",\n                "value": ""\n            },\n            {\n                "name": "surface-reserve",\n                "value": ""\n            },\n            {\n                "name": "courtsnotavailable",\n                "value": ""\n            },\n            {\n                "name": "join-waitlist-case",\n                "value": "0"\n            }\n        ]\n    }\n}'}
+Request params map: {'date': '06/25/2024', 'interval': '30', 'timeFrom': '14', 'timeTo': '0'}
+Request data before update: {'bodySize': 718, 'method': 'POST', 'url': 'https://gtc.clubautomation.com/event/reserve-court-new?ajax=true', 'httpVersion': 'HTTP/2', 'headers': [{'name': 'Host', 'value': 'gtc.clubautomation.com'}, {'name': 'User-Agent', 'value': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0'}, {'name': 'Accept', 'value': '*/*'}, {'name': 'Accept-Language', 'value': 'en-US,en;q=0.5'}, {'name': 'Accept-Encoding', 'value': 'gzip, deflate, br'}, {'name': 'Referer', 'value': 'https://gtc.clubautomation.com/event/reserve-court-new'}, {'name': 'Content-Type', 'value': 'application/x-www-form-urlencoded; charset=UTF-8'}, {'name': 'X-Requested-With', 'value': 'XMLHttpRequest'}, {'name': 'X-INSTANA-T', 'value': 'a2dff8e1914fbae9'}, {'name': 'X-INSTANA-S', 'value': 'a2dff8e1914fbae9'}, {'name': 'X-INSTANA-L', 'value': '1,correlationType=web;correlationId=a2dff8e1914fbae9'}, {'name': 'Content-Length', 'value': '718'}, {'name': 'Origin', 'value': 'https://gtc.clubautomation.com'}, {'name': 'Connection', 'value': 'keep-alive'}, {'name': 'Cookie', 'value': 'PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1'}, {'name': 'Sec-Fetch-Dest', 'value': 'empty'}, {'name': 'Sec-Fetch-Mode', 'value': 'cors'}, {'name': 'Sec-Fetch-Site', 'value': 'same-origin'}, {'name': 'TE', 'value': 'trailers'}], 'cookies': [{'name': 'PHPSESSID', 'value': 'ultj1akb8cjhknu2l8k36e1f8a'}, {'name': '__cf_bm', 'value': 'TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g'}, {'name': 'SessionExpirationTime', 'value': '1715323192'}, {'name': 'isLoggedIn', 'value': '1'}], 'queryString': [{'name': 'ajax', 'value': 'true'}], 'headersSize': 966, 'postData': {'mimeType': 'application/x-www-form-urlencoded', 'params': [{'name': 'reservation-list-page', 'value': '1'}, {'name': 'user_id', 'value': '25397'}, {'name': 'event_member_token_reserve_court', 'value': '21f55e9e90592d561f192cc2c86e019b'}, {'name': 'current_guest_count', 'value': '0'}, {'name': 'component', 'value': '2'}, {'name': 'club', 'value': '-1'}, {'name': 'location', 'value': '-1'}, {'name': 'surface', 'value': '-1'}, {'name': 'host', 'value': '25397'}, {'name': 'add-new-child-to-guest_1', 'value': ''}, {'name': 'add-new-child-to-guest_2', 'value': ''}, {'name': 'add-new-child-to-guest_3', 'value': ''}, {'name': 'add-new-child-to-guest_4', 'value': ''}, {'name': 'add-new-child-to-guest_5', 'value': ''}, {'name': 'add-new-child-to-guest_6', 'value': ''}, {'name': 'add-new-child-to-guest_7', 'value': ''}, {'name': 'add-new-child-to-guest_8', 'value': ''}, {'name': 'add-new-child-to-guest_9', 'value': ''}, {'name': 'add-new-child-to-guest_10', 'value': ''}, {'name': 'add-new-child-to-guest_11', 'value': ''}, {'name': 'add-new-child-to-guest_12', 'value': ''}, {'name': 'add-new-child-to-guest_13', 'value': ''}, {'name': 'add-new-child-to-guest_14', 'value': ''}, {'name': 'add-new-child-to-guest_15', 'value': ''}, {'name': 'date', 'value': '05/09/2024'}, {'name': 'interval', 'value': '30'}, {'name': 'timeFrom', 'value': '15'}, {'name': 'timeTo', 'value': '0'}, {'name': 'time-reserve', 'value': ''}, {'name': 'location-reserve', 'value': ''}, {'name': 'surface-reserve', 'value': ''}, {'name': 'courtsnotavailable', 'value': ''}, {'name': 'join-waitlist-case', 'value': '0'}]}}
+Request data after update: {'bodySize': 718, 'method': 'POST', 'url': 'https://gtc.clubautomation.com/event/reserve-court-new?ajax=true', 'httpVersion': 'HTTP/2', 'headers': [{'name': 'Host', 'value': 'gtc.clubautomation.com'}, {'name': 'User-Agent', 'value': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0'}, {'name': 'Accept', 'value': '*/*'}, {'name': 'Accept-Language', 'value': 'en-US,en;q=0.5'}, {'name': 'Accept-Encoding', 'value': 'gzip, deflate, br'}, {'name': 'Referer', 'value': 'https://gtc.clubautomation.com/event/reserve-court-new'}, {'name': 'Content-Type', 'value': 'application/x-www-form-urlencoded; charset=UTF-8'}, {'name': 'X-Requested-With', 'value': 'XMLHttpRequest'}, {'name': 'X-INSTANA-T', 'value': 'a2dff8e1914fbae9'}, {'name': 'X-INSTANA-S', 'value': 'a2dff8e1914fbae9'}, {'name': 'X-INSTANA-L', 'value': '1,correlationType=web;correlationId=a2dff8e1914fbae9'}, {'name': 'Content-Length', 'value': '718'}, {'name': 'Origin', 'value': 'https://gtc.clubautomation.com'}, {'name': 'Connection', 'value': 'keep-alive'}, {'name': 'Cookie', 'value': 'PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1'}, {'name': 'Sec-Fetch-Dest', 'value': 'empty'}, {'name': 'Sec-Fetch-Mode', 'value': 'cors'}, {'name': 'Sec-Fetch-Site', 'value': 'same-origin'}, {'name': 'TE', 'value': 'trailers'}], 'cookies': [{'name': 'PHPSESSID', 'value': 'ultj1akb8cjhknu2l8k36e1f8a'}, {'name': '__cf_bm', 'value': 'TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g'}, {'name': 'SessionExpirationTime', 'value': '1715323192'}, {'name': 'isLoggedIn', 'value': '1'}], 'queryString': [{'name': 'ajax', 'value': 'true'}], 'headersSize': 966, 'postData': {'mimeType': 'application/x-www-form-urlencoded', 'params': [{'name': 'reservation-list-page', 'value': '1'}, {'name': 'user_id', 'value': '25397'}, {'name': 'event_member_token_reserve_court', 'value': '21f55e9e90592d561f192cc2c86e019b'}, {'name': 'current_guest_count', 'value': '0'}, {'name': 'component', 'value': '2'}, {'name': 'club', 'value': '-1'}, {'name': 'location', 'value': '-1'}, {'name': 'surface', 'value': '-1'}, {'name': 'host', 'value': '25397'}, {'name': 'add-new-child-to-guest_1', 'value': ''}, {'name': 'add-new-child-to-guest_2', 'value': ''}, {'name': 'add-new-child-to-guest_3', 'value': ''}, {'name': 'add-new-child-to-guest_4', 'value': ''}, {'name': 'add-new-child-to-guest_5', 'value': ''}, {'name': 'add-new-child-to-guest_6', 'value': ''}, {'name': 'add-new-child-to-guest_7', 'value': ''}, {'name': 'add-new-child-to-guest_8', 'value': ''}, {'name': 'add-new-child-to-guest_9', 'value': ''}, {'name': 'add-new-child-to-guest_10', 'value': ''}, {'name': 'add-new-child-to-guest_11', 'value': ''}, {'name': 'add-new-child-to-guest_12', 'value': ''}, {'name': 'add-new-child-to-guest_13', 'value': ''}, {'name': 'add-new-child-to-guest_14', 'value': ''}, {'name': 'add-new-child-to-guest_15', 'value': ''}, {'name': 'date', 'value': '06/25/2024'}, {'name': 'interval', 'value': '30'}, {'name': 'timeFrom', 'value': '14'}, {'name': 'timeTo', 'value': '0'}, {'name': 'time-reserve', 'value': ''}, {'name': 'location-reserve', 'value': ''}, {'name': 'surface-reserve', 'value': ''}, {'name': 'courtsnotavailable', 'value': ''}, {'name': 'join-waitlist-case', 'value': '0'}]}}
+Encoded params: reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F25%2F2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0
+Updated request data: {"bodySize":718,"method":"POST","url":"https://gtc.clubautomation.com/event/reserve-court-new?ajax=true","httpVersion":"HTTP/2","headers":[{"name":"Host","value":"gtc.clubautomation.com"},{"name":"User-Agent","value":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"},{"name":"Accept","value":"*/*"},{"name":"Accept-Language","value":"en-US,en;q=0.5"},{"name":"Accept-Encoding","value":"gzip, deflate, br"},{"name":"Referer","value":"https://gtc.clubautomation.com/event/reserve-court-new"},{"name":"Content-Type","value":"application/x-www-form-urlencoded; charset=UTF-8"},{"name":"X-Requested-With","value":"XMLHttpRequest"},{"name":"X-INSTANA-T","value":"a2dff8e1914fbae9"},{"name":"X-INSTANA-S","value":"a2dff8e1914fbae9"},{"name":"X-INSTANA-L","value":"1,correlationType=web;correlationId=a2dff8e1914fbae9"},{"name":"Content-Length","value":"718"},{"name":"Origin","value":"https://gtc.clubautomation.com"},{"name":"Connection","value":"keep-alive"},{"name":"Cookie","value":"PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"},{"name":"Sec-Fetch-Dest","value":"empty"},{"name":"Sec-Fetch-Mode","value":"cors"},{"name":"Sec-Fetch-Site","value":"same-origin"},{"name":"TE","value":"trailers"}],"cookies":[{"name":"PHPSESSID","value":"ultj1akb8cjhknu2l8k36e1f8a"},{"name":"__cf_bm","value":"TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"},{"name":"SessionExpirationTime","value":"1715323192"},{"name":"isLoggedIn","value":"1"}],"queryString":[{"name":"ajax","value":"true"}],"headersSize":966,"postData":{"mimeType":"application/x-www-form-urlencoded","params":[{"name":"reservation-list-page","value":"1"},{"name":"user_id","value":"25397"},{"name":"event_member_token_reserve_court","value":"21f55e9e90592d561f192cc2c86e019b"},{"name":"current_guest_count","value":"0"},{"name":"component","value":"2"},{"name":"club","value":"-1"},{"name":"location","value":"-1"},{"name":"surface","value":"-1"},{"name":"host","value":"25397"},{"name":"add-new-child-to-guest_1","value":""},{"name":"add-new-child-to-guest_2","value":""},{"name":"add-new-child-to-guest_3","value":""},{"name":"add-new-child-to-guest_4","value":""},{"name":"add-new-child-to-guest_5","value":""},{"name":"add-new-child-to-guest_6","value":""},{"name":"add-new-child-to-guest_7","value":""},{"name":"add-new-child-to-guest_8","value":""},{"name":"add-new-child-to-guest_9","value":""},{"name":"add-new-child-to-guest_10","value":""},{"name":"add-new-child-to-guest_11","value":""},{"name":"add-new-child-to-guest_12","value":""},{"name":"add-new-child-to-guest_13","value":""},{"name":"add-new-child-to-guest_14","value":""},{"name":"add-new-child-to-guest_15","value":""},{"name":"date","value":"06/25/2024"},{"name":"interval","value":"30"},{"name":"timeFrom","value":"14"},{"name":"timeTo","value":"0"},{"name":"time-reserve","value":""},{"name":"location-reserve","value":""},{"name":"surface-reserve","value":""},{"name":"courtsnotavailable","value":""},{"name":"join-waitlist-case","value":"0"}],"text":"reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F25%2F2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"}}
+
+            Differences:
+            {"root['postData']['text']": {'old_value': 'reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F25%2F2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0', 'new_value': 'reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06/25/2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0', 'character_diff': '-% +/ +5+/+2+0+2+4+&+i+n+t+e+r+v+a+l+=+3+0+&+t+i+m+e +r+o+m+=+1 -2-5-%-2-F-2-0-2 -i-n +i+m+e+T+o+=+0+&+t+i+m+e+-+r+e+s -a-l-=-3-0-&-t-i-m -F-r-o-m -1-4 +l -t-i-m-e-T +c+a -=-0-& -m-e +o+n -l-o-c +s+u+r+f +c+e -t-i-o-n -s-u-r-f-a -e-- +o+u -e +t -e-r +n+o+t+a -e-=-&-c-o-u-r-t-s-n-o-t-a-v'}}
+</test case>
+---DECISION: RE-TRY SOLUTION---
+---REFLECTING ON ERRORS, DEBUG STATEMENTS, and FORMULATING IMPROVEMENT PLAN---
+Context:
+    Previous Corrections, Reflections and Code diffs:
+
+ Correction Summary: Created a function 'func' that takes a JSON string as input, parses it, updates the HTTP request string based on the provided parameters, and returns the updated HTTP request string. The function handles malformed input by attempting to correct it and includes a debug output for troubleshooting.
+Imports:
+import json
+Code:
+import re
+
+global debug_output
+
+debug_output = ""
+
+def func(input_str):
+    global debug_output
+    try:
+        # Parse the input string to a dictionary
+        input_str = input_str.replace("'", '"')
+        input_data = json.loads(input_str)
+        request_params_map = input_data['request_params_map']
+        request_data = input_data['request_data']
+
+        # Parse the request_data to a dictionary
+        request_data = json.loads(request_data)
+
+        # Update the request_data based on request_params_map
+        for param, new_value in request_params_map.items():
+            for item in request_data['postData']['params']:
+                if item['name'] == param:
+                    item['value'] = new_value
+
+        # Convert the updated request_data back to a JSON string
+        updated_request_data = json.dumps(request_data, indent=4)
+        return updated_request_data
+    except Exception as e:
+        debug_output = str(e)
+        return ""
+
+================================================
+
+    Correction Summary: Rewrote the function to ensure correct formatting and inclusion of the 'text' field in the 'postData' section. Added debug statements to trace intermediate variables.
+Imports:
+import json
+import urllib.parse
+Code:
+debug_output = ""
+
+def func(input_str):
+    global debug_output
+    try:
+        # Parse the input string to a dictionary
+        input_data = json.loads(input_str)
+        request_params_map = input_data['request_params_map']
+        request_data = json.loads(input_data['request_data'])
+
+        debug_output += f"Parsed input data: {input_data}\n"
+        debug_output += f"Request params map: {request_params_map}\n"
+        debug_output += f"Request data before update: {request_data}\n"
+
+        # Update the request_data based on request_params_map
+        for param, new_value in request_params_map.items():
+            for item in request_data['postData']['params']:
+                if item['name'] == param:
+                    item['value'] = new_value
+
+        debug_output += f"Request data after update: {request_data}\n"
+
+        # Generate the 'text' field in postData
+        params = request_data['postData']['params']
+        encoded_params = urllib.parse.urlencode({item['name']: item['value'] for item in params})
+        request_data['postData']['text'] = encoded_params
+
+        debug_output += f"Encoded params: {encoded_params}\n"
+
+        # Convert the updated request_data back to a single-line JSON string
+        updated_request_data = json.dumps(request_data, separators=(',', ':'))
+        debug_output += f"Updated request data: {updated_request_data}\n"
+        return updated_request_data
+    except Exception as e:
+        debug_output += f"Error: {str(e)}\n"
+        return f"SUSPECT_BAD_TEST_CASE, REASON: {str(e)}"
+        
+---GENERATING CODE SOLUTION---
+--------- Rewriting code with print statements -----------
+Generating solution using prompt:
+We just gave you this prompt:
+
+ (1) Determine what went wrong in each of the following test results: Incorrect submission.
+Pass rate: 0.0
+Results:
+<test case 0 begin >
+Failed test case.
+            Actual test case output:
+            {"bodySize":718,"method":"POST","url":"https://gtc.clubautomation.com/event/reserve-court-new?ajax=true","httpVersion":"HTTP/2","headers":[{"name":"Host","value":"gtc.clubautomation.com"},{"name":"User-Agent","value":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"},{"name":"Accept","value":"*/*"},{"name":"Accept-Language","value":"en-US,en;q=0.5"},{"name":"Accept-Encoding","value":"gzip, deflate, br"},{"name":"Referer","value":"https://gtc.clubautomation.com/event/reserve-court-new"},{"name":"Content-Type","value":"application/x-www-form-urlencoded; charset=UTF-8"},{"name":"X-Requested-With","value":"XMLHttpRequest"},{"name":"X-INSTANA-T","value":"a2dff8e1914fbae9"},{"name":"X-INSTANA-S","value":"a2dff8e1914fbae9"},{"name":"X-INSTANA-L","value":"1,correlationType=web;correlationId=a2dff8e1914fbae9"},{"name":"Content-Length","value":"718"},{"name":"Origin","value":"https://gtc.clubautomation.com"},{"name":"Connection","value":"keep-alive"},{"name":"Cookie","value":"PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"},{"name":"Sec-Fetch-Dest","value":"empty"},{"name":"Sec-Fetch-Mode","value":"cors"},{"name":"Sec-Fetch-Site","value":"same-origin"},{"name":"TE","value":"trailers"}],"cookies":[{"name":"PHPSESSID","value":"ultj1akb8cjhknu2l8k36e1f8a"},{"name":"__cf_bm","value":"TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"},{"name":"SessionExpirationTime","value":"1715323192"},{"name":"isLoggedIn","value":"1"}],"queryString":[{"name":"ajax","value":"true"}],"headersSize":966,"postData":{"mimeType":"application/x-www-form-urlencoded","params":[{"name":"reservation-list-page","value":"1"},{"name":"user_id","value":"25397"},{"name":"event_member_token_reserve_court","value":"21f55e9e90592d561f192cc2c86e019b"},{"name":"current_guest_count","value":"0"},{"name":"component","value":"2"},{"name":"club","value":"-1"},{"name":"location","value":"-1"},{"name":"surface","value":"-1"},{"name":"host","value":"25397"},{"name":"add-new-child-to-guest_1","value":""},{"name":"add-new-child-to-guest_2","value":""},{"name":"add-new-child-to-guest_3","value":""},{"name":"add-new-child-to-guest_4","value":""},{"name":"add-new-child-to-guest_5","value":""},{"name":"add-new-child-to-guest_6","value":""},{"name":"add-new-child-to-guest_7","value":""},{"name":"add-new-child-to-guest_8","value":""},{"name":"add-new-child-to-guest_9","value":""},{"name":"add-new-child-to-guest_10","value":""},{"name":"add-new-child-to-guest_11","value":""},{"name":"add-new-child-to-guest_12","value":""},{"name":"add-new-child-to-guest_13","value":""},{"name":"add-new-child-to-guest_14","value":""},{"name":"add-new-child-to-guest_15","value":""},{"name":"date","value":"06/25/2024"},{"name":"interval","value":"30"},{"name":"timeFrom","value":"14"},{"name":"timeTo","value":"0"},{"name":"time-reserve","value":""},{"name":"location-reserve","value":""},{"name":"surface-reserve","value":""},{"name":"courtsnotavailable","value":""},{"name":"join-waitlist-case","value":"0"}],"text":"reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F25%2F2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"}}
+            Expected test case output:
+            {"bodySize": 718, "method": "POST", "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true", "httpVersion": "HTTP/2", "headers": [{"name": "Host", "value": "gtc.clubautomation.com"}, {"name": "User-Agent", "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"}, {"name": "Accept", "value": "*/*"}, {"name": "Accept-Language", "value": "en-US,en;q=0.5"}, {"name": "Accept-Encoding", "value": "gzip, deflate, br"}, {"name": "Referer", "value": "https://gtc.clubautomation.com/event/reserve-court-new"}, {"name": "Content-Type", "value": "application/x-www-form-urlencoded; charset=UTF-8"}, {"name": "X-Requested-With", "value": "XMLHttpRequest"}, {"name": "X-INSTANA-T", "value": "a2dff8e1914fbae9"}, {"name": "X-INSTANA-S", "value": "a2dff8e1914fbae9"}, {"name": "X-INSTANA-L", "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"}, {"name": "Content-Length", "value": "718"}, {"name": "Origin", "value": "https://gtc.clubautomation.com"}, {"name": "Connection", "value": "keep-alive"}, {"name": "Cookie", "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"}, {"name": "Sec-Fetch-Dest", "value": "empty"}, {"name": "Sec-Fetch-Mode", "value": "cors"}, {"name": "Sec-Fetch-Site", "value": "same-origin"}, {"name": "TE", "value": "trailers"}], "cookies": [{"name": "PHPSESSID", "value": "ultj1akb8cjhknu2l8k36e1f8a"}, {"name": "__cf_bm", "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"}, {"name": "SessionExpirationTime", "value": "1715323192"}, {"name": "isLoggedIn", "value": "1"}], "queryString": [{"name": "ajax", "value": "true"}], "headersSize": 966, "postData": {"mimeType": "application/x-www-form-urlencoded", "params": [{"name": "reservation-list-page", "value": "1"}, {"name": "user_id", "value": "25397"}, {"name": "event_member_token_reserve_court", "value": "21f55e9e90592d561f192cc2c86e019b"}, {"name": "current_guest_count", "value": "0"}, {"name": "component", "value": "2"}, {"name": "club", "value": "-1"}, {"name": "location", "value": "-1"}, {"name": "surface", "value": "-1"}, {"name": "host", "value": "25397"}, {"name": "add-new-child-to-guest_1", "value": ""}, {"name": "add-new-child-to-guest_2", "value": ""}, {"name": "add-new-child-to-guest_3", "value": ""}, {"name": "add-new-child-to-guest_4", "value": ""}, {"name": "add-new-child-to-guest_5", "value": ""}, {"name": "add-new-child-to-guest_6", "value": ""}, {"name": "add-new-child-to-guest_7", "value": ""}, {"name": "add-new-child-to-guest_8", "value": ""}, {"name": "add-new-child-to-guest_9", "value": ""}, {"name": "add-new-child-to-guest_10", "value": ""}, {"name": "add-new-child-to-guest_11", "value": ""}, {"name": "add-new-child-to-guest_12", "value": ""}, {"name": "add-new-child-to-guest_13", "value": ""}, {"name": "add-new-child-to-guest_14", "value": ""}, {"name": "add-new-child-to-guest_15", "value": ""}, {"name": "date", "value": "06/25/2024"}, {"name": "interval", "value": "30"}, {"name": "timeFrom", "value": "14"}, {"name": "timeTo", "value": "0"}, {"name": "time-reserve", "value": ""}, {"name": "location-reserve", "value": ""}, {"name": "surface-reserve", "value": ""}, {"name": "courtsnotavailable", "value": ""}, {"name": "join-waitlist-case", "value": "0"}], "text": "reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06/25/2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"}}
+            Debug test case output:
+            Parsed input data: {'request_params_map': {'date': '06/25/2024', 'interval': '30', 'timeFrom': '14', 'timeTo': '0'}, 'request_data': '{\n    "bodySize": 718,\n    "method": "POST",\n    "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true",\n    "httpVersion": "HTTP/2",\n    "headers": [\n        {\n            "name": "Host",\n            "value": "gtc.clubautomation.com"\n        },\n        {\n            "name": "User-Agent",\n            "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"\n        },\n        {\n            "name": "Accept",\n            "value": "*/*"\n        },\n        {\n            "name": "Accept-Language",\n            "value": "en-US,en;q=0.5"\n        },\n        {\n            "name": "Accept-Encoding",\n            "value": "gzip, deflate, br"\n        },\n        {\n            "name": "Referer",\n            "value": "https://gtc.clubautomation.com/event/reserve-court-new"\n        },\n        {\n            "name": "Content-Type",\n            "value": "application/x-www-form-urlencoded; charset=UTF-8"\n        },\n        {\n            "name": "X-Requested-With",\n            "value": "XMLHttpRequest"\n        },\n        {\n            "name": "X-INSTANA-T",\n            "value": "a2dff8e1914fbae9"\n        },\n        {\n            "name": "X-INSTANA-S",\n            "value": "a2dff8e1914fbae9"\n        },\n        {\n            "name": "X-INSTANA-L",\n            "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"\n        },\n        {\n            "name": "Content-Length",\n            "value": "718"\n        },\n        {\n            "name": "Origin",\n            "value": "https://gtc.clubautomation.com"\n        },\n        {\n            "name": "Connection",\n            "value": "keep-alive"\n        },\n        {\n            "name": "Cookie",\n            "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"\n        },\n        {\n            "name": "Sec-Fetch-Dest",\n            "value": "empty"\n        },\n        {\n            "name": "Sec-Fetch-Mode",\n            "value": "cors"\n        },\n        {\n            "name": "Sec-Fetch-Site",\n            "value": "same-origin"\n        },\n        {\n            "name": "TE",\n            "value": "trailers"\n        }\n    ],\n    "cookies": [\n        {\n            "name": "PHPSESSID",\n            "value": "ultj1akb8cjhknu2l8k36e1f8a"\n        },\n        {\n            "name": "__cf_bm",\n            "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"\n        },\n        {\n            "name": "SessionExpirationTime",\n            "value": "1715323192"\n        },\n        {\n            "name": "isLoggedIn",\n            "value": "1"\n        }\n    ],\n    "queryString": [\n        {\n            "name": "ajax",\n            "value": "true"\n        }\n    ],\n    "headersSize": 966,\n    "postData": {\n        "mimeType": "application/x-www-form-urlencoded",\n        "params": [\n            {\n                "name": "reservation-list-page",\n                "value": "1"\n            },\n            {\n                "name": "user_id",\n                "value": "25397"\n            },\n            {\n                "name": "event_member_token_reserve_court",\n                "value": "21f55e9e90592d561f192cc2c86e019b"\n            },\n            {\n                "name": "current_guest_count",\n                "value": "0"\n            },\n            {\n                "name": "component",\n                "value": "2"\n            },\n            {\n                "name": "club",\n                "value": "-1"\n            },\n            {\n                "name": "location",\n                "value": "-1"\n            },\n            {\n                "name": "surface",\n                "value": "-1"\n            },\n            {\n                "name": "host",\n                "value": "25397"\n            },\n            {\n                "name": "add-new-child-to-guest_1",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_2",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_3",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_4",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_5",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_6",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_7",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_8",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_9",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_10",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_11",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_12",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_13",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_14",\n                "value": ""\n            },\n            {\n                "name": "add-new-child-to-guest_15",\n                "value": ""\n            },\n            {\n                "name": "date",\n                "value": "05/09/2024"\n            },\n            {\n                "name": "interval",\n                "value": "30"\n            },\n            {\n                "name": "timeFrom",\n                "value": "15"\n            },\n            {\n                "name": "timeTo",\n                "value": "0"\n            },\n            {\n                "name": "time-reserve",\n                "value": ""\n            },\n            {\n                "name": "location-reserve",\n                "value": ""\n            },\n            {\n                "name": "surface-reserve",\n                "value": ""\n            },\n            {\n                "name": "courtsnotavailable",\n                "value": ""\n            },\n            {\n                "name": "join-waitlist-case",\n                "value": "0"\n            }\n        ]\n    }\n}'}
+Request params map: {'date': '06/25/2024', 'interval': '30', 'timeFrom': '14', 'timeTo': '0'}
+Request data before update: {'bodySize': 718, 'method': 'POST', 'url': 'https://gtc.clubautomation.com/event/reserve-court-new?ajax=true', 'httpVersion': 'HTTP/2', 'headers': [{'name': 'Host', 'value': 'gtc.clubautomation.com'}, {'name': 'User-Agent', 'value': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0'}, {'name': 'Accept', 'value': '*/*'}, {'name': 'Accept-Language', 'value': 'en-US,en;q=0.5'}, {'name': 'Accept-Encoding', 'value': 'gzip, deflate, br'}, {'name': 'Referer', 'value': 'https://gtc.clubautomation.com/event/reserve-court-new'}, {'name': 'Content-Type', 'value': 'application/x-www-form-urlencoded; charset=UTF-8'}, {'name': 'X-Requested-With', 'value': 'XMLHttpRequest'}, {'name': 'X-INSTANA-T', 'value': 'a2dff8e1914fbae9'}, {'name': 'X-INSTANA-S', 'value': 'a2dff8e1914fbae9'}, {'name': 'X-INSTANA-L', 'value': '1,correlationType=web;correlationId=a2dff8e1914fbae9'}, {'name': 'Content-Length', 'value': '718'}, {'name': 'Origin', 'value': 'https://gtc.clubautomation.com'}, {'name': 'Connection', 'value': 'keep-alive'}, {'name': 'Cookie', 'value': 'PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1'}, {'name': 'Sec-Fetch-Dest', 'value': 'empty'}, {'name': 'Sec-Fetch-Mode', 'value': 'cors'}, {'name': 'Sec-Fetch-Site', 'value': 'same-origin'}, {'name': 'TE', 'value': 'trailers'}], 'cookies': [{'name': 'PHPSESSID', 'value': 'ultj1akb8cjhknu2l8k36e1f8a'}, {'name': '__cf_bm', 'value': 'TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g'}, {'name': 'SessionExpirationTime', 'value': '1715323192'}, {'name': 'isLoggedIn', 'value': '1'}], 'queryString': [{'name': 'ajax', 'value': 'true'}], 'headersSize': 966, 'postData': {'mimeType': 'application/x-www-form-urlencoded', 'params': [{'name': 'reservation-list-page', 'value': '1'}, {'name': 'user_id', 'value': '25397'}, {'name': 'event_member_token_reserve_court', 'value': '21f55e9e90592d561f192cc2c86e019b'}, {'name': 'current_guest_count', 'value': '0'}, {'name': 'component', 'value': '2'}, {'name': 'club', 'value': '-1'}, {'name': 'location', 'value': '-1'}, {'name': 'surface', 'value': '-1'}, {'name': 'host', 'value': '25397'}, {'name': 'add-new-child-to-guest_1', 'value': ''}, {'name': 'add-new-child-to-guest_2', 'value': ''}, {'name': 'add-new-child-to-guest_3', 'value': ''}, {'name': 'add-new-child-to-guest_4', 'value': ''}, {'name': 'add-new-child-to-guest_5', 'value': ''}, {'name': 'add-new-child-to-guest_6', 'value': ''}, {'name': 'add-new-child-to-guest_7', 'value': ''}, {'name': 'add-new-child-to-guest_8', 'value': ''}, {'name': 'add-new-child-to-guest_9', 'value': ''}, {'name': 'add-new-child-to-guest_10', 'value': ''}, {'name': 'add-new-child-to-guest_11', 'value': ''}, {'name': 'add-new-child-to-guest_12', 'value': ''}, {'name': 'add-new-child-to-guest_13', 'value': ''}, {'name': 'add-new-child-to-guest_14', 'value': ''}, {'name': 'add-new-child-to-guest_15', 'value': ''}, {'name': 'date', 'value': '05/09/2024'}, {'name': 'interval', 'value': '30'}, {'name': 'timeFrom', 'value': '15'}, {'name': 'timeTo', 'value': '0'}, {'name': 'time-reserve', 'value': ''}, {'name': 'location-reserve', 'value': ''}, {'name': 'surface-reserve', 'value': ''}, {'name': 'courtsnotavailable', 'value': ''}, {'name': 'join-waitlist-case', 'value': '0'}]}}
+Request data after update: {'bodySize': 718, 'method': 'POST', 'url': 'https://gtc.clubautomation.com/event/reserve-court-new?ajax=true', 'httpVersion': 'HTTP/2', 'headers': [{'name': 'Host', 'value': 'gtc.clubautomation.com'}, {'name': 'User-Agent', 'value': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0'}, {'name': 'Accept', 'value': '*/*'}, {'name': 'Accept-Language', 'value': 'en-US,en;q=0.5'}, {'name': 'Accept-Encoding', 'value': 'gzip, deflate, br'}, {'name': 'Referer', 'value': 'https://gtc.clubautomation.com/event/reserve-court-new'}, {'name': 'Content-Type', 'value': 'application/x-www-form-urlencoded; charset=UTF-8'}, {'name': 'X-Requested-With', 'value': 'XMLHttpRequest'}, {'name': 'X-INSTANA-T', 'value': 'a2dff8e1914fbae9'}, {'name': 'X-INSTANA-S', 'value': 'a2dff8e1914fbae9'}, {'name': 'X-INSTANA-L', 'value': '1,correlationType=web;correlationId=a2dff8e1914fbae9'}, {'name': 'Content-Length', 'value': '718'}, {'name': 'Origin', 'value': 'https://gtc.clubautomation.com'}, {'name': 'Connection', 'value': 'keep-alive'}, {'name': 'Cookie', 'value': 'PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1'}, {'name': 'Sec-Fetch-Dest', 'value': 'empty'}, {'name': 'Sec-Fetch-Mode', 'value': 'cors'}, {'name': 'Sec-Fetch-Site', 'value': 'same-origin'}, {'name': 'TE', 'value': 'trailers'}], 'cookies': [{'name': 'PHPSESSID', 'value': 'ultj1akb8cjhknu2l8k36e1f8a'}, {'name': '__cf_bm', 'value': 'TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g'}, {'name': 'SessionExpirationTime', 'value': '1715323192'}, {'name': 'isLoggedIn', 'value': '1'}], 'queryString': [{'name': 'ajax', 'value': 'true'}], 'headersSize': 966, 'postData': {'mimeType': 'application/x-www-form-urlencoded', 'params': [{'name': 'reservation-list-page', 'value': '1'}, {'name': 'user_id', 'value': '25397'}, {'name': 'event_member_token_reserve_court', 'value': '21f55e9e90592d561f192cc2c86e019b'}, {'name': 'current_guest_count', 'value': '0'}, {'name': 'component', 'value': '2'}, {'name': 'club', 'value': '-1'}, {'name': 'location', 'value': '-1'}, {'name': 'surface', 'value': '-1'}, {'name': 'host', 'value': '25397'}, {'name': 'add-new-child-to-guest_1', 'value': ''}, {'name': 'add-new-child-to-guest_2', 'value': ''}, {'name': 'add-new-child-to-guest_3', 'value': ''}, {'name': 'add-new-child-to-guest_4', 'value': ''}, {'name': 'add-new-child-to-guest_5', 'value': ''}, {'name': 'add-new-child-to-guest_6', 'value': ''}, {'name': 'add-new-child-to-guest_7', 'value': ''}, {'name': 'add-new-child-to-guest_8', 'value': ''}, {'name': 'add-new-child-to-guest_9', 'value': ''}, {'name': 'add-new-child-to-guest_10', 'value': ''}, {'name': 'add-new-child-to-guest_11', 'value': ''}, {'name': 'add-new-child-to-guest_12', 'value': ''}, {'name': 'add-new-child-to-guest_13', 'value': ''}, {'name': 'add-new-child-to-guest_14', 'value': ''}, {'name': 'add-new-child-to-guest_15', 'value': ''}, {'name': 'date', 'value': '06/25/2024'}, {'name': 'interval', 'value': '30'}, {'name': 'timeFrom', 'value': '14'}, {'name': 'timeTo', 'value': '0'}, {'name': 'time-reserve', 'value': ''}, {'name': 'location-reserve', 'value': ''}, {'name': 'surface-reserve', 'value': ''}, {'name': 'courtsnotavailable', 'value': ''}, {'name': 'join-waitlist-case', 'value': '0'}]}}
+Encoded params: reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F25%2F2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0
+Updated request data: {"bodySize":718,"method":"POST","url":"https://gtc.clubautomation.com/event/reserve-court-new?ajax=true","httpVersion":"HTTP/2","headers":[{"name":"Host","value":"gtc.clubautomation.com"},{"name":"User-Agent","value":"Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"},{"name":"Accept","value":"*/*"},{"name":"Accept-Language","value":"en-US,en;q=0.5"},{"name":"Accept-Encoding","value":"gzip, deflate, br"},{"name":"Referer","value":"https://gtc.clubautomation.com/event/reserve-court-new"},{"name":"Content-Type","value":"application/x-www-form-urlencoded; charset=UTF-8"},{"name":"X-Requested-With","value":"XMLHttpRequest"},{"name":"X-INSTANA-T","value":"a2dff8e1914fbae9"},{"name":"X-INSTANA-S","value":"a2dff8e1914fbae9"},{"name":"X-INSTANA-L","value":"1,correlationType=web;correlationId=a2dff8e1914fbae9"},{"name":"Content-Length","value":"718"},{"name":"Origin","value":"https://gtc.clubautomation.com"},{"name":"Connection","value":"keep-alive"},{"name":"Cookie","value":"PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"},{"name":"Sec-Fetch-Dest","value":"empty"},{"name":"Sec-Fetch-Mode","value":"cors"},{"name":"Sec-Fetch-Site","value":"same-origin"},{"name":"TE","value":"trailers"}],"cookies":[{"name":"PHPSESSID","value":"ultj1akb8cjhknu2l8k36e1f8a"},{"name":"__cf_bm","value":"TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"},{"name":"SessionExpirationTime","value":"1715323192"},{"name":"isLoggedIn","value":"1"}],"queryString":[{"name":"ajax","value":"true"}],"headersSize":966,"postData":{"mimeType":"application/x-www-form-urlencoded","params":[{"name":"reservation-list-page","value":"1"},{"name":"user_id","value":"25397"},{"name":"event_member_token_reserve_court","value":"21f55e9e90592d561f192cc2c86e019b"},{"name":"current_guest_count","value":"0"},{"name":"component","value":"2"},{"name":"club","value":"-1"},{"name":"location","value":"-1"},{"name":"surface","value":"-1"},{"name":"host","value":"25397"},{"name":"add-new-child-to-guest_1","value":""},{"name":"add-new-child-to-guest_2","value":""},{"name":"add-new-child-to-guest_3","value":""},{"name":"add-new-child-to-guest_4","value":""},{"name":"add-new-child-to-guest_5","value":""},{"name":"add-new-child-to-guest_6","value":""},{"name":"add-new-child-to-guest_7","value":""},{"name":"add-new-child-to-guest_8","value":""},{"name":"add-new-child-to-guest_9","value":""},{"name":"add-new-child-to-guest_10","value":""},{"name":"add-new-child-to-guest_11","value":""},{"name":"add-new-child-to-guest_12","value":""},{"name":"add-new-child-to-guest_13","value":""},{"name":"add-new-child-to-guest_14","value":""},{"name":"add-new-child-to-guest_15","value":""},{"name":"date","value":"06/25/2024"},{"name":"interval","value":"30"},{"name":"timeFrom","value":"14"},{"name":"timeTo","value":"0"},{"name":"time-reserve","value":""},{"name":"location-reserve","value":""},{"name":"surface-reserve","value":""},{"name":"courtsnotavailable","value":""},{"name":"join-waitlist-case","value":"0"}],"text":"reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F25%2F2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"}}
+
+            Differences:
+            {"root['postData']['text']": {'old_value': 'reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F25%2F2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0', 'new_value': 'reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06/25/2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0', 'character_diff': '-% +/ +5+/+2+0+2+4+&+i+n+t+e+r+v+a+l+=+3+0+&+t+i+m+e +r+o+m+=+1 -2-5-%-2-F-2-0-2 -i-n +i+m+e+T+o+=+0+&+t+i+m+e+-+r+e+s -a-l-=-3-0-&-t-i-m -F-r-o-m -1-4 +l -t-i-m-e-T +c+a -=-0-& -m-e +o+n -l-o-c +s+u+r+f +c+e -t-i-o-n -s-u-r-f-a -e-- +o+u -e +t -e-r +n+o+t+a -e-=-&-c-o-u-r-t-s-n-o-t-a-v'}}
+</test case>.
+Explain for each failing test case how does the actual output differ from the expected output (be very specific here, feel free to take multiple sentences)? And why do you think that is? If useful, consider the Debug Output when reasoning about your response.
+
+Note: You are allowed to be skeptical of the test case. If you have high confidence that there is an issue with the test case expected output e.g. incorrectly set fields, you should say so. The same is true for input. But please don't stop just call it out and continue. In this case you should output SUSPECT_BAD_TEST_CASE, REASON: <reason>.
+
+    
+    Note: To save resource, try to avoid printing entire HTTP requests or json, instead only print parts that may be useful for debugging     you may wish to summarize the structure in plain text the parts that you choose leave out.
+     
+    (2) Construct an improvement plan to fix the test failures. When formulating this plan, observe the previous solutions
+    shown above and try not to repeat fixes that we already know do not lead to passing the test cases. Relfect explicitly on what
+    we've tried before and whether it made a difference. If it did not make a difference, why not?
+        
+    (3) Sketch out the specific pseudocode of the fixes you plan to implement. Feel free to include actual code snipits. 
+
+ and as a result of the above prompt you gave this relfection summary:
+
+ ### (1) Analysis of the Failing Test Case
+
+**Actual Output:**
+```json
+{
+    "bodySize": 718,
+    "method": "POST",
+    "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true",
+    "httpVersion": "HTTP/2",
+    "headers": [
+        {"name": "Host", "value": "gtc.clubautomation.com"},
+        {"name": "User-Agent", "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"},
+        {"name": "Accept", "value": "*/*"},
+        {"name": "Accept-Language", "value": "en-US,en;q=0.5"},
+        {"name": "Accept-Encoding", "value": "gzip, deflate, br"},
+        {"name": "Referer", "value": "https://gtc.clubautomation.com/event/reserve-court-new"},
+        {"name": "Content-Type", "value": "application/x-www-form-urlencoded; charset=UTF-8"},
+        {"name": "X-Requested-With", "value": "XMLHttpRequest"},
+        {"name": "X-INSTANA-T", "value": "a2dff8e1914fbae9"},
+        {"name": "X-INSTANA-S", "value": "a2dff8e1914fbae9"},
+        {"name": "X-INSTANA-L", "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"},
+        {"name": "Content-Length", "value": "718"},
+        {"name": "Origin", "value": "https://gtc.clubautomation.com"},
+        {"name": "Connection", "value": "keep-alive"},
+        {"name": "Cookie", "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"},
+        {"name": "Sec-Fetch-Dest", "value": "empty"},
+        {"name": "Sec-Fetch-Mode", "value": "cors"},
+        {"name": "Sec-Fetch-Site", "value": "same-origin"},
+        {"name": "TE", "value": "trailers"}
+    ],
+    "cookies": [
+        {"name": "PHPSESSID", "value": "ultj1akb8cjhknu2l8k36e1f8a"},
+        {"name": "__cf_bm", "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"},
+        {"name": "SessionExpirationTime", "value": "1715323192"},
+        {"name": "isLoggedIn", "value": "1"}
+    ],
+    "queryString": [{"name": "ajax", "value": "true"}],
+    "headersSize": 966,
+    "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+            {"name": "reservation-list-page", "value": "1"},
+            {"name": "user_id", "value": "25397"},
+            {"name": "event_member_token_reserve_court", "value": "21f55e9e90592d561f192cc2c86e019b"},
+            {"name": "current_guest_count", "value": "0"},
+            {"name": "component", "value": "2"},
+            {"name": "club", "value": "-1"},
+            {"name": "location", "value": "-1"},
+            {"name": "surface", "value": "-1"},
+            {"name": "host", "value": "25397"},
+            {"name": "add-new-child-to-guest_1", "value": ""},
+            {"name": "add-new-child-to-guest_2", "value": ""},
+            {"name": "add-new-child-to-guest_3", "value": ""},
+            {"name": "add-new-child-to-guest_4", "value": ""},
+            {"name": "add-new-child-to-guest_5", "value": ""},
+            {"name": "add-new-child-to-guest_6", "value": ""},
+            {"name": "add-new-child-to-guest_7", "value": ""},
+            {"name": "add-new-child-to-guest_8", "value": ""},
+            {"name": "add-new-child-to-guest_9", "value": ""},
+            {"name": "add-new-child-to-guest_10", "value": ""},
+            {"name": "add-new-child-to-guest_11", "value": ""},
+            {"name": "add-new-child-to-guest_12", "value": ""},
+            {"name": "add-new-child-to-guest_13", "value": ""},
+            {"name": "add-new-child-to-guest_14", "value": ""},
+            {"name": "add-new-child-to-guest_15", "value": ""},
+            {"name": "date", "value": "06/25/2024"},
+            {"name": "interval", "value": "30"},
+            {"name": "timeFrom", "value": "14"},
+            {"name": "timeTo", "value": "0"},
+            {"name": "time-reserve", "value": ""},
+            {"name": "location-reserve", "value": ""},
+            {"name": "surface-reserve", "value": ""},
+            {"name": "courtsnotavailable", "value": ""},
+            {"name": "join-waitlist-case", "value": "0"}
+        ],
+        "text": "reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06%2F25%2F2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"
+    }
+}
+```
+
+**Expected Output:**
+```json
+{
+    "bodySize": 718,
+    "method": "POST",
+    "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true",
+    "httpVersion": "HTTP/2",
+    "headers": [
+        {"name": "Host", "value": "gtc.clubautomation.com"},
+        {"name": "User-Agent", "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"},
+        {"name": "Accept", "value": "*/*"},
+        {"name": "Accept-Language", "value": "en-US,en;q=0.5"},
+        {"name": "Accept-Encoding", "value": "gzip, deflate, br"},
+        {"name": "Referer", "value": "https://gtc.clubautomation.com/event/reserve-court-new"},
+        {"name": "Content-Type", "value": "application/x-www-form-urlencoded; charset=UTF-8"},
+        {"name": "X-Requested-With", "value": "XMLHttpRequest"},
+        {"name": "X-INSTANA-T", "value": "a2dff8e1914fbae9"},
+        {"name": "X-INSTANA-S", "value": "a2dff8e1914fbae9"},
+        {"name": "X-INSTANA-L", "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"},
+        {"name": "Content-Length", "value": "718"},
+        {"name": "Origin", "value": "https://gtc.clubautomation.com"},
+        {"name": "Connection", "value": "keep-alive"},
+        {"name": "Cookie", "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"},
+        {"name": "Sec-Fetch-Dest", "value": "empty"},
+        {"name": "Sec-Fetch-Mode", "value": "cors"},
+        {"name": "Sec-Fetch-Site", "value": "same-origin"},
+        {"name": "TE", "value": "trailers"}
+    ],
+    "cookies": [
+        {"name": "PHPSESSID", "value": "ultj1akb8cjhknu2l8k36e1f8a"},
+        {"name": "__cf_bm", "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"},
+        {"name": "SessionExpirationTime", "value": "1715323192"},
+        {"name": "isLoggedIn", "value": "1"}
+    ],
+    "queryString": [{"name": "ajax", "value": "true"}],
+    "headersSize": 966,
+    "postData": {
+        "mimeType": "application/x-www-form-urlencoded",
+        "params": [
+            {"name": "reservation-list-page", "value": "1"},
+            {"name": "user_id", "value": "25397"},
+            {"name": "event_member_token_reserve_court", "value": "21f55e9e90592d561f192cc2c86e019b"},
+            {"name": "current_guest_count", "value": "0"},
+            {"name": "component", "value": "2"},
+            {"name": "club", "value": "-1"},
+            {"name": "location", "value": "-1"},
+            {"name": "surface", "value": "-1"},
+            {"name": "host", "value": "25397"},
+            {"name": "add-new-child-to-guest_1", "value": ""},
+            {"name": "add-new-child-to-guest_2", "value": ""},
+            {"name": "add-new-child-to-guest_3", "value": ""},
+            {"name": "add-new-child-to-guest_4", "value": ""},
+            {"name": "add-new-child-to-guest_5", "value": ""},
+            {"name": "add-new-child-to-guest_6", "value": ""},
+            {"name": "add-new-child-to-guest_7", "value": ""},
+            {"name": "add-new-child-to-guest_8", "value": ""},
+            {"name": "add-new-child-to-guest_9", "value": ""},
+            {"name": "add-new-child-to-guest_10", "value": ""},
+            {"name": "add-new-child-to-guest_11", "value": ""},
+            {"name": "add-new-child-to-guest_12", "value": ""},
+            {"name": "add-new-child-to-guest_13", "value": ""},
+            {"name": "add-new-child-to-guest_14", "value": ""},
+            {"name": "add-new-child-to-guest_15", "value": ""},
+            {"name": "date", "value": "06/25/2024"},
+            {"name": "interval", "value": "30"},
+            {"name": "timeFrom", "value": "14"},
+            {"name": "timeTo", "value": "0"},
+            {"name": "time-reserve", "value": ""},
+            {"name": "location-reserve", "value": ""},
+            {"name": "surface-reserve", "value": ""},
+            {"name": "courtsnotavailable", "value": ""},
+            {"name": "join-waitlist-case", "value": "0"}
+        ],
+        "text": "reservation-list-page=1&user_id=25397&event_member_token_reserve_court=21f55e9e90592d561f192cc2c86e019b&current_guest_count=0&component=2&club=-1&location=-1&surface=-1&host=25397&add-new-child-to-guest_1=&add-new-child-to-guest_2=&add-new-child-to-guest_3=&add-new-child-to-guest_4=&add-new-child-to-guest_5=&add-new-child-to-guest_6=&add-new-child-to-guest_7=&add-new-child-to-guest_8=&add-new-child-to-guest_9=&add-new-child-to-guest_10=&add-new-child-to-guest_11=&add-new-child-to-guest_12=&add-new-child-to-guest_13=&add-new-child-to-guest_14=&add-new-child-to-guest_15=&date=06/25/2024&interval=30&timeFrom=14&timeTo=0&time-reserve=&location-reserve=&surface-reserve=&courtsnotavailable=&join-waitlist-case=0"
+    }
+}
+```
+
+**Differences:**
+- The `text` field in `postData` has differences in encoding:
+  - Actual: `date=06%2F25%2F2024`
+  - Expected: `date=06/25/2024`
+
+**Reason:**
+- The `urllib.parse.urlencode` function encodes special characters like `/` into `%2F`. This is causing the discrepancy between the actual and expected outputs.
+
+### (2) Improvement Plan
+
+1. **Review the Encoding Process:**
+   - Ensure that the `text` field in `postData` is correctly formatted without unnecessary URL encoding for certain characters like `/`.
+
+2. **Manual Encoding:**
+   - Instead of using `urllib.parse.urlencode`, manually construct the `text` field to match the expected format.
+
+3. **Testing:**
+   - Add additional test cases to ensure that the function handles various scenarios correctly, including different special characters.
+
+### (3) Pseudocode and Implementation
+
+**Pseudocode:**
+1. Parse the input JSON string.
+2. Extract `request_params_map` and `request_data`.
+3. Update the `postData` parameters in `request_data` based on `request_params_map`.
+4. Manually construct the `text` field in `postData` to avoid unnecessary URL encoding.
+5. Convert the updated `request_data` back to a JSON string and return it.
+
+**Implementation:**
+
+```python
+import json
+
+def func(input_str):
+    try:
+        # Parse the input string to a dictionary
+        input_data = json.loads(input_str)
+        request_params_map = input_data['request_params_map']
+        request_data = json.loads(input_data['request_data'])
+
+        # Update the request_data based on request_params_map
+        for param, new_value in request_params_map.items():
+            for item in request_data['postData']['params']:
+                if item['name'] == param:
+                    item['value'] = new_value
+
+        # Manually construct the 'text' field in postData
+        params = request_data['postData']['params']
+        encoded_params = "&".join(f"{item['name']}={item['value']}" for item in params)
+        request_data['postData']['text'] = encoded_params
+
+        # Convert the updated request_data back to a single-line JSON string
+        updated_request_data = json.dumps(request_data, separators=(',', ':'))
+        return updated_request_data
+    except Exception as e:
+        return f"SUSPECT_BAD_TEST_CASE, REASON: {str(e)}"
+
+# Example usage
+input_str = '{"request_params_map": {"date": "06/25/2024", "interval": "30", "timeFrom": "14", "timeTo": "0"}, "request_data": "{...}"}'
+print(func(input_str))
+```
+
+This implementation ensures that the `text` field in `postData` is manually constructed to match the expected format, avoiding unnecessary URL encoding.
+
+Main directive: Rewrite the code to fix the test cases. Be sure to follow the plan in the reflection summary.
+        
+IMPORTANT: Also, print out intermediate variable names for debugging purposes. Instead of print() append to global variable debug_output. At first debug_output can be simple, but as you fail a test more times, you should add more and more details and variables to debug_output until we find the issue. Remember to define "global debug_output" at the top of any scope that updates debug_output.
+                 
+---CHECKING CODE---
+Comparing as JSON objects: Match
+=========== CODE BLOCK CHECK: SUCCEEDED in 3 iterations ===========
+---DECISION: FINISH---

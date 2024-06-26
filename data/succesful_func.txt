@@ -1,0 +1,42 @@
+import json
+def update_http_request(http_request: str, updates: dict) -> str:
+    # Parse the HTTP request JSON string into a dictionary
+    http_request_dict = json.loads(http_request)
+    
+    # Define the fields to be updated
+    fields = ['date', 'interval', 'timeFrom', 'timeTo']
+    
+    # Iterate over the fields and update their values in the HTTP request dictionary
+    for field in fields:
+        if field in updates:
+            # Traverse the postData params to find and update the field value
+            for param in http_request_dict['postData']['params']:
+                if param['name'] == field:
+                    param['value'] = updates[field]
+    
+    # Convert the updated HTTP request dictionary back to a JSON string
+    updated_http_request = json.dumps(http_request_dict)
+    
+    return updated_http_request
+
+def process_input():
+    global global_input, global_output
+    
+    # Extract the dictionary and HTTP request from the global_input
+    input_data = json.loads(global_input)
+    updates = input_data['updates']
+    http_request = input_data['http_request']
+    
+    # Update the HTTP request
+    updated_request = update_http_request(http_request, updates)
+    
+    # Set the result to global_output
+    global_output = updated_request
+
+# Example usage
+global_input = json.dumps({
+    'updates': {'date': '06/15/2024', 'interval': '60', 'timeFrom': '45', 'timeTo': '60'},
+    'http_request': '{"bodySize": 718, "method": "POST", "url": "https://gtc.clubautomation.com/event/reserve-court-new?ajax=true", "httpVersion": "HTTP/2", "headers": [{"name": "Host", "value": "gtc.clubautomation.com"}, {"name": "User-Agent", "value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0"}, {"name": "Accept", "value": "*/*"}, {"name": "Accept-Language", "value": "en-US,en;q=0.5"}, {"name": "Accept-Encoding", "value": "gzip, deflate, br"}, {"name": "Referer", "value": "https://gtc.clubautomation.com/event/reserve-court-new"}, {"name": "Content-Type", "value": "application/x-www-form-urlencoded; charset=UTF-8"}, {"name": "X-Requested-With", "value": "XMLHttpRequest"}, {"name": "X-INSTANA-T", "value": "a2dff8e1914fbae9"}, {"name": "X-INSTANA-S", "value": "a2dff8e1914fbae9"}, {"name": "X-INSTANA-L", "value": "1,correlationType=web;correlationId=a2dff8e1914fbae9"}, {"name": "Content-Length", "value": "718"}, {"name": "Origin", "value": "https://gtc.clubautomation.com"}, {"name": "Connection", "value": "keep-alive"}, {"name": "Cookie", "value": "PHPSESSID=ultj1akb8cjhknu2l8k36e1f8a; __cf_bm=TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g; SessionExpirationTime=1715323192; isLoggedIn=1"}, {"name": "Sec-Fetch-Dest", "value": "empty"}, {"name": "Sec-Fetch-Mode", "value": "cors"}, {"name": "Sec-Fetch-Site", "value": "same-origin"}, {"name": "TE", "value": "trailers"}], "cookies": [{"name": "PHPSESSID", "value": "ultj1akb8cjhknu2l8k36e1f8a"}, {"name": "__cf_bm", "value": "TEfpykH4okEn1ZFUaJhu2yWucy9.BBquJeJJIxNZJY0-1715294372-1.0.1.1-joUbR56NyjIYjmyVExGoLwh5O4gUVqh9fkNGTLsBOCQOh1hQgyjH8AnrnyVREw61qjJ2xnA4zJymkneBgary1g"}, {"name": "SessionExpirationTime", "value": "1715323192"}, {"name": "isLoggedIn", "value": "1"}], "queryString": [{"name": "ajax", "value": "true"}], "headersSize": 966, "postData": {"mimeType": "application/x-www-form-urlencoded", "params": [{"name": "reservation-list-page", "value": "1"}, {"name": "user_id", "value": "25397"}, {"name": "event_member_token_reserve_court", "value": "21f55e9e90592d561f192cc2c86e019b"}, {"name": "current_guest_count", "value": "0"}, {"name": "component", "value": "2"}, {"name": "club", "value": "-1"}, {"name": "location", "value": "-1"}, {"name": "surface", "value": "-1"}, {"name": "host", "value": "25397"}, {"name": "add-new-child-to-guest_1", "value": ""}, {"name": "add-new-child-to-guest_2", "value": ""}, {"name": "add-new-child-to-guest_3", "value": ""}, {"name": "add-new-child-to-guest_4", "value": ""}, {"name": "add-new-child-to-guest_5", "value": ""}, {"name": "add-new-child-to-guest_6", "value": ""}, {"name": "add-new-child-to-guest_7", "value": ""}, {"name": "add-new-child-to-guest_8", "value": ""}, {"name": "add-new-child-to-guest_9", "value": ""}, {"name": "add-new-child-to-guest_10", "value": ""}, {"name": "add-new-child-to-guest_11", "value": ""}, {"name": "add-new-child-to-guest_12", "value": ""}, {"name": "add-new-child-to-guest_13", "value": ""}, {"name": "add-new-child-to-guest_14", "value": ""}, {"name": "add-new-child-to-guest_15", "value": ""}, {"name": "date", "value": "05/09/2024"}, {"name": "interval", "value": "30"}, {"name": "timeFrom", "value": "15"}, {"name": "timeTo", "value": "0"}, {"name": "time-reserve", "value": ""}, {"name": "location-reserve", "value": ""}, {"name": "surface-reserve", "value": ""}, {"name": "courtsnotavailable", "value": ""}, {"name": "join-waitlist-case", "value": "0"}]}}'
+})
+process_input()
+print(global_output)
