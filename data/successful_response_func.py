@@ -1,38 +1,37 @@
 from bs4 import BeautifulSoup
-debug_output = ""
-
-def func(input_str):
+def func(html_content):
     global debug_output
+    debug_output = ""
     
-    # Parse the input HTML content
-    soup = BeautifulSoup(input_str, 'html.parser')
+    # Parse the HTML content
+    soup = BeautifulSoup(html_content, 'html.parser')
+    debug_output += "Parsed HTML content.\n"
     
     # Initialize the result dictionary
     result = {}
     
     # Find all the time slots
-    time_slots = soup.select('table#times-to-reserve a')
+    time_slots = soup.select('#times-to-reserve a')
+    debug_output += f"Found {len(time_slots)} time slots.\n"
     
     for slot in time_slots:
-        activity_info = slot.find_previous('b').text.strip()
+        # Find the corresponding activity
+        activity = slot.find_previous('b').text.strip().replace(' -', '')
         time = slot.text.strip()
         
-        # Extract the activity name and correctly strip the ' - '
-        if activity_info.endswith(' -'):
-            activity_name = activity_info[:-2].strip()
+        debug_output += f"Activity: {activity}, Time: {time}\n"
+        
+        # Initialize the activity list if not already present
+        if activity not in result:
+            result[activity] = []
+        
+        # Append the time if it is not already in the list
+        if time not in result[activity]:
+            result[activity].append(time)
         else:
-            activity_name = activity_info.strip()
-        
-        # Debugging statement
-        debug_output += f"Activity Info: {activity_info}, Activity Name: {activity_name}, Time: {time}\n"
-        
-        if activity_name not in result:
-            result[activity_name] = []
-        
-        # Add the time to the list if it's not already present
-        if time not in result[activity_name]:
-            result[activity_name].append(time)
+            debug_output += f"Duplicate time found for {activity} at {time}.\n"
     
+    debug_output += f"Final result: {result}\n"
     return result
 
 def get_input():
@@ -43,7 +42,7 @@ def set_output(output):
     global global_output
     global_output = output
 
-# Main execution
-input = get_input()
-result = func(input)
-set_output(str(result))
+if __name__ == "__main__":
+    input = get_input()
+    result = func(input)
+    set_output(str(result))

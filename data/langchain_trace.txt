@@ -1,1 +1,3747 @@
 Graph saved as 'data/graph.png'.
+---GENERATING CODE SOLUTION---
+---CHECKING CODE---
+Comparing as strings: Match
+Comparing as strings: No Match. Exception: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)
+---CODE BLOCK CHECK: FAILED---
+Code:
+from bs4 import BeautifulSoup
+def func(input_str):
+    global debug_output
+    debug_output = input_str
+    
+    # Parse the HTML content
+    soup = BeautifulSoup(input_str, 'html.parser')
+    
+    # Initialize the result dictionary
+    result = {}
+    
+    # Find all the time slots
+    time_slots = soup.select('#times-to-reserve a')
+    
+    for slot in time_slots:
+        activity = slot.find_previous('b').text.strip().replace(' -', '')
+        time = slot.text.strip()
+        
+        if activity not in result:
+            result[activity] = []
+        result[activity].append(time)
+    
+    return result
+
+def get_input():
+    global global_input
+    return global_input
+
+def set_output(output):
+    global global_output
+    global_output = output
+
+if __name__ == "__main__":
+    input = get_input()
+    result = func(input)
+    set_output(str(result))
+
+Test results:
+Incorrect submission.
+Pass rate: 0.5
+Results:
+<test case 0 begin >
+Correct test case! Your output matched the expected output: {'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}. Successful debug output in case it's useful: <div id="reserve-court-new">
+<form method="post" id="reserve-court-filter">
+    <div id="view-reservation-list">
+    <table class="reservation-list-new" id="table-reservation-list">
+        <tr>
+            <th colspan="2">Your Reservations</th>
+            <th>Host</th>
+            <th>Activity</th>
+            <th>Players</th>
+            <th></th>
+        </tr>
+        
+<script type="text/javascript">
+    (function ($) {
+        $(document).ready(function () {
+            var isLastPage = '1';
+            if (isLastPage) {
+                $('.reservation-list-show-more').addClass('hidden');
+            } else {
+                $('.reservation-list-show-more').removeClass('hidden');
+            }
+
+            $('.court-time-cancel').unbind('click').bind('click', function() {
+                var cid = $(this).attr('cid');
+
+                $.caPost(
+                    '/event/cancel-court-time?ajax=true',
+                    {id: cid},
+                    function(response) {
+                        var popup = $('<div></div>').append(response);
+                        $('#reserve-court-new').append(popup);
+
+                        newMemberReg.popup = popup.caDialog({
+                            title: 'Cancel Reservation',
+                            resizable: false,
+                            width: 400,
+                            showCloseButton: true,
+                            modal: true,
+                            beforeClose: function () {
+                                $(this).remove();
+                            }
+                        });
+                    }
+                );
+            });
+        });
+    })(jQuery);
+</script>
+    </table>
+    <div class="reservation-list-show-more hidden">
+        <a href="javascript:void(0)" id="showMoreReservations">Show More Reservations</a>
+    </div>
+</div>
+
+<input type="hidden" name="reservation-list-page" value="1" id="reservation-list-page">
+<script type="text/javascript">
+    (function($){
+        $(document).ready(function () {
+            $('#showMoreReservations').on('click', function () {
+                var currPage = $.isNumeric($('#reservation-list-page').val())
+                    ? parseInt($('#reservation-list-page').val())
+                    : 1;
+
+                var nextPage = currPage + 1;
+                $('#reservation-list-page').val(nextPage);
+                var url = 'https://gtc.clubautomation.com/event/court-reservation-list-page?pageNum=' + nextPage;
+
+                showResources(null, url, 'table-reservation-list', null, null, false, null, 'append');
+            });
+        });
+    })(jQuery);
+</script>
+
+
+
+<div class="reserve-court-new-header">Make a New Reservation</div>
+<div class="reserve-court-new">
+
+    <div class="ca-element-error-wrapper">
+<input type="hidden" name="user_id" value="25397" id="user_id"></div>    <div class="ca-element-error-wrapper">
+<input type="hidden" name="event_member_token_reserve_court" value="64b5513eefd29d0c37ce0aad35bf3d6d" id="event_member_token_reserve_court"></div>    <div class="ca-element-error-wrapper">
+<input type="hidden" name="current_guest_count" value="0" id="current_guest_count"></div>    <div class="r-line">
+        <div class="t-block">What Service?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="component" id="component" class="ca-select">
+    <option value="2" selected="selected">Tennis</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#component").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+        <div class="clear-both"></div>
+    </div>
+        <div class="r-line" >
+        <div class="t-block">Where?</div>
+                <div class="i-block"  style="display: none;"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="club" id="club" class="ca-select">
+    <option value="-1" selected="selected">All Locations</option>
+    <option value="1">Lifetime Tennis GTC</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#club").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="location" id="location" class="ca-select">
+    <option value="-1" selected="selected">All Service Locations</option>
+    <option value="1">Tennis</option>
+    <option value="35">Pickleball / Mini Tennis</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#location").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="surface" id="surface" class="ca-select">
+    <option value="-1" selected="selected">All Surfaces</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#surface").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                                <div class="clear-both"></div>
+    </div>
+    <div class="r-line">
+        <div class="t-block">Who will host?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="host" id="host" class="ca-select">
+    <option value="25397" selected="selected">Benjamin Solis-Cohen</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#host").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                    <div class="i-guests">
+                            <div class="i-block i-vertical i-none" id="div_guest_1"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_1-wrapper"><input type="text" name="add-new-child-to-guest_1" id="guest_1" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_1").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="1"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_2"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_2-wrapper"><input type="text" name="add-new-child-to-guest_2" id="guest_2" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_2").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="2"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_3"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_3-wrapper"><input type="text" name="add-new-child-to-guest_3" id="guest_3" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_3").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="3"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_4"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_4-wrapper"><input type="text" name="add-new-child-to-guest_4" id="guest_4" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_4").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="4"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_5"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_5-wrapper"><input type="text" name="add-new-child-to-guest_5" id="guest_5" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_5").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="5"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_6"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_6-wrapper"><input type="text" name="add-new-child-to-guest_6" id="guest_6" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_6").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="6"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_7"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_7-wrapper"><input type="text" name="add-new-child-to-guest_7" id="guest_7" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_7").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="7"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_8"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_8-wrapper"><input type="text" name="add-new-child-to-guest_8" id="guest_8" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_8").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="8"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_9"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_9-wrapper"><input type="text" name="add-new-child-to-guest_9" id="guest_9" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_9").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="9"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_10"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_10-wrapper"><input type="text" name="add-new-child-to-guest_10" id="guest_10" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_10").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="10"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_11"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_11-wrapper"><input type="text" name="add-new-child-to-guest_11" id="guest_11" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_11").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="11"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_12"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_12-wrapper"><input type="text" name="add-new-child-to-guest_12" id="guest_12" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_12").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="12"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_13"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_13-wrapper"><input type="text" name="add-new-child-to-guest_13" id="guest_13" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_13").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="13"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_14"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_14-wrapper"><input type="text" name="add-new-child-to-guest_14" id="guest_14" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_14").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="14"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_15"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_15-wrapper"><input type="text" name="add-new-child-to-guest_15" id="guest_15" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_15").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="15"></span></div>
+                        <div class="clear-both"></div>
+            <div id="addParticipant" class="i-vertical span-add ">Add Participant</div>
+            <div class="clear-both"></div>
+            </div>            
+            <div class="clear-both"></div>
+                        <div class="clear-both"></div>
+    </div>
+
+        
+    <div class="r-line">
+        <div class="t-block">When?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui clearfix"><input type="text" name="date" id="date" value="06/08/2024" display_month_names="1" class="ca-text-field form-control">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#date").caText({});
+                        });
+                    })(jQuery)
+                </script>
+            </span>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#date").caDatePicker({"year":"2024","with_year":1,"format":"m\/d\/Y"});
+                        });
+                    })(jQuery)
+                </script>
+            </div></div>
+        <div class="l-block"><div class="ca-switcher switcher-interval"><div class="ca-element-error-wrapper">
+<label><input type="radio" name="interval" id="interval-30" value="30" checked="checked" horizontal="1">30 Min</label><label><input type="radio" name="interval" id="interval-50" value="50" horizontal="1">50 Min</label><label><input type="radio" name="interval" id="interval-60" value="60" horizontal="1">60 Min</label><label><input type="radio" name="interval" id="interval-90" value="90" horizontal="1">90 Min</label></div></div></div>
+        <div class="clear-both"></div>
+    </div>
+
+        <div class="r-line input-group time-block">
+        <div class="t-block">Search for available times</div>
+        <div class="l-block">
+            <div class="time-title">From</div>
+        </div>
+        <div class="i-block">
+            <div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="timeFrom" id="timeFrom" class="ca-select">
+    <option value="0">12:00 AM</option>
+    <option value="1">01:00 AM</option>
+    <option value="2">02:00 AM</option>
+    <option value="3">03:00 AM</option>
+    <option value="4">04:00 AM</option>
+    <option value="5">05:00 AM</option>
+    <option value="6">06:00 AM</option>
+    <option value="7">07:00 AM</option>
+    <option value="8">08:00 AM</option>
+    <option value="9">09:00 AM</option>
+    <option value="10">10:00 AM</option>
+    <option value="11">11:00 AM</option>
+    <option value="12">12:00 PM</option>
+    <option value="13">01:00 PM</option>
+    <option value="14">02:00 PM</option>
+    <option value="15">03:00 PM</option>
+    <option value="16">04:00 PM</option>
+    <option value="17">05:00 PM</option>
+    <option value="18">06:00 PM</option>
+    <option value="19">07:00 PM</option>
+    <option value="20" selected="selected">08:00 PM</option>
+    <option value="21">09:00 PM</option>
+    <option value="22">10:00 PM</option>
+    <option value="23">11:00 PM</option>
+    <option value="24">12:00 AM</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#timeFrom").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div>        </div>
+        <div class="l-block">
+            <div class="time-title">To</div>
+        </div>
+        <div class="i-block">
+            <div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="timeTo" id="timeTo" class="ca-select">
+    <option value="0">12:00 AM</option>
+    <option value="1">01:00 AM</option>
+    <option value="2">02:00 AM</option>
+    <option value="3">03:00 AM</option>
+    <option value="4">04:00 AM</option>
+    <option value="5">05:00 AM</option>
+    <option value="6">06:00 AM</option>
+    <option value="7">07:00 AM</option>
+    <option value="8">08:00 AM</option>
+    <option value="9">09:00 AM</option>
+    <option value="10">10:00 AM</option>
+    <option value="11">11:00 AM</option>
+    <option value="12">12:00 PM</option>
+    <option value="13">01:00 PM</option>
+    <option value="14">02:00 PM</option>
+    <option value="15">03:00 PM</option>
+    <option value="16">04:00 PM</option>
+    <option value="17">05:00 PM</option>
+    <option value="18">06:00 PM</option>
+    <option value="19">07:00 PM</option>
+    <option value="20">08:00 PM</option>
+    <option value="21">09:00 PM</option>
+    <option value="22">10:00 PM</option>
+    <option value="23">11:00 PM</option>
+    <option value="24">12:00 AM</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#timeTo").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div>        </div>
+        <div class="clear-both"></div>
+    </div>
+    
+    <div class="r-line before-search">
+        <div class="i-block">
+            <span class="ca-pro-ui"><button name="reserve-court-search" id="reserve-court-search" type="button" value="Search" class="btn  btn-info" style="">Search</button></span>        </div>
+        <div class="t-block"></div>
+        <div class="clear-both"></div>
+    </div>
+
+    <input type="hidden" name="time-reserve" id="time-reserve">
+    <input type="hidden" name="location-reserve" id="location-reserve">
+    <input type="hidden" name="surface-reserve" id="surface-reserve">
+
+    <input type="hidden" name="courtsnotavailable" class="courtsnotavailable" value="">
+
+    <div class="r-line times-to-reserve-container pick-time-list">
+        <div class="t-block">Pick a Time</div>
+        <table id="times-to-reserve" class="times-to-reserve">
+                            <tr>
+                                                                        <td class="td-blue">
+                                <b>Pickleball / Mini Tennis - </b><br /><br />
+                                                                    <a href="javascript:void(0);" t="1717907400" l="35" s="0">
+                                        9:30pm                                    </a> <br />
+                                                            </td>
+                                                                                                                            <td class="">
+                                <b>Tennis - </b><br /><br />
+                                                                    <a href="javascript:void(0);" t="1717907400" l="1" s="0">
+                                        9:30pm                                    </a> <br />
+                                                            </td>
+                                                                                <td class="td-blue">
+                                                                                        </tr>
+        </table>
+    </div>
+        <div class="r-line times-to-reserve-container search-notify">
+        <b>Click "Search" to populate reservation times.</b>
+    </div>
+    <input type="hidden" name="join-waitlist-case" id="join-waitlist-case" value="1">
+    
+</div>
+</form>
+
+<script type="text/javascript">
+newMemberReg = {
+};
+
+(function($) {
+    var checkForDuplicates = function(e, params) {
+        var item = params.item;
+
+        if (item !== undefined && item.id) {
+            var selectedHost = jQuery("#host option:selected").val();
+
+            if (selectedHost == item.id) {
+                $.caAlert('This user is already selected as the host', 'Cannot add new participant');
+
+                return false;
+            }
+
+            var fullname = item.label.replace("'", "\\'").replace('&quot;', '"');
+            var participants = $("input[name*='guest_'][value='" + item.id + "']");
+            var guests = $("input[name*='guest_'][value='" + fullname + "']");
+
+            if (participants.length !== 0) {
+                $.caAlert('This user has already been added as a participant', 'Cannot add new participant');
+
+                return false;
+            }
+            if (guests.length !== 0) {
+                $.caAlert('This guest has already been added as a participant', 'Cannot add new participant');
+
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        return true;
+    };
+    
+    newMemberReg = {
+        reserveCourtConfirm: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+                
+            var form = $('#reserve-court-filter');
+            var params = form.serialize();
+            params = params + '&is_confirmed=1';
+            //debugger;
+            $.caPost('/event/reserve-court-new-do?ajax=true', params, function(response){
+                var title = 'Confirm Reservation';
+                var width = 800;
+                if (response.indexOf('f7ae89266c0ba312d80220e50ac3b1a2') > 0) {
+                    //title = 'OOPS!';
+                    width = 600;
+                }
+                //$('#reserve-court-new').append(response);
+                var popup = $('<div></div>').append(response);
+                $('#reserve-court-new').append(popup);
+                newMemberReg.popup = popup.caDialog({
+                    title: title,
+                    resizable: false,
+                    beforeClose:function () {
+                        $(this).remove();
+                    },
+                    width: width,
+                    showCloseButton:true,
+                    modal : true,
+                    dialogClass: 'confirm-reservation-dialog'
+                });
+            });
+        },
+        reserveUserConfirm: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+                
+            var form = $('#reserve-court-filter');
+            var params = form.serialize();
+            params = params + '&skipUserAvailability=1';
+            //debugger;
+            $.caPost('/event/reserve-court-new-do?ajax=true', params, function(response){
+                //$('#reserve-court-new').append(response);
+                var popup = $('<div></div>').append(response);
+                $('#reserve-court-new').append(popup);
+                newMemberReg.popup = popup.caDialog({
+                    title:'Confirm Reservation',
+                    resizable:false,
+                    beforeClose:function () {
+                        $(this).remove();
+                    },
+                    width: 800,
+                    showCloseButton:true,
+                    modal : true,
+                    dialogClass: 'confirm-reservation-dialog'
+                });
+            });
+        },
+        closePopup: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+        },
+        popup: false,
+        
+        optionSelect: function() {
+            var val = $('#reserve-court-filter input[name=option]:checked').val();
+            switch (val) {
+                case 'singles':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_2').hide();
+                    $('#div_guest_3').hide();
+                    break;
+                case 'doubles':
+                    newMemberReg.showAllParticipants();
+                    break;
+                case 'ball_machine':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_1").caUserPicker('clearItem');
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_block').hide();
+                    break;
+                case 'serves':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_1").caUserPicker('clearItem');
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_block').hide();
+                    break;
+            }
+        },
+        showAllParticipants: function() {
+            $('#div_guest_1').show();    
+            $('#div_guest_2').show();
+            $('#div_guest_3').show();
+            $('#div_guest_block').show();
+        }
+    };
+    
+    $(document).ready(function() {
+        var form = $('#reserve-court-filter');
+
+        $('#addParticipant').bind('click', function() {
+            var c = $('#current_guest_count').val();
+            for( var i = 1; i <= 15; i++ ) {
+               if($('#div_guest_' + i).is(':hidden')) {
+                   $('#div_guest_' + i).show(); 
+                   c = c + ',' + i;
+                   $('#current_guest_count').val(c);
+                   break;
+               }
+            }
+            
+        });
+        $('.i-minus').bind('click', function() {
+            var cid = $(this).attr('cid');
+            $("#guest_" + cid).caUserPicker('clearItem');
+            $('#div_guest_' + cid).hide(); 
+            
+            var c = $('#current_guest_count').val();
+            var tmp = c.split(',');
+            tmp.splice( $.inArray(cid, tmp) ,1 );
+            c = tmp.join();
+            $('#current_guest_count').val(c);
+        });        
+        
+        $('#date').caDatePicker('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+
+        form.find('#component').bind('change', function() {
+            Event_Reserve_Court_New.componentChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#club').bind('change', function() {
+            Event_Reserve_Court_New.clubChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#location').bind('change', function() {
+            Event_Reserve_Court_New.locationChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#surface').bind('change', function() {
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#court').bind('change', function() {
+            Event_Reserve_Court_New.clearTimesToReserve();
+        });
+
+        var previous;
+
+        form.find('#host').on('focus', function () {
+            previous = $(this).val();
+        }).change(function() {
+            var guests = $("input[name*='guest_'][name*='_id'][value='" + $(this).val() + "']");
+
+            if (guests.length !== 0) {
+                $.caAlert('This user has already been added as a participant', 'Cannot change the host');
+
+                $(this).val(previous);
+
+                return false;
+            } else {
+                Event_Reserve_Court_New.clearTimesToReserve();
+            }
+        });
+
+                    form.find('#guest_1').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_2').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_3').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_4').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_5').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_6').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_7').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_8').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_9').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_10').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_11').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_12').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_13').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_14').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_15').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+        
+        $('.ca-switcher').caSwitcher();
+        $('.switcher-interval').caSwitcher('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+        $('.switcher-bm').caSwitcher('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+        
+        $('#times-to-reserve a').bind('click', function() {
+            var t = $(this).attr('t');
+            var l = $(this).attr('l');
+            var s = $(this).attr('s');
+            if(t) {
+                $('#time-reserve').val(t);
+                $('#location-reserve').val(l);
+                $('#surface-reserve').val(s);
+                var form = $('#reserve-court-filter');
+                $.caPost('/event/reserve-court-new-do?ajax=true', form.serialize(), function(response){
+                    var title = 'Confirm Reservation';
+                    var width = 800;
+                    if (response.indexOf('682f436ba7840abb027cb6a8a976605e') > 0) {
+                        title = 'OOPS!';
+                        width = 600;
+                    }
+                    var closePopup = false;
+                    if (response.indexOf('d41d8cd98f00b204e9800998ecf8427e') > 0) {
+                        width = 500;
+                        closePopup = true;
+                    }
+                    //$('#reserve-court-new').append(response);
+                    var popup = $('<div></div>').append(response);
+                    $('#reserve-court-new').append(popup);
+                    newMemberReg.popup = popup.caDialog({
+                        title: title,
+                        resizable:false,
+                        beforeClose:function () {
+                            $(this).remove();
+                        },
+                        width: width,
+                        showCloseButton:true,
+                        modal : true,
+                        dialogClass: 'confirm-reservation-dialog',
+                        close: function() {
+                            if(closePopup) {
+                                Event_Reserve_Court_New.clearTimesToReserve();
+                            }
+                        }
+                    });
+                });
+            }
+        });
+
+        newMemberReg.optionSelect();
+    });
+})(jQuery);
+</script>
+</div>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            Event_Reserve_Court_New.init();
+        });
+    })(jQuery);
+</script>
+</test case>
+<test case 1 begin >
+Failed test case.
+            Actual test case output:
+            {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm', '9:00pm', '9:30pm']}
+            Expected test case output:
+            {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}
+            Debug test case output:
+            
+<div id="reserve-court-new">
+<form method="post" id="reserve-court-filter">
+    <div id="view-reservation-list">
+    <table class="reservation-list-new" id="table-reservation-list">
+        <tr>
+            <th colspan="2">Your Reservations</th>
+            <th>Host</th>
+            <th>Activity</th>
+            <th>Players</th>
+            <th></th>
+        </tr>
+        
+<script type="text/javascript">
+    (function ($) {
+        $(document).ready(function () {
+            var isLastPage = '1';
+            if (isLastPage) {
+                $('.reservation-list-show-more').addClass('hidden');
+            } else {
+                $('.reservation-list-show-more').removeClass('hidden');
+            }
+
+            $('.court-time-cancel').unbind('click').bind('click', function() {
+                var cid = $(this).attr('cid');
+
+                $.caPost(
+                    '/event/cancel-court-time?ajax=true',
+                    {id: cid},
+                    function(response) {
+                        var popup = $('<div></div>').append(response);
+                        $('#reserve-court-new').append(popup);
+
+                        newMemberReg.popup = popup.caDialog({
+                            title: 'Cancel Reservation',
+                            resizable: false,
+                            width: 400,
+                            showCloseButton: true,
+                            modal: true,
+                            beforeClose: function () {
+                                $(this).remove();
+                            }
+                        });
+                    }
+                );
+            });
+        });
+    })(jQuery);
+</script>
+    </table>
+    <div class="reservation-list-show-more hidden">
+        <a href="javascript:void(0)" id="showMoreReservations">Show More Reservations</a>
+    </div>
+</div>
+
+<input type="hidden" name="reservation-list-page" value="1" id="reservation-list-page">
+<script type="text/javascript">
+    (function($){
+        $(document).ready(function () {
+            $('#showMoreReservations').on('click', function () {
+                var currPage = $.isNumeric($('#reservation-list-page').val())
+                    ? parseInt($('#reservation-list-page').val())
+                    : 1;
+
+                var nextPage = currPage + 1;
+                $('#reservation-list-page').val(nextPage);
+                var url = 'https://gtc.clubautomation.com/event/court-reservation-list-page?pageNum=' + nextPage;
+
+                showResources(null, url, 'table-reservation-list', null, null, false, null, 'append');
+            });
+        });
+    })(jQuery);
+</script>
+
+
+
+<div class="reserve-court-new-header">Make a New Reservation</div>
+<div class="reserve-court-new">
+
+    <div class="ca-element-error-wrapper">
+<input type="hidden" name="user_id" value="25397" id="user_id"></div>    <div class="ca-element-error-wrapper">
+<input type="hidden" name="event_member_token_reserve_court" value="64b5513eefd29d0c37ce0aad35bf3d6d" id="event_member_token_reserve_court"></div>    <div class="ca-element-error-wrapper">
+<input type="hidden" name="current_guest_count" value="0" id="current_guest_count"></div>    <div class="r-line">
+        <div class="t-block">What Service?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="component" id="component" class="ca-select">
+    <option value="2" selected="selected">Tennis</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#component").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+        <div class="clear-both"></div>
+    </div>
+        <div class="r-line" >
+        <div class="t-block">Where?</div>
+                <div class="i-block"  style="display: none;"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="club" id="club" class="ca-select">
+    <option value="-1" selected="selected">All Locations</option>
+    <option value="1">Lifetime Tennis GTC</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#club").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="location" id="location" class="ca-select">
+    <option value="-1" selected="selected">All Service Locations</option>
+    <option value="1">Tennis</option>
+    <option value="35">Pickleball / Mini Tennis</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#location").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="surface" id="surface" class="ca-select">
+    <option value="-1" selected="selected">All Surfaces</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#surface").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                                <div class="clear-both"></div>
+    </div>
+    <div class="r-line">
+        <div class="t-block">Who will host?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="host" id="host" class="ca-select">
+    <option value="25397" selected="selected">Benjamin Solis-Cohen</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#host").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                    <div class="i-guests">
+                            <div class="i-block i-vertical i-none" id="div_guest_1"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_1-wrapper"><input type="text" name="add-new-child-to-guest_1" id="guest_1" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_1").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="1"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_2"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_2-wrapper"><input type="text" name="add-new-child-to-guest_2" id="guest_2" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_2").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="2"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_3"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_3-wrapper"><input type="text" name="add-new-child-to-guest_3" id="guest_3" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_3").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="3"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_4"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_4-wrapper"><input type="text" name="add-new-child-to-guest_4" id="guest_4" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_4").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="4"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_5"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_5-wrapper"><input type="text" name="add-new-child-to-guest_5" id="guest_5" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_5").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="5"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_6"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_6-wrapper"><input type="text" name="add-new-child-to-guest_6" id="guest_6" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_6").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="6"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_7"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_7-wrapper"><input type="text" name="add-new-child-to-guest_7" id="guest_7" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_7").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="7"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_8"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_8-wrapper"><input type="text" name="add-new-child-to-guest_8" id="guest_8" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_8").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="8"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_9"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_9-wrapper"><input type="text" name="add-new-child-to-guest_9" id="guest_9" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_9").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="9"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_10"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_10-wrapper"><input type="text" name="add-new-child-to-guest_10" id="guest_10" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_10").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="10"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_11"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_11-wrapper"><input type="text" name="add-new-child-to-guest_11" id="guest_11" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_11").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="11"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_12"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_12-wrapper"><input type="text" name="add-new-child-to-guest_12" id="guest_12" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_12").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="12"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_13"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_13-wrapper"><input type="text" name="add-new-child-to-guest_13" id="guest_13" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_13").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="13"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_14"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_14-wrapper"><input type="text" name="add-new-child-to-guest_14" id="guest_14" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_14").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="14"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_15"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_15-wrapper"><input type="text" name="add-new-child-to-guest_15" id="guest_15" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_15").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="15"></span></div>
+                        <div class="clear-both"></div>
+            <div id="addParticipant" class="i-vertical span-add ">Add Participant</div>
+            <div class="clear-both"></div>
+            </div>            
+            <div class="clear-both"></div>
+                        <div class="clear-both"></div>
+    </div>
+
+        
+    <div class="r-line">
+        <div class="t-block">When?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui clearfix"><input type="text" name="date" id="date" value="06/08/2024" display_month_names="1" class="ca-text-field form-control">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#date").caText({});
+                        });
+                    })(jQuery)
+                </script>
+            </span>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#date").caDatePicker({"year":"2024","with_year":1,"format":"m\/d\/Y"});
+                        });
+                    })(jQuery)
+                </script>
+            </div></div>
+        <div class="l-block"><div class="ca-switcher switcher-interval"><div class="ca-element-error-wrapper">
+<label><input type="radio" name="interval" id="interval-30" value="30" checked="checked" horizontal="1">30 Min</label><label><input type="radio" name="interval" id="interval-50" value="50" horizontal="1">50 Min</label><label><input type="radio" name="interval" id="interval-60" value="60" horizontal="1">60 Min</label><label><input type="radio" name="interval" id="interval-90" value="90" horizontal="1">90 Min</label></div></div></div>
+        <div class="clear-both"></div>
+    </div>
+
+        <div class="r-line input-group time-block">
+        <div class="t-block">Search for available times</div>
+        <div class="l-block">
+            <div class="time-title">From</div>
+        </div>
+        <div class="i-block">
+            <div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="timeFrom" id="timeFrom" class="ca-select">
+    <option value="0">12:00 AM</option>
+    <option value="1">01:00 AM</option>
+    <option value="2">02:00 AM</option>
+    <option value="3">03:00 AM</option>
+    <option value="4">04:00 AM</option>
+    <option value="5">05:00 AM</option>
+    <option value="6">06:00 AM</option>
+    <option value="7">07:00 AM</option>
+    <option value="8">08:00 AM</option>
+    <option value="9">09:00 AM</option>
+    <option value="10">10:00 AM</option>
+    <option value="11">11:00 AM</option>
+    <option value="12">12:00 PM</option>
+    <option value="13">01:00 PM</option>
+    <option value="14">02:00 PM</option>
+    <option value="15">03:00 PM</option>
+    <option value="16">04:00 PM</option>
+    <option value="17">05:00 PM</option>
+    <option value="18">06:00 PM</option>
+    <option value="19">07:00 PM</option>
+    <option value="20" selected="selected">08:00 PM</option>
+    <option value="21">09:00 PM</option>
+    <option value="22">10:00 PM</option>
+    <option value="23">11:00 PM</option>
+    <option value="24">12:00 AM</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#timeFrom").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div>        </div>
+        <div class="l-block">
+            <div class="time-title">To</div>
+        </div>
+        <div class="i-block">
+            <div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="timeTo" id="timeTo" class="ca-select">
+    <option value="0">12:00 AM</option>
+    <option value="1">01:00 AM</option>
+    <option value="2">02:00 AM</option>
+    <option value="3">03:00 AM</option>
+    <option value="4">04:00 AM</option>
+    <option value="5">05:00 AM</option>
+    <option value="6">06:00 AM</option>
+    <option value="7">07:00 AM</option>
+    <option value="8">08:00 AM</option>
+    <option value="9">09:00 AM</option>
+    <option value="10">10:00 AM</option>
+    <option value="11">11:00 AM</option>
+    <option value="12">12:00 PM</option>
+    <option value="13">01:00 PM</option>
+    <option value="14">02:00 PM</option>
+    <option value="15">03:00 PM</option>
+    <option value="16">04:00 PM</option>
+    <option value="17">05:00 PM</option>
+    <option value="18">06:00 PM</option>
+    <option value="19">07:00 PM</option>
+    <option value="20">08:00 PM</option>
+    <option value="21">09:00 PM</option>
+    <option value="22">10:00 PM</option>
+    <option value="23">11:00 PM</option>
+    <option value="24">12:00 AM</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#timeTo").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div>        </div>
+        <div class="clear-both"></div>
+    </div>
+    
+    <div class="r-line before-search">
+        <div class="i-block">
+            <span class="ca-pro-ui"><button name="reserve-court-search" id="reserve-court-search" type="button" value="Search" class="btn  btn-info" style="">Search</button></span>        </div>
+        <div class="t-block"></div>
+        <div class="clear-both"></div>
+    </div>
+
+    <input type="hidden" name="time-reserve" id="time-reserve">
+    <input type="hidden" name="location-reserve" id="location-reserve">
+    <input type="hidden" name="surface-reserve" id="surface-reserve">
+
+    <input type="hidden" name="courtsnotavailable" class="courtsnotavailable" value="">
+
+    <div class="r-line times-to-reserve-container pick-time-list">
+        <div class="t-block">Pick a Time</div>
+        <table id="times-to-reserve" class="times-to-reserve">
+                            <tr>
+                                                                        <td class="td-blue">
+                                <b>Pickleball / Mini Tennis - </b><br /><br />
+                                                                    <a href="javascript:void(0);" t="1717905600" l="35" s="0">
+                                        9:00pm                                    </a> <br />
+                                                                    <a href="javascript:void(0);" t="1717907400" l="35" s="0">
+                                        9:30pm                                    </a> <br />
+                                                            </td>
+                                                                                                                            <td class="">
+                                <b>Tennis - </b><br /><br />
+                                                                    <a href="javascript:void(0);" t="1717902000" l="1" s="0">
+                                        8:00pm                                    </a> <br />
+                                                                    <a href="javascript:void(0);" t="1717903800" l="1" s="0">
+                                        8:30pm                                    </a> <br />
+                                                                    <a href="javascript:void(0);" t="1717905600" l="1" s="0">
+                                        9:00pm                                    </a> <br />
+                                                                    <a href="javascript:void(0);" t="1717907400" l="1" s="0">
+                                        9:30pm                                    </a> <br />
+                                                            </td>
+                                                                                <td class="td-blue">
+                                <b>Tennis - </b><br /><br />
+                                                                    <a href="javascript:void(0);" t="1717905600" l="1" s="2">
+                                        9:00pm                                    </a> <br />
+                                                                    <a href="javascript:void(0);" t="1717907400" l="1" s="2">
+                                        9:30pm                                    </a> <br />
+                                                            </td>
+                                                                                        </tr>
+        </table>
+    </div>
+        <div class="r-line times-to-reserve-container search-notify">
+        <b>Click "Search" to populate reservation times.</b>
+    </div>
+    <input type="hidden" name="join-waitlist-case" id="join-waitlist-case" value="1">
+    
+</div>
+</form>
+
+<script type="text/javascript">
+newMemberReg = {
+};
+
+(function($) {
+    var checkForDuplicates = function(e, params) {
+        var item = params.item;
+
+        if (item !== undefined && item.id) {
+            var selectedHost = jQuery("#host option:selected").val();
+
+            if (selectedHost == item.id) {
+                $.caAlert('This user is already selected as the host', 'Cannot add new participant');
+
+                return false;
+            }
+
+            var fullname = item.label.replace("'", "\\'").replace('&quot;', '"');
+            var participants = $("input[name*='guest_'][value='" + item.id + "']");
+            var guests = $("input[name*='guest_'][value='" + fullname + "']");
+
+            if (participants.length !== 0) {
+                $.caAlert('This user has already been added as a participant', 'Cannot add new participant');
+
+                return false;
+            }
+            if (guests.length !== 0) {
+                $.caAlert('This guest has already been added as a participant', 'Cannot add new participant');
+
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        return true;
+    };
+    
+    newMemberReg = {
+        reserveCourtConfirm: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+                
+            var form = $('#reserve-court-filter');
+            var params = form.serialize();
+            params = params + '&is_confirmed=1';
+            //debugger;
+            $.caPost('/event/reserve-court-new-do?ajax=true', params, function(response){
+                var title = 'Confirm Reservation';
+                var width = 800;
+                if (response.indexOf('f7ae89266c0ba312d80220e50ac3b1a2') > 0) {
+                    //title = 'OOPS!';
+                    width = 600;
+                }
+                //$('#reserve-court-new').append(response);
+                var popup = $('<div></div>').append(response);
+                $('#reserve-court-new').append(popup);
+                newMemberReg.popup = popup.caDialog({
+                    title: title,
+                    resizable: false,
+                    beforeClose:function () {
+                        $(this).remove();
+                    },
+                    width: width,
+                    showCloseButton:true,
+                    modal : true,
+                    dialogClass: 'confirm-reservation-dialog'
+                });
+            });
+        },
+        reserveUserConfirm: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+                
+            var form = $('#reserve-court-filter');
+            var params = form.serialize();
+            params = params + '&skipUserAvailability=1';
+            //debugger;
+            $.caPost('/event/reserve-court-new-do?ajax=true', params, function(response){
+                //$('#reserve-court-new').append(response);
+                var popup = $('<div></div>').append(response);
+                $('#reserve-court-new').append(popup);
+                newMemberReg.popup = popup.caDialog({
+                    title:'Confirm Reservation',
+                    resizable:false,
+                    beforeClose:function () {
+                        $(this).remove();
+                    },
+                    width: 800,
+                    showCloseButton:true,
+                    modal : true,
+                    dialogClass: 'confirm-reservation-dialog'
+                });
+            });
+        },
+        closePopup: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+        },
+        popup: false,
+        
+        optionSelect: function() {
+            var val = $('#reserve-court-filter input[name=option]:checked').val();
+            switch (val) {
+                case 'singles':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_2').hide();
+                    $('#div_guest_3').hide();
+                    break;
+                case 'doubles':
+                    newMemberReg.showAllParticipants();
+                    break;
+                case 'ball_machine':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_1").caUserPicker('clearItem');
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_block').hide();
+                    break;
+                case 'serves':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_1").caUserPicker('clearItem');
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_block').hide();
+                    break;
+            }
+        },
+        showAllParticipants: function() {
+            $('#div_guest_1').show();    
+            $('#div_guest_2').show();
+            $('#div_guest_3').show();
+            $('#div_guest_block').show();
+        }
+    };
+    
+    $(document).ready(function() {
+        var form = $('#reserve-court-filter');
+
+        $('#addParticipant').bind('click', function() {
+            var c = $('#current_guest_count').val();
+            for( var i = 1; i <= 15; i++ ) {
+               if($('#div_guest_' + i).is(':hidden')) {
+                   $('#div_guest_' + i).show(); 
+                   c = c + ',' + i;
+                   $('#current_guest_count').val(c);
+                   break;
+               }
+            }
+            
+        });
+        $('.i-minus').bind('click', function() {
+            var cid = $(this).attr('cid');
+            $("#guest_" + cid).caUserPicker('clearItem');
+            $('#div_guest_' + cid).hide(); 
+            
+            var c = $('#current_guest_count').val();
+            var tmp = c.split(',');
+            tmp.splice( $.inArray(cid, tmp) ,1 );
+            c = tmp.join();
+            $('#current_guest_count').val(c);
+        });        
+        
+        $('#date').caDatePicker('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+
+        form.find('#component').bind('change', function() {
+            Event_Reserve_Court_New.componentChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#club').bind('change', function() {
+            Event_Reserve_Court_New.clubChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#location').bind('change', function() {
+            Event_Reserve_Court_New.locationChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#surface').bind('change', function() {
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#court').bind('change', function() {
+            Event_Reserve_Court_New.clearTimesToReserve();
+        });
+
+        var previous;
+
+        form.find('#host').on('focus', function () {
+            previous = $(this).val();
+        }).change(function() {
+            var guests = $("input[name*='guest_'][name*='_id'][value='" + $(this).val() + "']");
+
+            if (guests.length !== 0) {
+                $.caAlert('This user has already been added as a participant', 'Cannot change the host');
+
+                $(this).val(previous);
+
+                return false;
+            } else {
+                Event_Reserve_Court_New.clearTimesToReserve();
+            }
+        });
+
+                    form.find('#guest_1').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_2').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_3').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_4').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_5').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_6').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_7').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_8').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_9').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_10').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_11').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_12').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_13').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_14').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_15').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+        
+        $('.ca-switcher').caSwitcher();
+        $('.switcher-interval').caSwitcher('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+        $('.switcher-bm').caSwitcher('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+        
+        $('#times-to-reserve a').bind('click', function() {
+            var t = $(this).attr('t');
+            var l = $(this).attr('l');
+            var s = $(this).attr('s');
+            if(t) {
+                $('#time-reserve').val(t);
+                $('#location-reserve').val(l);
+                $('#surface-reserve').val(s);
+                var form = $('#reserve-court-filter');
+                $.caPost('/event/reserve-court-new-do?ajax=true', form.serialize(), function(response){
+                    var title = 'Confirm Reservation';
+                    var width = 800;
+                    if (response.indexOf('682f436ba7840abb027cb6a8a976605e') > 0) {
+                        title = 'OOPS!';
+                        width = 600;
+                    }
+                    var closePopup = false;
+                    if (response.indexOf('d41d8cd98f00b204e9800998ecf8427e') > 0) {
+                        width = 500;
+                        closePopup = true;
+                    }
+                    //$('#reserve-court-new').append(response);
+                    var popup = $('<div></div>').append(response);
+                    $('#reserve-court-new').append(popup);
+                    newMemberReg.popup = popup.caDialog({
+                        title: title,
+                        resizable:false,
+                        beforeClose:function () {
+                            $(this).remove();
+                        },
+                        width: width,
+                        showCloseButton:true,
+                        modal : true,
+                        dialogClass: 'confirm-reservation-dialog',
+                        close: function() {
+                            if(closePopup) {
+                                Event_Reserve_Court_New.clearTimesToReserve();
+                            }
+                        }
+                    });
+                });
+            }
+        });
+
+        newMemberReg.optionSelect();
+    });
+})(jQuery);
+</script>
+</div>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            Event_Reserve_Court_New.init();
+        });
+    })(jQuery);
+</script>
+            Differences:
+            Expected: {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}, Got: {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm', '9:00pm', '9:30pm']}
+</test case>
+---DECISION: RE-TRY SOLUTION---
+---REFLECTING ON ERRORS, DEBUG STATEMENTS, and FORMULATING IMPROVEMENT PLAN---
+Context:
+    Previous Corrections, Reflections and Code diffs:
+
+ Correction Summary: Extracted playing times from the HTML content by parsing the HTML and identifying the relevant elements. Used BeautifulSoup to parse the HTML and extract the times associated with each activity.
+Imports:
+from bs4 import BeautifulSoup
+Code:
+def func(input_str):
+    global debug_output
+    debug_output = input_str
+    
+    # Parse the HTML content
+    soup = BeautifulSoup(input_str, 'html.parser')
+    
+    # Initialize the result dictionary
+    result = {}
+    
+    # Find all the time slots
+    time_slots = soup.select('#times-to-reserve a')
+    
+    for slot in time_slots:
+        activity = slot.find_previous('b').text.strip().replace(' -', '')
+        time = slot.text.strip()
+        
+        if activity not in result:
+            result[activity] = []
+        result[activity].append(time)
+    
+    return result
+        
+---GENERATING CODE SOLUTION---
+--------- Rewriting code with print statements -----------
+Generating solution using prompt:
+We just gave you this prompt:
+
+ (1) Determine what went wrong in each of the following test results: Incorrect submission.
+Pass rate: 0.5
+Results:
+<test case 0 begin >
+Correct test case! Your output matched the expected output: {'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}. Successful debug output in case it's useful: <div id="reserve-court-new">
+<form method="post" id="reserve-court-filter">
+    <div id="view-reservation-list">
+    <table class="reservation-list-new" id="table-reservation-list">
+        <tr>
+            <th colspan="2">Your Reservations</th>
+            <th>Host</th>
+            <th>Activity</th>
+            <th>Players</th>
+            <th></th>
+        </tr>
+        
+<script type="text/javascript">
+    (function ($) {
+        $(document).ready(function () {
+            var isLastPage = '1';
+            if (isLastPage) {
+                $('.reservation-list-show-more').addClass('hidden');
+            } else {
+                $('.reservation-list-show-more').removeClass('hidden');
+            }
+
+            $('.court-time-cancel').unbind('click').bind('click', function() {
+                var cid = $(this).attr('cid');
+
+                $.caPost(
+                    '/event/cancel-court-time?ajax=true',
+                    {id: cid},
+                    function(response) {
+                        var popup = $('<div></div>').append(response);
+                        $('#reserve-court-new').append(popup);
+
+                        newMemberReg.popup = popup.caDialog({
+                            title: 'Cancel Reservation',
+                            resizable: false,
+                            width: 400,
+                            showCloseButton: true,
+                            modal: true,
+                            beforeClose: function () {
+                                $(this).remove();
+                            }
+                        });
+                    }
+                );
+            });
+        });
+    })(jQuery);
+</script>
+    </table>
+    <div class="reservation-list-show-more hidden">
+        <a href="javascript:void(0)" id="showMoreReservations">Show More Reservations</a>
+    </div>
+</div>
+
+<input type="hidden" name="reservation-list-page" value="1" id="reservation-list-page">
+<script type="text/javascript">
+    (function($){
+        $(document).ready(function () {
+            $('#showMoreReservations').on('click', function () {
+                var currPage = $.isNumeric($('#reservation-list-page').val())
+                    ? parseInt($('#reservation-list-page').val())
+                    : 1;
+
+                var nextPage = currPage + 1;
+                $('#reservation-list-page').val(nextPage);
+                var url = 'https://gtc.clubautomation.com/event/court-reservation-list-page?pageNum=' + nextPage;
+
+                showResources(null, url, 'table-reservation-list', null, null, false, null, 'append');
+            });
+        });
+    })(jQuery);
+</script>
+
+
+
+<div class="reserve-court-new-header">Make a New Reservation</div>
+<div class="reserve-court-new">
+
+    <div class="ca-element-error-wrapper">
+<input type="hidden" name="user_id" value="25397" id="user_id"></div>    <div class="ca-element-error-wrapper">
+<input type="hidden" name="event_member_token_reserve_court" value="64b5513eefd29d0c37ce0aad35bf3d6d" id="event_member_token_reserve_court"></div>    <div class="ca-element-error-wrapper">
+<input type="hidden" name="current_guest_count" value="0" id="current_guest_count"></div>    <div class="r-line">
+        <div class="t-block">What Service?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="component" id="component" class="ca-select">
+    <option value="2" selected="selected">Tennis</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#component").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+        <div class="clear-both"></div>
+    </div>
+        <div class="r-line" >
+        <div class="t-block">Where?</div>
+                <div class="i-block"  style="display: none;"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="club" id="club" class="ca-select">
+    <option value="-1" selected="selected">All Locations</option>
+    <option value="1">Lifetime Tennis GTC</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#club").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="location" id="location" class="ca-select">
+    <option value="-1" selected="selected">All Service Locations</option>
+    <option value="1">Tennis</option>
+    <option value="35">Pickleball / Mini Tennis</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#location").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="surface" id="surface" class="ca-select">
+    <option value="-1" selected="selected">All Surfaces</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#surface").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                                <div class="clear-both"></div>
+    </div>
+    <div class="r-line">
+        <div class="t-block">Who will host?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="host" id="host" class="ca-select">
+    <option value="25397" selected="selected">Benjamin Solis-Cohen</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#host").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                    <div class="i-guests">
+                            <div class="i-block i-vertical i-none" id="div_guest_1"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_1-wrapper"><input type="text" name="add-new-child-to-guest_1" id="guest_1" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_1").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="1"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_2"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_2-wrapper"><input type="text" name="add-new-child-to-guest_2" id="guest_2" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_2").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="2"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_3"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_3-wrapper"><input type="text" name="add-new-child-to-guest_3" id="guest_3" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_3").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="3"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_4"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_4-wrapper"><input type="text" name="add-new-child-to-guest_4" id="guest_4" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_4").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="4"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_5"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_5-wrapper"><input type="text" name="add-new-child-to-guest_5" id="guest_5" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_5").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="5"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_6"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_6-wrapper"><input type="text" name="add-new-child-to-guest_6" id="guest_6" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_6").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="6"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_7"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_7-wrapper"><input type="text" name="add-new-child-to-guest_7" id="guest_7" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_7").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="7"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_8"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_8-wrapper"><input type="text" name="add-new-child-to-guest_8" id="guest_8" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_8").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="8"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_9"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_9-wrapper"><input type="text" name="add-new-child-to-guest_9" id="guest_9" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_9").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="9"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_10"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_10-wrapper"><input type="text" name="add-new-child-to-guest_10" id="guest_10" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_10").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="10"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_11"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_11-wrapper"><input type="text" name="add-new-child-to-guest_11" id="guest_11" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_11").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="11"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_12"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_12-wrapper"><input type="text" name="add-new-child-to-guest_12" id="guest_12" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_12").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="12"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_13"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_13-wrapper"><input type="text" name="add-new-child-to-guest_13" id="guest_13" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_13").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="13"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_14"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_14-wrapper"><input type="text" name="add-new-child-to-guest_14" id="guest_14" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_14").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="14"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_15"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_15-wrapper"><input type="text" name="add-new-child-to-guest_15" id="guest_15" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_15").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="15"></span></div>
+                        <div class="clear-both"></div>
+            <div id="addParticipant" class="i-vertical span-add ">Add Participant</div>
+            <div class="clear-both"></div>
+            </div>            
+            <div class="clear-both"></div>
+                        <div class="clear-both"></div>
+    </div>
+
+        
+    <div class="r-line">
+        <div class="t-block">When?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui clearfix"><input type="text" name="date" id="date" value="06/08/2024" display_month_names="1" class="ca-text-field form-control">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#date").caText({});
+                        });
+                    })(jQuery)
+                </script>
+            </span>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#date").caDatePicker({"year":"2024","with_year":1,"format":"m\/d\/Y"});
+                        });
+                    })(jQuery)
+                </script>
+            </div></div>
+        <div class="l-block"><div class="ca-switcher switcher-interval"><div class="ca-element-error-wrapper">
+<label><input type="radio" name="interval" id="interval-30" value="30" checked="checked" horizontal="1">30 Min</label><label><input type="radio" name="interval" id="interval-50" value="50" horizontal="1">50 Min</label><label><input type="radio" name="interval" id="interval-60" value="60" horizontal="1">60 Min</label><label><input type="radio" name="interval" id="interval-90" value="90" horizontal="1">90 Min</label></div></div></div>
+        <div class="clear-both"></div>
+    </div>
+
+        <div class="r-line input-group time-block">
+        <div class="t-block">Search for available times</div>
+        <div class="l-block">
+            <div class="time-title">From</div>
+        </div>
+        <div class="i-block">
+            <div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="timeFrom" id="timeFrom" class="ca-select">
+    <option value="0">12:00 AM</option>
+    <option value="1">01:00 AM</option>
+    <option value="2">02:00 AM</option>
+    <option value="3">03:00 AM</option>
+    <option value="4">04:00 AM</option>
+    <option value="5">05:00 AM</option>
+    <option value="6">06:00 AM</option>
+    <option value="7">07:00 AM</option>
+    <option value="8">08:00 AM</option>
+    <option value="9">09:00 AM</option>
+    <option value="10">10:00 AM</option>
+    <option value="11">11:00 AM</option>
+    <option value="12">12:00 PM</option>
+    <option value="13">01:00 PM</option>
+    <option value="14">02:00 PM</option>
+    <option value="15">03:00 PM</option>
+    <option value="16">04:00 PM</option>
+    <option value="17">05:00 PM</option>
+    <option value="18">06:00 PM</option>
+    <option value="19">07:00 PM</option>
+    <option value="20" selected="selected">08:00 PM</option>
+    <option value="21">09:00 PM</option>
+    <option value="22">10:00 PM</option>
+    <option value="23">11:00 PM</option>
+    <option value="24">12:00 AM</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#timeFrom").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div>        </div>
+        <div class="l-block">
+            <div class="time-title">To</div>
+        </div>
+        <div class="i-block">
+            <div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="timeTo" id="timeTo" class="ca-select">
+    <option value="0">12:00 AM</option>
+    <option value="1">01:00 AM</option>
+    <option value="2">02:00 AM</option>
+    <option value="3">03:00 AM</option>
+    <option value="4">04:00 AM</option>
+    <option value="5">05:00 AM</option>
+    <option value="6">06:00 AM</option>
+    <option value="7">07:00 AM</option>
+    <option value="8">08:00 AM</option>
+    <option value="9">09:00 AM</option>
+    <option value="10">10:00 AM</option>
+    <option value="11">11:00 AM</option>
+    <option value="12">12:00 PM</option>
+    <option value="13">01:00 PM</option>
+    <option value="14">02:00 PM</option>
+    <option value="15">03:00 PM</option>
+    <option value="16">04:00 PM</option>
+    <option value="17">05:00 PM</option>
+    <option value="18">06:00 PM</option>
+    <option value="19">07:00 PM</option>
+    <option value="20">08:00 PM</option>
+    <option value="21">09:00 PM</option>
+    <option value="22">10:00 PM</option>
+    <option value="23">11:00 PM</option>
+    <option value="24">12:00 AM</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#timeTo").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div>        </div>
+        <div class="clear-both"></div>
+    </div>
+    
+    <div class="r-line before-search">
+        <div class="i-block">
+            <span class="ca-pro-ui"><button name="reserve-court-search" id="reserve-court-search" type="button" value="Search" class="btn  btn-info" style="">Search</button></span>        </div>
+        <div class="t-block"></div>
+        <div class="clear-both"></div>
+    </div>
+
+    <input type="hidden" name="time-reserve" id="time-reserve">
+    <input type="hidden" name="location-reserve" id="location-reserve">
+    <input type="hidden" name="surface-reserve" id="surface-reserve">
+
+    <input type="hidden" name="courtsnotavailable" class="courtsnotavailable" value="">
+
+    <div class="r-line times-to-reserve-container pick-time-list">
+        <div class="t-block">Pick a Time</div>
+        <table id="times-to-reserve" class="times-to-reserve">
+                            <tr>
+                                                                        <td class="td-blue">
+                                <b>Pickleball / Mini Tennis - </b><br /><br />
+                                                                    <a href="javascript:void(0);" t="1717907400" l="35" s="0">
+                                        9:30pm                                    </a> <br />
+                                                            </td>
+                                                                                                                            <td class="">
+                                <b>Tennis - </b><br /><br />
+                                                                    <a href="javascript:void(0);" t="1717907400" l="1" s="0">
+                                        9:30pm                                    </a> <br />
+                                                            </td>
+                                                                                <td class="td-blue">
+                                                                                        </tr>
+        </table>
+    </div>
+        <div class="r-line times-to-reserve-container search-notify">
+        <b>Click "Search" to populate reservation times.</b>
+    </div>
+    <input type="hidden" name="join-waitlist-case" id="join-waitlist-case" value="1">
+    
+</div>
+</form>
+
+<script type="text/javascript">
+newMemberReg = {
+};
+
+(function($) {
+    var checkForDuplicates = function(e, params) {
+        var item = params.item;
+
+        if (item !== undefined && item.id) {
+            var selectedHost = jQuery("#host option:selected").val();
+
+            if (selectedHost == item.id) {
+                $.caAlert('This user is already selected as the host', 'Cannot add new participant');
+
+                return false;
+            }
+
+            var fullname = item.label.replace("'", "\\'").replace('&quot;', '"');
+            var participants = $("input[name*='guest_'][value='" + item.id + "']");
+            var guests = $("input[name*='guest_'][value='" + fullname + "']");
+
+            if (participants.length !== 0) {
+                $.caAlert('This user has already been added as a participant', 'Cannot add new participant');
+
+                return false;
+            }
+            if (guests.length !== 0) {
+                $.caAlert('This guest has already been added as a participant', 'Cannot add new participant');
+
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        return true;
+    };
+    
+    newMemberReg = {
+        reserveCourtConfirm: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+                
+            var form = $('#reserve-court-filter');
+            var params = form.serialize();
+            params = params + '&is_confirmed=1';
+            //debugger;
+            $.caPost('/event/reserve-court-new-do?ajax=true', params, function(response){
+                var title = 'Confirm Reservation';
+                var width = 800;
+                if (response.indexOf('f7ae89266c0ba312d80220e50ac3b1a2') > 0) {
+                    //title = 'OOPS!';
+                    width = 600;
+                }
+                //$('#reserve-court-new').append(response);
+                var popup = $('<div></div>').append(response);
+                $('#reserve-court-new').append(popup);
+                newMemberReg.popup = popup.caDialog({
+                    title: title,
+                    resizable: false,
+                    beforeClose:function () {
+                        $(this).remove();
+                    },
+                    width: width,
+                    showCloseButton:true,
+                    modal : true,
+                    dialogClass: 'confirm-reservation-dialog'
+                });
+            });
+        },
+        reserveUserConfirm: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+                
+            var form = $('#reserve-court-filter');
+            var params = form.serialize();
+            params = params + '&skipUserAvailability=1';
+            //debugger;
+            $.caPost('/event/reserve-court-new-do?ajax=true', params, function(response){
+                //$('#reserve-court-new').append(response);
+                var popup = $('<div></div>').append(response);
+                $('#reserve-court-new').append(popup);
+                newMemberReg.popup = popup.caDialog({
+                    title:'Confirm Reservation',
+                    resizable:false,
+                    beforeClose:function () {
+                        $(this).remove();
+                    },
+                    width: 800,
+                    showCloseButton:true,
+                    modal : true,
+                    dialogClass: 'confirm-reservation-dialog'
+                });
+            });
+        },
+        closePopup: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+        },
+        popup: false,
+        
+        optionSelect: function() {
+            var val = $('#reserve-court-filter input[name=option]:checked').val();
+            switch (val) {
+                case 'singles':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_2').hide();
+                    $('#div_guest_3').hide();
+                    break;
+                case 'doubles':
+                    newMemberReg.showAllParticipants();
+                    break;
+                case 'ball_machine':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_1").caUserPicker('clearItem');
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_block').hide();
+                    break;
+                case 'serves':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_1").caUserPicker('clearItem');
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_block').hide();
+                    break;
+            }
+        },
+        showAllParticipants: function() {
+            $('#div_guest_1').show();    
+            $('#div_guest_2').show();
+            $('#div_guest_3').show();
+            $('#div_guest_block').show();
+        }
+    };
+    
+    $(document).ready(function() {
+        var form = $('#reserve-court-filter');
+
+        $('#addParticipant').bind('click', function() {
+            var c = $('#current_guest_count').val();
+            for( var i = 1; i <= 15; i++ ) {
+               if($('#div_guest_' + i).is(':hidden')) {
+                   $('#div_guest_' + i).show(); 
+                   c = c + ',' + i;
+                   $('#current_guest_count').val(c);
+                   break;
+               }
+            }
+            
+        });
+        $('.i-minus').bind('click', function() {
+            var cid = $(this).attr('cid');
+            $("#guest_" + cid).caUserPicker('clearItem');
+            $('#div_guest_' + cid).hide(); 
+            
+            var c = $('#current_guest_count').val();
+            var tmp = c.split(',');
+            tmp.splice( $.inArray(cid, tmp) ,1 );
+            c = tmp.join();
+            $('#current_guest_count').val(c);
+        });        
+        
+        $('#date').caDatePicker('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+
+        form.find('#component').bind('change', function() {
+            Event_Reserve_Court_New.componentChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#club').bind('change', function() {
+            Event_Reserve_Court_New.clubChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#location').bind('change', function() {
+            Event_Reserve_Court_New.locationChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#surface').bind('change', function() {
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#court').bind('change', function() {
+            Event_Reserve_Court_New.clearTimesToReserve();
+        });
+
+        var previous;
+
+        form.find('#host').on('focus', function () {
+            previous = $(this).val();
+        }).change(function() {
+            var guests = $("input[name*='guest_'][name*='_id'][value='" + $(this).val() + "']");
+
+            if (guests.length !== 0) {
+                $.caAlert('This user has already been added as a participant', 'Cannot change the host');
+
+                $(this).val(previous);
+
+                return false;
+            } else {
+                Event_Reserve_Court_New.clearTimesToReserve();
+            }
+        });
+
+                    form.find('#guest_1').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_2').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_3').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_4').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_5').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_6').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_7').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_8').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_9').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_10').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_11').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_12').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_13').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_14').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_15').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+        
+        $('.ca-switcher').caSwitcher();
+        $('.switcher-interval').caSwitcher('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+        $('.switcher-bm').caSwitcher('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+        
+        $('#times-to-reserve a').bind('click', function() {
+            var t = $(this).attr('t');
+            var l = $(this).attr('l');
+            var s = $(this).attr('s');
+            if(t) {
+                $('#time-reserve').val(t);
+                $('#location-reserve').val(l);
+                $('#surface-reserve').val(s);
+                var form = $('#reserve-court-filter');
+                $.caPost('/event/reserve-court-new-do?ajax=true', form.serialize(), function(response){
+                    var title = 'Confirm Reservation';
+                    var width = 800;
+                    if (response.indexOf('682f436ba7840abb027cb6a8a976605e') > 0) {
+                        title = 'OOPS!';
+                        width = 600;
+                    }
+                    var closePopup = false;
+                    if (response.indexOf('d41d8cd98f00b204e9800998ecf8427e') > 0) {
+                        width = 500;
+                        closePopup = true;
+                    }
+                    //$('#reserve-court-new').append(response);
+                    var popup = $('<div></div>').append(response);
+                    $('#reserve-court-new').append(popup);
+                    newMemberReg.popup = popup.caDialog({
+                        title: title,
+                        resizable:false,
+                        beforeClose:function () {
+                            $(this).remove();
+                        },
+                        width: width,
+                        showCloseButton:true,
+                        modal : true,
+                        dialogClass: 'confirm-reservation-dialog',
+                        close: function() {
+                            if(closePopup) {
+                                Event_Reserve_Court_New.clearTimesToReserve();
+                            }
+                        }
+                    });
+                });
+            }
+        });
+
+        newMemberReg.optionSelect();
+    });
+})(jQuery);
+</script>
+</div>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            Event_Reserve_Court_New.init();
+        });
+    })(jQuery);
+</script>
+</test case>
+<test case 1 begin >
+Failed test case.
+            Actual test case output:
+            {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm', '9:00pm', '9:30pm']}
+            Expected test case output:
+            {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}
+            Debug test case output:
+            
+<div id="reserve-court-new">
+<form method="post" id="reserve-court-filter">
+    <div id="view-reservation-list">
+    <table class="reservation-list-new" id="table-reservation-list">
+        <tr>
+            <th colspan="2">Your Reservations</th>
+            <th>Host</th>
+            <th>Activity</th>
+            <th>Players</th>
+            <th></th>
+        </tr>
+        
+<script type="text/javascript">
+    (function ($) {
+        $(document).ready(function () {
+            var isLastPage = '1';
+            if (isLastPage) {
+                $('.reservation-list-show-more').addClass('hidden');
+            } else {
+                $('.reservation-list-show-more').removeClass('hidden');
+            }
+
+            $('.court-time-cancel').unbind('click').bind('click', function() {
+                var cid = $(this).attr('cid');
+
+                $.caPost(
+                    '/event/cancel-court-time?ajax=true',
+                    {id: cid},
+                    function(response) {
+                        var popup = $('<div></div>').append(response);
+                        $('#reserve-court-new').append(popup);
+
+                        newMemberReg.popup = popup.caDialog({
+                            title: 'Cancel Reservation',
+                            resizable: false,
+                            width: 400,
+                            showCloseButton: true,
+                            modal: true,
+                            beforeClose: function () {
+                                $(this).remove();
+                            }
+                        });
+                    }
+                );
+            });
+        });
+    })(jQuery);
+</script>
+    </table>
+    <div class="reservation-list-show-more hidden">
+        <a href="javascript:void(0)" id="showMoreReservations">Show More Reservations</a>
+    </div>
+</div>
+
+<input type="hidden" name="reservation-list-page" value="1" id="reservation-list-page">
+<script type="text/javascript">
+    (function($){
+        $(document).ready(function () {
+            $('#showMoreReservations').on('click', function () {
+                var currPage = $.isNumeric($('#reservation-list-page').val())
+                    ? parseInt($('#reservation-list-page').val())
+                    : 1;
+
+                var nextPage = currPage + 1;
+                $('#reservation-list-page').val(nextPage);
+                var url = 'https://gtc.clubautomation.com/event/court-reservation-list-page?pageNum=' + nextPage;
+
+                showResources(null, url, 'table-reservation-list', null, null, false, null, 'append');
+            });
+        });
+    })(jQuery);
+</script>
+
+
+
+<div class="reserve-court-new-header">Make a New Reservation</div>
+<div class="reserve-court-new">
+
+    <div class="ca-element-error-wrapper">
+<input type="hidden" name="user_id" value="25397" id="user_id"></div>    <div class="ca-element-error-wrapper">
+<input type="hidden" name="event_member_token_reserve_court" value="64b5513eefd29d0c37ce0aad35bf3d6d" id="event_member_token_reserve_court"></div>    <div class="ca-element-error-wrapper">
+<input type="hidden" name="current_guest_count" value="0" id="current_guest_count"></div>    <div class="r-line">
+        <div class="t-block">What Service?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="component" id="component" class="ca-select">
+    <option value="2" selected="selected">Tennis</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#component").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+        <div class="clear-both"></div>
+    </div>
+        <div class="r-line" >
+        <div class="t-block">Where?</div>
+                <div class="i-block"  style="display: none;"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="club" id="club" class="ca-select">
+    <option value="-1" selected="selected">All Locations</option>
+    <option value="1">Lifetime Tennis GTC</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#club").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="location" id="location" class="ca-select">
+    <option value="-1" selected="selected">All Service Locations</option>
+    <option value="1">Tennis</option>
+    <option value="35">Pickleball / Mini Tennis</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#location").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="surface" id="surface" class="ca-select">
+    <option value="-1" selected="selected">All Surfaces</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#surface").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                                <div class="clear-both"></div>
+    </div>
+    <div class="r-line">
+        <div class="t-block">Who will host?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="host" id="host" class="ca-select">
+    <option value="25397" selected="selected">Benjamin Solis-Cohen</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#host").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div></div>
+                    <div class="i-guests">
+                            <div class="i-block i-vertical i-none" id="div_guest_1"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_1-wrapper"><input type="text" name="add-new-child-to-guest_1" id="guest_1" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_1").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="1"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_2"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_2-wrapper"><input type="text" name="add-new-child-to-guest_2" id="guest_2" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_2").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="2"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_3"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_3-wrapper"><input type="text" name="add-new-child-to-guest_3" id="guest_3" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_3").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="3"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_4"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_4-wrapper"><input type="text" name="add-new-child-to-guest_4" id="guest_4" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_4").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="4"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_5"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_5-wrapper"><input type="text" name="add-new-child-to-guest_5" id="guest_5" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_5").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="5"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_6"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_6-wrapper"><input type="text" name="add-new-child-to-guest_6" id="guest_6" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_6").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="6"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_7"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_7-wrapper"><input type="text" name="add-new-child-to-guest_7" id="guest_7" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_7").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="7"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_8"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_8-wrapper"><input type="text" name="add-new-child-to-guest_8" id="guest_8" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_8").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="8"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_9"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_9-wrapper"><input type="text" name="add-new-child-to-guest_9" id="guest_9" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_9").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="9"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_10"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_10-wrapper"><input type="text" name="add-new-child-to-guest_10" id="guest_10" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_10").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="10"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_11"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_11-wrapper"><input type="text" name="add-new-child-to-guest_11" id="guest_11" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_11").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="11"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_12"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_12-wrapper"><input type="text" name="add-new-child-to-guest_12" id="guest_12" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_12").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="12"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_13"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_13-wrapper"><input type="text" name="add-new-child-to-guest_13" id="guest_13" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_13").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="13"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_14"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_14-wrapper"><input type="text" name="add-new-child-to-guest_14" id="guest_14" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_14").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="14"></span></div>
+                            <div class="i-block i-vertical i-none" id="div_guest_15"><div class="i-subblock"><div class="ca-element-error-wrapper">
+<div class="ca-pro-ui"><div class="tagsinput ca-autocomplete ca-user-picker" id="guest_15-wrapper"><input type="text" name="add-new-child-to-guest_15" id="guest_15" value="" class="add-new ca-text-field">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#guest_15").caUserPicker({"placeholder":"Type Name","showCreateButton":false,"showAddGuestButton":true,"items":[]});
+                        });
+                    })(jQuery)
+                </script>
+            <div class="tags_clear"></div></div></div></div></div><span class="i-minus" cid="15"></span></div>
+                        <div class="clear-both"></div>
+            <div id="addParticipant" class="i-vertical span-add ">Add Participant</div>
+            <div class="clear-both"></div>
+            </div>            
+            <div class="clear-both"></div>
+                        <div class="clear-both"></div>
+    </div>
+
+        
+    <div class="r-line">
+        <div class="t-block">When?</div>
+        <div class="i-block"><div class="ca-element-error-wrapper">
+<span class="ca-pro-ui clearfix"><input type="text" name="date" id="date" value="06/08/2024" display_month_names="1" class="ca-text-field form-control">
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#date").caText({});
+                        });
+                    })(jQuery)
+                </script>
+            </span>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#date").caDatePicker({"year":"2024","with_year":1,"format":"m\/d\/Y"});
+                        });
+                    })(jQuery)
+                </script>
+            </div></div>
+        <div class="l-block"><div class="ca-switcher switcher-interval"><div class="ca-element-error-wrapper">
+<label><input type="radio" name="interval" id="interval-30" value="30" checked="checked" horizontal="1">30 Min</label><label><input type="radio" name="interval" id="interval-50" value="50" horizontal="1">50 Min</label><label><input type="radio" name="interval" id="interval-60" value="60" horizontal="1">60 Min</label><label><input type="radio" name="interval" id="interval-90" value="90" horizontal="1">90 Min</label></div></div></div>
+        <div class="clear-both"></div>
+    </div>
+
+        <div class="r-line input-group time-block">
+        <div class="t-block">Search for available times</div>
+        <div class="l-block">
+            <div class="time-title">From</div>
+        </div>
+        <div class="i-block">
+            <div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="timeFrom" id="timeFrom" class="ca-select">
+    <option value="0">12:00 AM</option>
+    <option value="1">01:00 AM</option>
+    <option value="2">02:00 AM</option>
+    <option value="3">03:00 AM</option>
+    <option value="4">04:00 AM</option>
+    <option value="5">05:00 AM</option>
+    <option value="6">06:00 AM</option>
+    <option value="7">07:00 AM</option>
+    <option value="8">08:00 AM</option>
+    <option value="9">09:00 AM</option>
+    <option value="10">10:00 AM</option>
+    <option value="11">11:00 AM</option>
+    <option value="12">12:00 PM</option>
+    <option value="13">01:00 PM</option>
+    <option value="14">02:00 PM</option>
+    <option value="15">03:00 PM</option>
+    <option value="16">04:00 PM</option>
+    <option value="17">05:00 PM</option>
+    <option value="18">06:00 PM</option>
+    <option value="19">07:00 PM</option>
+    <option value="20" selected="selected">08:00 PM</option>
+    <option value="21">09:00 PM</option>
+    <option value="22">10:00 PM</option>
+    <option value="23">11:00 PM</option>
+    <option value="24">12:00 AM</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#timeFrom").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div>        </div>
+        <div class="l-block">
+            <div class="time-title">To</div>
+        </div>
+        <div class="i-block">
+            <div class="ca-element-error-wrapper">
+<span class="ca-pro-ui"><span class="select-input-container"><select name="timeTo" id="timeTo" class="ca-select">
+    <option value="0">12:00 AM</option>
+    <option value="1">01:00 AM</option>
+    <option value="2">02:00 AM</option>
+    <option value="3">03:00 AM</option>
+    <option value="4">04:00 AM</option>
+    <option value="5">05:00 AM</option>
+    <option value="6">06:00 AM</option>
+    <option value="7">07:00 AM</option>
+    <option value="8">08:00 AM</option>
+    <option value="9">09:00 AM</option>
+    <option value="10">10:00 AM</option>
+    <option value="11">11:00 AM</option>
+    <option value="12">12:00 PM</option>
+    <option value="13">01:00 PM</option>
+    <option value="14">02:00 PM</option>
+    <option value="15">03:00 PM</option>
+    <option value="16">04:00 PM</option>
+    <option value="17">05:00 PM</option>
+    <option value="18">06:00 PM</option>
+    <option value="19">07:00 PM</option>
+    <option value="20">08:00 PM</option>
+    <option value="21">09:00 PM</option>
+    <option value="22">10:00 PM</option>
+    <option value="23">11:00 PM</option>
+    <option value="24">12:00 AM</option>
+</select>
+                <script type="text/javascript">
+                    (function($) {
+                        $(document).ready(function() {
+                            $("#timeTo").caSelect({"width":150,"tickWidth":30,"selectType":"select"});
+                        });
+                    })(jQuery)
+                </script>
+            </span></span></div>        </div>
+        <div class="clear-both"></div>
+    </div>
+    
+    <div class="r-line before-search">
+        <div class="i-block">
+            <span class="ca-pro-ui"><button name="reserve-court-search" id="reserve-court-search" type="button" value="Search" class="btn  btn-info" style="">Search</button></span>        </div>
+        <div class="t-block"></div>
+        <div class="clear-both"></div>
+    </div>
+
+    <input type="hidden" name="time-reserve" id="time-reserve">
+    <input type="hidden" name="location-reserve" id="location-reserve">
+    <input type="hidden" name="surface-reserve" id="surface-reserve">
+
+    <input type="hidden" name="courtsnotavailable" class="courtsnotavailable" value="">
+
+    <div class="r-line times-to-reserve-container pick-time-list">
+        <div class="t-block">Pick a Time</div>
+        <table id="times-to-reserve" class="times-to-reserve">
+                            <tr>
+                                                                        <td class="td-blue">
+                                <b>Pickleball / Mini Tennis - </b><br /><br />
+                                                                    <a href="javascript:void(0);" t="1717905600" l="35" s="0">
+                                        9:00pm                                    </a> <br />
+                                                                    <a href="javascript:void(0);" t="1717907400" l="35" s="0">
+                                        9:30pm                                    </a> <br />
+                                                            </td>
+                                                                                                                            <td class="">
+                                <b>Tennis - </b><br /><br />
+                                                                    <a href="javascript:void(0);" t="1717902000" l="1" s="0">
+                                        8:00pm                                    </a> <br />
+                                                                    <a href="javascript:void(0);" t="1717903800" l="1" s="0">
+                                        8:30pm                                    </a> <br />
+                                                                    <a href="javascript:void(0);" t="1717905600" l="1" s="0">
+                                        9:00pm                                    </a> <br />
+                                                                    <a href="javascript:void(0);" t="1717907400" l="1" s="0">
+                                        9:30pm                                    </a> <br />
+                                                            </td>
+                                                                                <td class="td-blue">
+                                <b>Tennis - </b><br /><br />
+                                                                    <a href="javascript:void(0);" t="1717905600" l="1" s="2">
+                                        9:00pm                                    </a> <br />
+                                                                    <a href="javascript:void(0);" t="1717907400" l="1" s="2">
+                                        9:30pm                                    </a> <br />
+                                                            </td>
+                                                                                        </tr>
+        </table>
+    </div>
+        <div class="r-line times-to-reserve-container search-notify">
+        <b>Click "Search" to populate reservation times.</b>
+    </div>
+    <input type="hidden" name="join-waitlist-case" id="join-waitlist-case" value="1">
+    
+</div>
+</form>
+
+<script type="text/javascript">
+newMemberReg = {
+};
+
+(function($) {
+    var checkForDuplicates = function(e, params) {
+        var item = params.item;
+
+        if (item !== undefined && item.id) {
+            var selectedHost = jQuery("#host option:selected").val();
+
+            if (selectedHost == item.id) {
+                $.caAlert('This user is already selected as the host', 'Cannot add new participant');
+
+                return false;
+            }
+
+            var fullname = item.label.replace("'", "\\'").replace('&quot;', '"');
+            var participants = $("input[name*='guest_'][value='" + item.id + "']");
+            var guests = $("input[name*='guest_'][value='" + fullname + "']");
+
+            if (participants.length !== 0) {
+                $.caAlert('This user has already been added as a participant', 'Cannot add new participant');
+
+                return false;
+            }
+            if (guests.length !== 0) {
+                $.caAlert('This guest has already been added as a participant', 'Cannot add new participant');
+
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        return true;
+    };
+    
+    newMemberReg = {
+        reserveCourtConfirm: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+                
+            var form = $('#reserve-court-filter');
+            var params = form.serialize();
+            params = params + '&is_confirmed=1';
+            //debugger;
+            $.caPost('/event/reserve-court-new-do?ajax=true', params, function(response){
+                var title = 'Confirm Reservation';
+                var width = 800;
+                if (response.indexOf('f7ae89266c0ba312d80220e50ac3b1a2') > 0) {
+                    //title = 'OOPS!';
+                    width = 600;
+                }
+                //$('#reserve-court-new').append(response);
+                var popup = $('<div></div>').append(response);
+                $('#reserve-court-new').append(popup);
+                newMemberReg.popup = popup.caDialog({
+                    title: title,
+                    resizable: false,
+                    beforeClose:function () {
+                        $(this).remove();
+                    },
+                    width: width,
+                    showCloseButton:true,
+                    modal : true,
+                    dialogClass: 'confirm-reservation-dialog'
+                });
+            });
+        },
+        reserveUserConfirm: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+                
+            var form = $('#reserve-court-filter');
+            var params = form.serialize();
+            params = params + '&skipUserAvailability=1';
+            //debugger;
+            $.caPost('/event/reserve-court-new-do?ajax=true', params, function(response){
+                //$('#reserve-court-new').append(response);
+                var popup = $('<div></div>').append(response);
+                $('#reserve-court-new').append(popup);
+                newMemberReg.popup = popup.caDialog({
+                    title:'Confirm Reservation',
+                    resizable:false,
+                    beforeClose:function () {
+                        $(this).remove();
+                    },
+                    width: 800,
+                    showCloseButton:true,
+                    modal : true,
+                    dialogClass: 'confirm-reservation-dialog'
+                });
+            });
+        },
+        closePopup: function() {
+            if(newMemberReg.popup) newMemberReg.popup.caDialog('close');
+        },
+        popup: false,
+        
+        optionSelect: function() {
+            var val = $('#reserve-court-filter input[name=option]:checked').val();
+            switch (val) {
+                case 'singles':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_2').hide();
+                    $('#div_guest_3').hide();
+                    break;
+                case 'doubles':
+                    newMemberReg.showAllParticipants();
+                    break;
+                case 'ball_machine':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_1").caUserPicker('clearItem');
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_block').hide();
+                    break;
+                case 'serves':
+                    newMemberReg.showAllParticipants();
+                    $("#guest_1").caUserPicker('clearItem');
+                    $("#guest_2").caUserPicker('clearItem');
+                    $("#guest_3").caUserPicker('clearItem');
+                    $('#div_guest_block').hide();
+                    break;
+            }
+        },
+        showAllParticipants: function() {
+            $('#div_guest_1').show();    
+            $('#div_guest_2').show();
+            $('#div_guest_3').show();
+            $('#div_guest_block').show();
+        }
+    };
+    
+    $(document).ready(function() {
+        var form = $('#reserve-court-filter');
+
+        $('#addParticipant').bind('click', function() {
+            var c = $('#current_guest_count').val();
+            for( var i = 1; i <= 15; i++ ) {
+               if($('#div_guest_' + i).is(':hidden')) {
+                   $('#div_guest_' + i).show(); 
+                   c = c + ',' + i;
+                   $('#current_guest_count').val(c);
+                   break;
+               }
+            }
+            
+        });
+        $('.i-minus').bind('click', function() {
+            var cid = $(this).attr('cid');
+            $("#guest_" + cid).caUserPicker('clearItem');
+            $('#div_guest_' + cid).hide(); 
+            
+            var c = $('#current_guest_count').val();
+            var tmp = c.split(',');
+            tmp.splice( $.inArray(cid, tmp) ,1 );
+            c = tmp.join();
+            $('#current_guest_count').val(c);
+        });        
+        
+        $('#date').caDatePicker('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+
+        form.find('#component').bind('change', function() {
+            Event_Reserve_Court_New.componentChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#club').bind('change', function() {
+            Event_Reserve_Court_New.clubChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#location').bind('change', function() {
+            Event_Reserve_Court_New.locationChanged();
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#surface').bind('change', function() {
+            Event_Reserve_Court_New.updateForm();
+        });
+        form.find('#court').bind('change', function() {
+            Event_Reserve_Court_New.clearTimesToReserve();
+        });
+
+        var previous;
+
+        form.find('#host').on('focus', function () {
+            previous = $(this).val();
+        }).change(function() {
+            var guests = $("input[name*='guest_'][name*='_id'][value='" + $(this).val() + "']");
+
+            if (guests.length !== 0) {
+                $.caAlert('This user has already been added as a participant', 'Cannot change the host');
+
+                $(this).val(previous);
+
+                return false;
+            } else {
+                Event_Reserve_Court_New.clearTimesToReserve();
+            }
+        });
+
+                    form.find('#guest_1').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_2').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_3').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_4').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_5').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_6').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_7').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_8').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_9').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_10').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_11').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_12').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_13').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_14').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+                    form.find('#guest_15').caUserPicker('option', 'select', function (e, ui) {
+               if (checkForDuplicates({}, ui)) {
+                   Event_Reserve_Court_New.clearTimesToReserve();
+                   $(this).caUserPicker('setItem', ui.item);
+
+               } else {
+                   $(this).val('');
+                   return false;
+               }
+            });
+        
+        $('.ca-switcher').caSwitcher();
+        $('.switcher-interval').caSwitcher('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+        $('.switcher-bm').caSwitcher('setOnChange', Event_Reserve_Court_New.clearTimesToReserve);
+        
+        $('#times-to-reserve a').bind('click', function() {
+            var t = $(this).attr('t');
+            var l = $(this).attr('l');
+            var s = $(this).attr('s');
+            if(t) {
+                $('#time-reserve').val(t);
+                $('#location-reserve').val(l);
+                $('#surface-reserve').val(s);
+                var form = $('#reserve-court-filter');
+                $.caPost('/event/reserve-court-new-do?ajax=true', form.serialize(), function(response){
+                    var title = 'Confirm Reservation';
+                    var width = 800;
+                    if (response.indexOf('682f436ba7840abb027cb6a8a976605e') > 0) {
+                        title = 'OOPS!';
+                        width = 600;
+                    }
+                    var closePopup = false;
+                    if (response.indexOf('d41d8cd98f00b204e9800998ecf8427e') > 0) {
+                        width = 500;
+                        closePopup = true;
+                    }
+                    //$('#reserve-court-new').append(response);
+                    var popup = $('<div></div>').append(response);
+                    $('#reserve-court-new').append(popup);
+                    newMemberReg.popup = popup.caDialog({
+                        title: title,
+                        resizable:false,
+                        beforeClose:function () {
+                            $(this).remove();
+                        },
+                        width: width,
+                        showCloseButton:true,
+                        modal : true,
+                        dialogClass: 'confirm-reservation-dialog',
+                        close: function() {
+                            if(closePopup) {
+                                Event_Reserve_Court_New.clearTimesToReserve();
+                            }
+                        }
+                    });
+                });
+            }
+        });
+
+        newMemberReg.optionSelect();
+    });
+})(jQuery);
+</script>
+</div>
+<script>
+    (function ($) {
+        $(document).ready(function () {
+            Event_Reserve_Court_New.init();
+        });
+    })(jQuery);
+</script>
+            Differences:
+            Expected: {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}, Got: {'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm', '9:00pm', '9:30pm']}
+</test case>.
+Explain for each failing test case how does the actual output differ from the expected output (be very specific here, feel free to take multiple sentences)? And why do you think that is? If useful, consider the Debug Output when reasoning about your response.
+
+Note: You are allowed to be skeptical of the test case. If you have high confidence that there is an issue with the test case expected output e.g. incorrectly set fields, you should say so. The same is true for input. But please don't stop just call it out and continue. In this case you should output SUSPECT_BAD_TEST_CASE, REASON: <reason>.
+
+    
+    Note: To save resource, try to avoid printing entire HTTP requests or json, instead only print parts that may be useful for debugging     you may wish to summarize the structure in plain text the parts that you choose leave out.
+     
+    (2) Construct an improvement plan to fix the test failures. When formulating this plan, observe the previous solutions
+    shown above and try not to repeat fixes that we already know do not lead to passing the test cases. Relfect explicitly on what
+    we've tried before and whether it made a difference. If it did not make a difference, why not?
+        
+    (3) Sketch out the specific pseudocode of the fixes you plan to implement. Feel free to include actual code snipits. 
+
+ and as a result of the above prompt you gave this relfection summary:
+
+ ### Analysis of Test Failures
+
+#### Test Case 0
+- **Actual Output:** `{'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}`
+- **Expected Output:** `{'Pickleball / Mini Tennis': ['9:30pm'], 'Tennis': ['9:30pm']}`
+- **Status:** Passed
+
+#### Test Case 1
+- **Actual Output:** `{'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm', '9:00pm', '9:30pm']}`
+- **Expected Output:** `{'Pickleball / Mini Tennis': ['9:00pm', '9:30pm'], 'Tennis': ['8:00pm', '8:30pm', '9:00pm', '9:30pm']}`
+- **Status:** Failed
+- **Difference:** The actual output contains duplicate times for 'Tennis' at '9:00pm' and '9:30pm'.
+
+### Reasoning
+The issue in Test Case 1 is that the function is capturing duplicate times for the 'Tennis' activity. This suggests that the function is not correctly handling cases where the same time appears multiple times for the same activity.
+
+### Improvement Plan
+1. **Remove Duplicates:** Ensure that the function does not add duplicate times for the same activity.
+2. **Refactor Parsing Logic:** Review and refine the parsing logic to ensure it correctly identifies and processes unique times for each activity.
+
+### Pseudocode and Implementation Plan
+
+1. **Initialize Result Dictionary:**
+   - Create an empty dictionary to store the results.
+
+2. **Parse HTML Content:**
+   - Use BeautifulSoup to parse the HTML content.
+
+3. **Find All Time Slots:**
+   - Use a CSS selector to find all `<a>` tags within the `#times-to-reserve` table.
+
+4. **Extract Activity and Time:**
+   - For each time slot, find the corresponding activity by looking at the previous `<b>` tag.
+   - Extract the time from the `<a>` tag.
+
+5. **Store Unique Times:**
+   - Check if the activity is already in the result dictionary.
+   - If not, add the activity with an empty list.
+   - Append the time to the list if it is not already present.
+
+6. **Return Result:**
+   - Return the result dictionary.
+
+### Code Implementation
+
+```python
+from bs4 import BeautifulSoup
+
+def extract_playing_times(html_content):
+    # Parse the HTML content
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # Initialize the result dictionary
+    result = {}
+    
+    # Find all the time slots
+    time_slots = soup.select('#times-to-reserve a')
+    
+    for slot in time_slots:
+        # Find the corresponding activity
+        activity = slot.find_previous('b').text.strip().replace(' -', '')
+        time = slot.text.strip()
+        
+        # Initialize the activity list if not already present
+        if activity not in result:
+            result[activity] = []
+        
+        # Append the time if it is not already in the list
+        if time not in result[activity]:
+            result[activity].append(time)
+    
+    return result
+```
+
+### Reflection on Previous Solutions
+- **Previous Solution:** The previous solution correctly parsed the HTML and extracted times but did not handle duplicates.
+- **Difference:** The new solution includes a check to ensure that times are not duplicated within the same activity.
+
+### Conclusion
+The new implementation should correctly handle the extraction of unique playing times for each activity, addressing the issue observed in Test Case 1. This approach ensures that the function does not add duplicate times for the same activity, leading to the expected output.
+
+Main directive: Rewrite the code to fix the test cases. Be sure to follow the plan in the reflection summary.
+        
+IMPORTANT: Also, print out intermediate variable names for debugging purposes. Instead of print() append to global variable debug_output. At first debug_output can be simple, but as you fail a test more times, you should add more and more details and variables to debug_output until we find the issue. Remember to define "global debug_output" at the top of any scope that updates debug_output.
+                 
+---CHECKING CODE---
+Comparing as strings: Match
+Comparing as strings: Match
+=========== CODE BLOCK CHECK: SUCCEEDED in 2 iterations ===========
+---DECISION: FINISH---

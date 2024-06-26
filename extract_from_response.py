@@ -1,4 +1,4 @@
-from codegen import CodeGenerator, combined_code
+from codegen import CodeGenerator, combined_code, exec_as_main
 import os
 
 def generate_response_func(code_generator, test_cases):
@@ -29,5 +29,5 @@ def extract_info_from_response(response_content, response_func):
     print("====================== Response content top 1000 ========================\n", response_content[:1000])
     global_scope = {'global_input': response_content,
                     'global_output': ""}
-    exec(response_func, global_scope)
+    exec_as_main(response_func, global_scope)
     return global_scope['global_output']

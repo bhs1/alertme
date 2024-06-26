@@ -29,11 +29,17 @@ def set_output(output):
     global global_output
     global_output = output
 
-# Main execution
-input = get_input()
-result = func(input)
-set_output(str(result))
+if __name__ == "__main__":
+    input = get_input()
+    result = func(input)
+    set_output(str(result))
 """
+
+CODE_PREFIX = "__name__ = '__main__'\n"
+
+def exec_as_main(code: str, global_scope: dict = {}):
+    exec(CODE_PREFIX + code, global_scope)
+
 # Data model
 class Code(BaseModel):
     """Code output"""
@@ -277,7 +283,7 @@ the issue. Remember to define "global debug_output" at the top of any scope that
         # Check imports
         test_results = []
         try:
-            exec(imports)
+            exec_as_main(imports)
         except Exception as e:
             self.log("---CODE IMPORT CHECK: FAILED---")
             # TODO update this if it becomes a problem, for now keep it simple. Maybe want to just unify it with the code flow below.
@@ -297,7 +303,7 @@ the issue. Remember to define "global debug_output" at the top of any scope that
                 "debug_output": ""
             }
             try:
-                exec(runnable_code, global_scope)
+                exec_as_main(runnable_code, global_scope)
                 output_match, differences = self.check_code(global_scope["global_output"], test_case["outputs"])
                 if output_match:
                     test_results.append(

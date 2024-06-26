@@ -1,4 +1,4 @@
-from codegen import CodeGenerator, combined_code, CODE_SUFFIX
+from codegen import CodeGenerator, combined_code, CODE_SUFFIX, exec_as_main
 from langchain_openai import ChatOpenAI
 from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import List
@@ -95,7 +95,7 @@ def replace_fields(request, request_params_map, func):
     }
 
     # Execute the function
-    exec(func, args)    
+    exec_as_main(func, args)
     print(f"DEBUG: debug_output: {args['debug_output']}")
     return args["global_output"]
 
