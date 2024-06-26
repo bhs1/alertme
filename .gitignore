@@ -4,3 +4,4 @@ alertme
 scratch
 venv
 __pycache__
+data/
