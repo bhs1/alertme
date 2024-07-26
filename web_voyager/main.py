@@ -430,7 +430,11 @@ async def call_agent(question: str, page, max_steps: int = 150):
         pred = event["agent"].get("prediction") or {}
         action = pred.get("action")
         action_input = pred.get("args")
-        steps.append(f"{len(steps) + 1}. {action}: {action_input}")        
+        steps.append(f"{len(steps) + 1}. {action}: {action_input}")
+        
+        print("Waiting for traces to upload...")
+        wait_for_all_tracers()
+        print("Traces uploaded.")
         
         if "ANSWER" in action:
             final_answer = action_input[0]
@@ -453,14 +457,13 @@ async def main():
     res = await ask_agent("""Go to url: https://gtc.clubautomation.com/. Use username: bensc77, password: wjbr8KLh6t6NCm.
 Task: Search for courts that satisfy the criteria (do not reserve):
  - date: 07/26/2024
- - start_time: 10am
- - end_time: 9pm
+ - from_time: 10am
+ - to_time: 9pm
  - duration: 60 mins.
 """, page)
     #await ask_agent("Could you check google maps to see when i should leave to get to SFO by 7 o'clock? starting from SF downtown.", page)
     
     print(f"Final response: {res}")
-    wait_for_all_tracers()
 
     # Store actions_log at the end
     with open("/Users/bensolis-cohen/Projects/alertme/web_voyager/data/actions_log.json", "w") as f:
