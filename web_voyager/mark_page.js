@@ -28,6 +28,23 @@ function unmarkPage() {
   labels = [];
 }
 
+function isTypable(element) {
+    // Check if the element is inherently designed to accept text input
+    const typableTags = ['TEXTAREA', 'INPUT'];
+    const typableInputTypes = ['text', 'password', 'email', 'number', 'search', 'tel', 'url', 'date', 'datetime-local', 'time', 'week', 'month'];
+    
+    if (typableTags.includes(element.tagName)) {
+        // Additional check for INPUT elements to filter by type
+        if (element.tagName === 'INPUT') {
+            return typableInputTypes.includes(element.type.toLowerCase());
+        }
+        return true; // TEXTAREA is always typable
+    }
+    
+    // Additional check for contenteditable being true
+    return element.contentEditable === 'true';
+}
+
 function markPage() {
   unmarkPage();
 
@@ -116,7 +133,8 @@ function markPage() {
         text: textualContent,
         type: elementType,
         ariaLabel: ariaLabel,
-        isScrollableArea: isScrollableArea // Add this property to the item
+        isScrollableArea: isScrollableArea, // Add this property to the item
+        isTypeable: isTypable(element) // Add isTypeable field
       };
     })
     .filter((item) => item.include && item.area >= 20);
@@ -219,6 +237,29 @@ function markPage() {
     labels.push(newElement);
   });
 
+  function getXPathForElement(element) {
+    const parts = [];
+    while (element && element.nodeType === Node.ELEMENT_NODE) {
+        let index = 0;
+        let sibling = element.previousSibling;
+        while (sibling) {
+            if (sibling.nodeType === Node.DOCUMENT_TYPE_NODE) {
+                sibling = sibling.previousSibling;
+                continue;
+            }
+            if (sibling.nodeName === element.nodeName) {
+                index++;
+            }
+            sibling = sibling.previousSibling;
+        }
+        const tagName = element.nodeName.toLowerCase();
+        const part = index === 0 ? tagName : `${tagName}[${index + 1}]`;
+        parts.unshift(part);
+        element = element.parentNode;
+    }
+    return parts.length ? '/' + parts.join('/') : null;
+  }
+
   const coordinates = items.flatMap((item, index) =>
     item.rects.map(({ left, top, width, height }) => ({
       x: (left + left + width) / 2,
@@ -228,7 +269,9 @@ function markPage() {
       ariaLabel: item.ariaLabel,
       outerHTML: item.element.outerHTML,
       isScrollable: item.isScrollableArea, // Add isScrollable field
-      index: index // Add index field
+      isTypeable: item.isTypeable, // Add isTypeable field
+      index: index, // Add index field
+      xpath: getXPathForElement(item.element) // Add xpath field
     }))
   );
   return coordinates;

@@ -13,6 +13,7 @@ import sys
 import base64
 
 from langchain_core.runnables import chain as chain_decorator
+from langchain_core.tracers.langchain import wait_for_all_tracers
 
     
 from langchain import hub
@@ -47,7 +48,7 @@ logging.basicConfig(level=logging.INFO,
 
 os.environ["LANGCHAIN_PROJECT"] = "Web-Voyager-3"
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
-
+os.environ["LANGCHAIN_CALLBACKS_BACKGROUND"] = "true"
 
 class BBox(TypedDict):
     x: float
@@ -94,8 +95,17 @@ class AgentState(TypedDict):
     formatted_scratchpad: str
 
 
+from playwright_actions import click as playwright_click, type_text as playwright_type_text, scroll as playwright_scroll, go_back as playwright_go_back, to_google as playwright_to_google, to_url as playwright_to_url
+
+import json
+
+actions_log = []
+
+def store_action(action_name: str, params: dict):
+    print(f"Executing and storing action: {action_name} with params: {params}")
+    actions_log.append({"action": action_name, "params": params})
+
 async def click(state: AgentState):
-    
     try:
         page = state["page"]
         click_args = state["prediction"]["args"]
@@ -104,12 +114,12 @@ async def click(state: AgentState):
         bbox_id = int(click_args[0])
         bbox = state["bboxes"][bbox_id]
         x, y = bbox["x"], bbox["y"]
-        await page.mouse.click(x, y)
-        await page.wait_for_load_state('networkidle')
+        xpath = bbox.get("xpath", "")
+        await playwright_click(page, x, y)
+        store_action("click", {"x": x, "y": y, "bbox_id": bbox_id, "xpath": xpath})
         return f"Clicked {bbox_id}"
     except Exception as e:
         return f"Error in click: {str(e)}"
-
 
 async def type_text(state: AgentState):
     try:
@@ -121,17 +131,12 @@ async def type_text(state: AgentState):
         bbox = state["bboxes"][bbox_id]
         x, y = bbox["x"], bbox["y"]
         text_content = type_args[1]
-        await page.mouse.click(x, y)
-        select_all = "Meta+A" if platform.system() == "Darwin" else "Control+A"
-        await page.keyboard.press(select_all)
-        await page.keyboard.press("Backspace")
-        await page.keyboard.type(text_content)
-        await page.keyboard.press("Enter")
-        await page.wait_for_load_state('networkidle')  # Wait for the page to reach the networkidle state
+        xpath = bbox.get("xpath", "")
+        await playwright_type_text(page, x, y, text_content)
+        store_action("type_text", {"x": x, "y": y, "bbox_id": bbox_id, "text": text_content, "xpath": xpath})
         return f"Typed {text_content} and submitted"
     except Exception as e:
         return f"Error in type_text: {str(e)}"
-
 
 async def scroll(state: AgentState):
     try:
@@ -144,42 +149,37 @@ async def scroll(state: AgentState):
         scroll_amount = 500 if target.upper() == "WINDOW" else 200
         scroll_direction = -scroll_amount if direction.lower() == "up" else scroll_amount
 
-        if target.upper() == "WINDOW":
-            await page.evaluate(f"window.scrollBy(0, {scroll_direction})")
-        else:
-            target_id = int(target)
-            bbox = state["bboxes"][target_id]
-            x, y = bbox["x"], bbox["y"]
-            await page.mouse.move(x, y)
-            await page.mouse.wheel(0, scroll_direction)
-
+        x, y = state["bboxes"][int(target)]["x"], state["bboxes"][int(target)]["y"]
+        xpath = state["bboxes"][int(target)].get("xpath", "")
+        await playwright_scroll(page, x, y, direction, scroll_direction)
+        store_action("scroll", {"x": x, "y": y, "direction": direction, "scroll_direction": scroll_direction, "xpath": xpath})
         return f"Scrolled {direction} in {'window' if target.upper() == 'WINDOW' else 'element'}"
     except Exception as e:
         return f"Error in scroll: {str(e)}"
-
 
 async def wait(state: AgentState):
     try:
         sleep_time = 5
         await asyncio.sleep(sleep_time)
+        store_action("wait", {"sleep_time": sleep_time})
         return f"Waited for {sleep_time}s."
     except Exception as e:
         return f"Error in wait: {str(e)}"
 
-
 async def go_back(state: AgentState):
     try:
         page = state["page"]
-        await page.go_back()
+        await playwright_go_back(page)
+        store_action("go_back", {})
         return f"Navigated back a page to {page.url}."
     except Exception as e:
         return f"Error in go_back: {str(e)}"
 
-
 async def to_google(state: AgentState):
     try:
         page = state["page"]
-        await page.goto("https://www.google.com/")
+        await playwright_to_google(page)
+        store_action("to_google", {})
         return "Navigated to google.com."
     except Exception as e:
         return f"Error in to_google: {str(e)}"
@@ -188,7 +188,8 @@ async def to_url(state: AgentState):
     try:
         page = state["page"]
         url = state["prediction"]["args"][0]
-        await page.goto(url)
+        await playwright_to_url(page, url)
+        store_action("to_url", {"url": url})
         return f"Navigated to {url}."
     except Exception as e:
         return f"Error in to_url: {str(e)}"
@@ -234,8 +235,9 @@ def format_descriptions(state):
         el_type = bbox.get("type")
         #outer_html = bbox.get("outerHTML", "")
         scrollable = bbox.get("isScrollable", False)
+        typable = bbox.get("isTypeable", False)
         index = bbox.get("index", "")
-        labels.append(f'{index} (<{el_type}/>): "{text}" Scrollable: {scrollable}')
+        labels.append(f'{index} (<{el_type}/>): "{text}" Scrollable: {scrollable} Typable: {typable}')
     bbox_descriptions = "\nValid Bounding Boxes:\n" + "\n".join(labels)
     return {**state, "bbox_descriptions": bbox_descriptions}    
 
@@ -408,16 +410,6 @@ graph_builder.add_conditional_edges("agent", select_tool)
 graph = graph_builder.compile()
 generate_graph_image(graph, filename="/Users/bensolis-cohen/Projects/alertme/web_voyager/logs/web_voyager_graph.png")
 
-from playwright.async_api import async_playwright
-
-async def setup_browser():
-    browser = await async_playwright().start()
-    browser = await browser.chromium.launch(headless=False, args=None)
-    page = await browser.new_page()
-    await page.set_viewport_size({"width": 1700, "height": 900})  # Set the viewport size
-    _ = await page.goto("https://www.google.com")
-    return page
-
 async def call_agent(question: str, page, max_steps: int = 150):
     event_stream = graph.astream(
         {
@@ -450,11 +442,14 @@ async def ask_agent(question: str, page):
     print(f"Question: {question}")
     return res
 
+from playwright_actions import setup_browser
+
 async def main():
     page = await setup_browser()
 
     #await ask_agent("Could you explain the WebVoyager paper (on arxiv)?", page)
     #await ask_agent("Navigate to amazon.com and buy the cheapest microwave oven on Amazon under $50. Add it to cart and proceed to checkout.", page)
+    #res = await ask_agent("Book a tee time at harding park for tomorrow.", page)
     res = await ask_agent("""Go to url: https://gtc.clubautomation.com/. Use username: bensc77, password: wjbr8KLh6t6NCm.
 Task: Search for courts that satisfy the criteria (do not reserve):
  - date: 07/26/2024
@@ -465,6 +460,12 @@ Task: Search for courts that satisfy the criteria (do not reserve):
     #await ask_agent("Could you check google maps to see when i should leave to get to SFO by 7 o'clock? starting from SF downtown.", page)
     
     print(f"Final response: {res}")
+    wait_for_all_tracers()
+
+    # Store actions_log at the end
+    with open("/Users/bensolis-cohen/Projects/alertme/web_voyager/data/actions_log.json", "w") as f:
+        json.dump(actions_log, f, indent=4)
+    
 
 if __name__ == "__main__":
 

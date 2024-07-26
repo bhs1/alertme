@@ -18,7 +18,7 @@ information to identify the Numerical Label corresponding to the Web Element tha
 the guidelines and choose one of the following actions:
 
 1. Click a Web Element.
-2. Delete existing content in a textbox and then type content.
+2. Delete existing content in a textbox and then type content. Pay attention!! Check Valid Bounding Boxes to see if element is "Typeable: True". If it is not, DO NOT attempt to type in it.
 3. Scroll up or down. Multiple scrolls are allowed to browse the webpage. Pay attention!! The default scroll is the whole window. But if the scroll widget is located in a certain area of the webpage, then you have to specify a Web Element in that area using Numerical_Label.
  - Before choosing a number to scroll, be sure to check the Valid Bounding Boxes to see if the element is scrollable. If it is not, just scroll the nearest scrollable neighbor element. It should work.
 4. Wait 
