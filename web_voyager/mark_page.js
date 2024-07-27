@@ -220,7 +220,7 @@ function markPage() {
 
     // Add floating label at the bottom right corner
     var label = document.createElement("span");
-    label.textContent = index + nonScrollableItems.length; // Continue numbering
+    label.textContent = index;
     label.style.position = "absolute";
     // Adjusted to be at the bottom right corner
     label.style.bottom = "-18px";

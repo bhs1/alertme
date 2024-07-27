@@ -37,7 +37,8 @@ async def replay_actions(page, actions_log_path):
         elif action_name == "to_google":
             await to_google(page)
         elif action_name == "to_url":
-            await to_url(page, params["url"])        
+            await to_url(page, params["url"])
+        #await asyncio.sleep(1)
             
 if __name__ == "__main__":
     async def main():
