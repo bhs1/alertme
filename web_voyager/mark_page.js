@@ -45,6 +45,36 @@ function isTypable(element) {
     return element.contentEditable === 'true';
 }
 
+function isClickable(element) {
+    // Check if the element is clickable
+    return element.tagName === "A" ||
+           element.onclick != null ||
+           window.getComputedStyle(element).cursor == "pointer";
+}
+
+function isWithinScrollableArea(element) {
+    let parent = element.parentElement;
+    while (parent) {
+      if (
+        parent.scrollHeight > parent.clientHeight ||
+        parent.scrollWidth > parent.clientWidth
+      ) {
+        const overflowY = window.getComputedStyle(parent).overflowY;
+        const overflowX = window.getComputedStyle(parent).overflowX;
+        if (
+          overflowY === "auto" ||
+          overflowY === "scroll" ||
+          overflowX === "auto" ||
+          overflowX === "scroll"
+        ) {
+          return true;
+        }
+      }
+      parent = parent.parentElement;
+    }
+    return false;
+}
+
 function markPage() {
   unmarkPage();
 
@@ -89,36 +119,10 @@ function markPage() {
 
       var area = rects.reduce((acc, rect) => acc + rect.width * rect.height, 0);
 
-      // Check if the element is within a scrollable area
-      function isWithinScrollableArea(element) {
-        let parent = element.parentElement;
-        while (parent) {
-          if (
-            parent.scrollHeight > parent.clientHeight ||
-            parent.scrollWidth > parent.clientWidth
-          ) {
-            const overflowY = window.getComputedStyle(parent).overflowY;
-            const overflowX = window.getComputedStyle(parent).overflowX;
-            if (
-              overflowY === "auto" ||
-              overflowY === "scroll" ||
-              overflowX === "auto" ||
-              overflowX === "scroll"
-            ) {
-              return true;
-            }
-          }
-          parent = parent.parentElement;
-        }
-        return false;
-      }
-
-      var isScrollableArea = isWithinScrollableArea(element);
-
       return {
         element: element,
         include:
-          element.tagName === "INPUT" ||
+          (element.tagName === "INPUT" ||
           element.tagName === "TEXTAREA" ||
           element.tagName === "SELECT" ||
           element.tagName === "BUTTON" ||
@@ -126,15 +130,18 @@ function markPage() {
           element.onclick != null ||
           window.getComputedStyle(element).cursor == "pointer" ||
           element.tagName === "IFRAME" ||
-          element.tagName === "VIDEO" ||
-          isScrollableArea, // Include elements within scrollable areas
+          element.tagName === "VIDEO") &&
+          (isWithinScrollableArea(element) ||
+          isClickable(element) ||
+          isTypable(element)),
         area,
         rects,
         text: textualContent,
         type: elementType,
         ariaLabel: ariaLabel,
-        isScrollableArea: isScrollableArea, // Add this property to the item
-        isTypeable: isTypable(element) // Add isTypeable field
+        isScrollableArea: isWithinScrollableArea(element),
+        isTypeable: isTypable(element),
+        isClickable: isClickable(element)
       };
     })
     .filter((item) => item.include && item.area >= 20);
@@ -143,10 +150,6 @@ function markPage() {
   items = items.filter(
     (x) => !items.some((y) => x.element.contains(y.element) && !(x == y))
   );
-
-  // Separate scrollable areas
-  const scrollableAreas = items.filter(item => item.isScrollableArea);
-  const nonScrollableItems = items.filter(item => !item.isScrollableArea);
 
   // Function to generate random colors
   function getRandomColor() {
@@ -158,62 +161,18 @@ function markPage() {
     return color;
   }
 
-  // Lets create a floating border on top of these elements that will always be visible
-  nonScrollableItems.forEach(function (item, index) {
-    item.rects.forEach((bbox) => {
-      newElement = document.createElement("div");
-      var borderColor = getRandomColor();
-      newElement.style.outline = `2px dashed ${borderColor}`;
-      newElement.style.position = "fixed";
-      newElement.style.left = bbox.left + "px";
-      newElement.style.top = bbox.top + "px";
-      newElement.style.width = bbox.width + "px";
-      newElement.style.height = bbox.height + "px";
-      newElement.style.pointerEvents = "none";
-      newElement.style.boxSizing = "border-box";
-      newElement.style.zIndex = 2147483647;
-
-      // Add floating label at the bottom right corner
-      var label = document.createElement("span");
-      label.textContent = index;
-      label.style.position = "absolute";
-      // Adjusted to be at the bottom right corner
-      label.style.bottom = "-18px";
-      label.style.right = "-20px";
-      label.style.background = borderColor;
-      label.style.color = "white";
-      label.style.padding = "2px 4px";
-      label.style.fontSize = "12px";
-      label.style.borderRadius = "2px";
-      label.style.opacity = "0.5"; // Make it translucent
-      newElement.appendChild(label);
-
-      document.body.appendChild(newElement);
-      labels.push(newElement);
-    });
-  });
-
-  // Add bounding boxes for scrollable areas with unique numbers
-  scrollableAreas.forEach(function (item, index) {
-    const scrollableRect = item.rects.reduce((acc, rect) => {
-      return {
-        left: Math.min(acc.left, rect.left),
-        top: Math.min(acc.top, rect.top),
-        right: Math.max(acc.right, rect.right),
-        bottom: Math.max(acc.bottom, rect.bottom),
-        width: Math.max(acc.right, rect.right) - Math.min(acc.left, rect.left),
-        height: Math.max(acc.bottom, rect.bottom) - Math.min(acc.top, rect.top)
-      };
-    }, { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity });
+  // Use a single loop to create labels for all items
+  items.forEach(function (item, index) {
+    const bbox = item.rects[0];
 
     newElement = document.createElement("div");
     var borderColor = getRandomColor();
     newElement.style.outline = `2px dashed ${borderColor}`;
     newElement.style.position = "fixed";
-    newElement.style.left = scrollableRect.left + "px";
-    newElement.style.top = scrollableRect.top + "px";
-    newElement.style.width = scrollableRect.width + "px";
-    newElement.style.height = scrollableRect.height + "px";
+    newElement.style.left = bbox.left + "px";
+    newElement.style.top = bbox.top + "px";
+    newElement.style.width = bbox.width + "px";
+    newElement.style.height = bbox.height + "px";
     newElement.style.pointerEvents = "none";
     newElement.style.boxSizing = "border-box";
     newElement.style.zIndex = 2147483647;
@@ -222,7 +181,6 @@ function markPage() {
     var label = document.createElement("span");
     label.textContent = index;
     label.style.position = "absolute";
-    // Adjusted to be at the bottom right corner
     label.style.bottom = "-18px";
     label.style.right = "-20px";
     label.style.background = borderColor;
@@ -230,7 +188,7 @@ function markPage() {
     label.style.padding = "2px 4px";
     label.style.fontSize = "12px";
     label.style.borderRadius = "2px";
-    label.style.opacity = "0.5"; // Make it translucent
+    label.style.opacity = "0.5";
     newElement.appendChild(label);
 
     document.body.appendChild(newElement);
@@ -262,17 +220,19 @@ function markPage() {
 
   const coordinates = items.flatMap((item, index) =>
     item.rects.map(({ left, top, width, height }) => ({
-      x: (left + left + width) / 2,
-      y: (top + top + height) / 2,
+      x: left + (width / 2),
+      y: top + (height / 2),
       type: item.type,
       text: item.text,
       ariaLabel: item.ariaLabel,
       outerHTML: item.element.outerHTML,
-      isScrollable: item.isScrollableArea, // Add isScrollable field
-      isTypeable: item.isTypeable, // Add isTypeable field
-      index: index, // Add index field
-      xpath: getXPathForElement(item.element) // Add xpath field
+      isScrollable: item.isScrollableArea,
+      isTypeable: item.isTypeable,
+      isClickable: item.isClickable,
+      index: index,
+      xpath: getXPathForElement(item.element)
     }))
   );
+
   return coordinates;
 }

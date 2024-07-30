@@ -20,8 +20,10 @@ from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
+from langchain_core.pydantic_v1 import BaseModel, Field
 sys.path.insert(0, '/Users/bensolis-cohen/Projects/alertme')
 from langgraph_utils import generate_graph_image
+from langsmith import traceable
 
 import re
 
@@ -59,10 +61,20 @@ class BBox(TypedDict):
     outerHTML: str
 
 
-class Prediction(TypedDict):
-    action: str
-    thought: Optional[str]
-    args: Optional[List[str]]
+class Prediction(BaseModel):
+    thought: Optional[str] = Field(description="Thought: Your brief thoughts.")
+    raw_predicted_action_string: Optional[str] = Field(description="Prediction action string and args, formatted as described.")
+    action: str = Field(description="One action you choose")
+    args: Optional[List[str]] = Field(description="List of action args.")
+
+class Reflection(BaseModel):
+    """Reflection output"""
+    intention_of_action: str = Field(
+        description="Intention of the attempted action.")
+    result_of_action: str = Field(
+        description="Description of relevant details before screenshot, after screenshot, and comparison of the two.")
+    explanation: str = Field(description="Brief explanation of why the action was a success, partial success, or failure.")    
+    success_or_failure_result: str = Field(description="Must be one of SUCCESS, PARTIAL_SUCCESS, or FAILURE.")
 
 async def compress_screenshot(screenshot, scale_factor: int = 1) -> str:
     """Compress the screenshot by reducing its width and height by 4x."""
@@ -74,7 +86,7 @@ async def compress_screenshot(screenshot, scale_factor: int = 1) -> str:
     # Convert back to base64
     buffer = io.BytesIO()
     compressed_image.save(buffer, format="PNG")  # Save as PNG to avoid JPEG compression
-    compressed_b64_image = base64.b64encode(buffer.getvalue()).decode()
+    compressed_b64_image = base64.b64encode(buffer.getvalue()).decode()    
     
     return compressed_b64_image
 
@@ -89,7 +101,6 @@ class AgentState(TypedDict):
     # A system message (or messages) containing the intermediate steps
     scratchpad: List[str]
     observation: str  # The most recent response from a tool
-    unannotated_img: str
     action_summary: str
     step: int
     formatted_scratchpad: str
@@ -101,14 +112,13 @@ import json
 
 actions_log = []
 
-def store_action(action_name: str, params: dict):
-    print(f"Executing and storing action: {action_name} with params: {params}")
+def store_action(action_name: str, params: dict):    
     actions_log.append({"action": action_name, "params": params})
 
 async def click(state: AgentState):
     try:
         page = state["page"]
-        click_args = state["prediction"]["args"]
+        click_args = state["prediction"].args
         if click_args is None or len(click_args) != 1:
             return f"Failed to click bounding box labeled as number {click_args}"
         bbox_id = int(click_args[0])
@@ -124,7 +134,7 @@ async def click(state: AgentState):
 async def type_text(state: AgentState):
     try:
         page = state["page"]
-        type_args = state["prediction"]["args"]
+        type_args = state["prediction"].args
         if type_args is None or len(type_args) != 2:
             return f"Failed to type in element from bounding box labeled as number {type_args}"
         bbox_id = int(type_args[0])
@@ -141,7 +151,7 @@ async def type_text(state: AgentState):
 async def scroll(state: AgentState):
     try:
         page = state["page"]
-        scroll_args = state["prediction"]["args"]
+        scroll_args = state["prediction"].args
         if scroll_args is None or len(scroll_args) != 2:
             return "Failed to scroll due to incorrect arguments."
 
@@ -187,7 +197,7 @@ async def to_google(state: AgentState):
 async def to_url(state: AgentState):
     try:
         page = state["page"]
-        url = state["prediction"]["args"][0]
+        url = state["prediction"].args[0]
         await playwright_to_url(page, url)
         store_action("to_url", {"url": url})
         return f"Navigated to {url}."
@@ -205,7 +215,6 @@ async def mark_page(page):
     await page.evaluate(mark_page_script)
     for _ in range(10):
         try:
-            unannotated_page = await take_screenshot(page)
             bboxes = await page.evaluate("markPage()")            
             break
         except Exception:
@@ -216,7 +225,6 @@ async def mark_page(page):
     await page.evaluate("unmarkPage()")
     return {
         "img": screenshot,
-        "unannotated_img": unannotated_page,
         "bboxes": bboxes,
     }
 
@@ -232,53 +240,33 @@ def format_descriptions(state):
         text = bbox.get("ariaLabel") or ""
         if not text.strip():
             text = bbox["text"]
-        el_type = bbox.get("type")
-        #outer_html = bbox.get("outerHTML", "")
+        #el_type = bbox.get("type")
         scrollable = bbox.get("isScrollable", False)
         typable = bbox.get("isTypeable", False)
+        clickable = bbox.get("isClickable", False)
         index = bbox.get("index", "")
-        labels.append(f'{index} (<{el_type}/>): "{text}" Scrollable: {scrollable} Typable: {typable}')
-    bbox_descriptions = "\nValid Bounding Boxes:\n" + "\n".join(labels)
-    return {**state, "bbox_descriptions": bbox_descriptions}    
-
-
-def parse(text: str) -> dict:
-    action_prefix = "Action: "
-    thought_prefix = "Thought: "
-    
-    lines = text.strip().split("\n")
-    
-    if not lines[-1].startswith(action_prefix):
-        return {"action": "retry", "args": f"Could not parse LLM Output: {text}"}
-    
-    action_block = lines[-1]
-    action_str = action_block[len(action_prefix):]
-    split_output = action_str.split(" ", 1)
-    
-    if len(split_output) == 1:
-        action, action_input = split_output[0], None
-    else:
-        action, action_input = split_output
-    
-    action = action.strip()
-    if action_input is not None:
-        action_input = [
-            inp.strip().strip("[]") for inp in action_input.strip().split(";")
-        ]
-    
-    thought = None
-    for line in lines:
-        if line.startswith(thought_prefix):
-            thought = line[len(thought_prefix):].strip()
-            break
-    
-    return {"action": action, "args": action_input, "thought": thought}
+        
+        available_actions = []
+        if scrollable:
+            available_actions.append(f"Scroll [{index}]")
+        if clickable:
+            available_actions.append(f"Click [{index}]")
+        if typable:
+            available_actions.append(f"Type [{index}]")
+        
+        actions_str = ", ".join(available_actions)
+        
+        labels.append(f'''(Box {index}) {actions_str}
+    - Text: "{text}", ''')
+    bbox_descriptions = "\nAvailable actions:\n" + "\n".join(labels)
+    print("Calling LLM to determine action...")
+    return {**state, "bbox_descriptions": bbox_descriptions}
 
 
 # Will need a later version of langchain to pull
 # this image prompt template
 prompt = web_voyager_prompt
-llm = ChatOpenAI(model="gpt-4o", max_tokens=4096)
+llm = ChatOpenAI(model="gpt-4o", max_tokens=4096, temperature=0).with_structured_output(Prediction)
 
 async def update_scratchpad(state: AgentState):
     """After a tool is invoked, we want to update
@@ -287,14 +275,13 @@ async def update_scratchpad(state: AgentState):
     step = state.get("step")
     if step is None:
         step = 1
-    
-    thought = state['prediction'].get('thought', '')
-    latest_step = f"""Action attempted: {state['prediction']['action']} with args: {state['prediction'].get('args', {})}
+        
+    latest_step = f"""Action attempted: {state['prediction'].action} with args: {state['prediction'].args}
 
-Action Result: {state['action_summary']}
+{state['action_summary']}
     """
-    print("================== STEP ====================")
-    print(latest_step)
+    #print("================== STEP ====================")
+    #print(latest_step)
     old.append(latest_step)
     if len(old) > 3:
         old = old[-3:]  # Keep only the latest 3 steps
@@ -309,7 +296,7 @@ def format_scratchpad(scratchpad):
     return "======================================================\n" + content + "\n======================================================"
 
 agent = annotate | RunnablePassthrough.assign(
-    prediction=format_descriptions | prompt | llm | StrOutputParser() | parse
+    prediction=format_descriptions | prompt | llm
 )
 
 from PIL import Image
@@ -322,6 +309,7 @@ async def take_screenshot(page):
 
 from prompt import compare_screenshots_prompt
 
+@traceable(name="reflect")
 async def reflect(state: AgentState):
     """
     (1) Take a screenshot of the page
@@ -331,10 +319,11 @@ async def reflect(state: AgentState):
     (5) Return the summary in the agent state
     """
 
+    print(f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}\033[0m")
     page = state["page"]
     prediction = state.get("prediction")
-    action_taken = f"Action attempted: {prediction['action']} with args: {prediction.get('args', {})}. Which results in:"
-    thought = prediction.get("thought")
+    action_taken = f"Action attempted: {prediction.action} with args: {prediction.args}. Which results in:"
+    thought = prediction.thought
     if thought:
         action_taken = f"Thought: {thought}\n" + action_taken
     old_screenshot = state.get("img")
@@ -352,10 +341,24 @@ async def reflect(state: AgentState):
     save_image_to_file(old_screenshot, "old_screenshot.jpg")
     
     llm = compare_screenshots_prompt | ChatOpenAI(
-            model="gpt-4o", temperature=0)
-    comparison_result = llm.invoke({"new_screenshot": new_screenshot, "action_taken": action_taken, "old_screenshot": old_screenshot, "input": state["input"]}, {"run_name": "ReflectOnDiff", "tags" : ["reflect-on-diff"]})        
+            model="gpt-4o", temperature=0).with_structured_output(Reflection)
+    print("Calling LLM to reflect on action...")
+    start_time = asyncio.get_event_loop().time()
+    comparison_result = llm.invoke({"new_screenshot": new_screenshot, "action_taken": action_taken, "old_screenshot": old_screenshot, "input": state["input"]}, {"run_name": "ReflectOnDiff", "tags" : ["reflect-on-diff"]})    
+    end_time = asyncio.get_event_loop().time()
+    print(f"Time taken for comparison: {end_time - start_time:.2f} seconds")    
     
-    summary = f"Action result: {comparison_result.content}"
+    explanation = comparison_result.explanation
+    success_or_failure_result = comparison_result.success_or_failure_result
+    summary = f"""Action result:
+        {success_or_failure_result}
+Explanation:
+    {explanation}
+"""
+    if "FAILURE" in summary:
+        print(f"\033[1;31m{summary}\033[0m")  # Bold red
+    else:
+        print(f"\033[1;32m{summary}\033[0m")  # Bold green
 
     if "error" in state:
         summary += f"\nError: {state['error']}"
@@ -368,12 +371,6 @@ graph_builder = StateGraph(AgentState)
 
 graph_builder.add_node("agent", agent)
 graph_builder.set_entry_point("agent")
-
-graph_builder.add_node("reflect", RunnableLambda(reflect))
-graph_builder.add_edge("reflect", "update_scratchpad")
-
-graph_builder.add_node("update_scratchpad", RunnableLambda(update_scratchpad))
-graph_builder.add_edge("update_scratchpad", "agent")
 
 tools = {
     "Click": click,
@@ -390,27 +387,32 @@ for node_name, tool in tools.items():
         node_name,
         RunnableLambda(tool) | (lambda observation: {"observation": observation}),
     )
-    graph_builder.add_edge(node_name, "reflect")
 
 
 def select_tool(state: AgentState):
     # Any time the agent completes, this function
     # is called to route the output to a tool or
     # to the end user.
-    action = state["prediction"]["action"]
-    if action == "ANSWER":
+    action = state["prediction"].action
+    if "ANSWER" in action:
         return END
-    if action == "retry":
-        return "agent"
     return action
 
 
 graph_builder.add_conditional_edges("agent", select_tool)
+graph_builder.add_node("reflect", RunnableLambda(reflect))
+
+for node_name, tool in tools.items():
+    graph_builder.add_edge(node_name, "reflect")
+
+graph_builder.add_node("update_scratchpad", RunnableLambda(update_scratchpad))
+graph_builder.add_edge("reflect", "update_scratchpad")
+graph_builder.add_edge("update_scratchpad", "agent")
 
 graph = graph_builder.compile()
 generate_graph_image(graph, filename="/Users/bensolis-cohen/Projects/alertme/web_voyager/logs/web_voyager_graph.png")
 
-async def call_agent(question: str, page, max_steps: int = 150):
+async def call_agent(question: str, page, max_steps: int = 300):
     event_stream = graph.astream(
         {
             "page": page,
@@ -428,13 +430,15 @@ async def call_agent(question: str, page, max_steps: int = 150):
         if "agent" not in event:
             continue
         pred = event["agent"].get("prediction") or {}
-        action = pred.get("action")
-        action_input = pred.get("args")
+        action = pred.action
+        action_input = pred.args
         steps.append(f"{len(steps) + 1}. {action}: {action_input}")
         
-        print("Waiting for traces to upload...")
-        wait_for_all_tracers()
-        print("Traces uploaded.")
+        #start_time = asyncio.get_event_loop().time()
+        #print("Waiting for traces to upload...")
+        # wait_for_all_tracers()
+        # end_time = asyncio.get_event_loop().time()
+        # print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
         
         if "ANSWER" in action:
             final_answer = action_input[0]
@@ -454,12 +458,16 @@ async def main():
     #await ask_agent("Could you explain the WebVoyager paper (on arxiv)?", page)
     #await ask_agent("Navigate to amazon.com and buy the cheapest microwave oven on Amazon under $50. Add it to cart and proceed to checkout.", page)
     #res = await ask_agent("Book a tee time at harding park for tomorrow.", page)
+    
+# TODO: put passowrd in .env file.
     res = await ask_agent("""Go to url: https://gtc.clubautomation.com/. Use username: bensc77, password: wjbr8KLh6t6NCm.
 Task: Search for courts that satisfy the criteria (do not reserve):
- - date: 07/26/2024
+ - date: 08/05/2024
  - from_time: 10am
  - to_time: 9pm
  - duration: 60 mins.
+ 
+ Print the available times.
 """, page)
     #await ask_agent("Could you check google maps to see when i should leave to get to SFO by 7 o'clock? starting from SF downtown.", page)
     
@@ -468,6 +476,8 @@ Task: Search for courts that satisfy the criteria (do not reserve):
     # Store actions_log at the end
     with open("/Users/bensolis-cohen/Projects/alertme/web_voyager/data/actions_log.json", "w") as f:
         json.dump(actions_log, f, indent=4)
+        
+    wait_for_all_tracers()
     
 
 if __name__ == "__main__":

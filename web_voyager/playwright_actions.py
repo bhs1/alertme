@@ -31,12 +31,32 @@ async def to_google(page: Page):
 async def to_url(page: Page, url: str):
     await page.goto(url)
 
+async def display_red_dot(page, x, y):
+    await page.evaluate("""
+        ({x, y}) => {
+            const dot = document.createElement('div');
+            dot.style.position = 'fixed';
+            dot.style.left = (x - 5) + 'px';  // Subtract half the width
+            dot.style.top = (y - 5) + 'px';   // Subtract half the height
+            dot.style.width = '10px';
+            dot.style.height = '10px';
+            dot.style.borderRadius = '50%';
+            dot.style.backgroundColor = 'red';
+            dot.style.zIndex = '2147483647';  // Maximum z-index value
+            dot.style.pointerEvents = 'none'; // Ensure dot doesn't interfere with clicks
+            document.body.appendChild(dot);
+            setTimeout(() => dot.remove(), 1000);  // Remove dot after 10 seconds
+        }
+    """, {"x": x, "y": y})
+
 from playwright.async_api import async_playwright
 
 async def setup_browser():
-    browser = await async_playwright().start()
-    browser = await browser.chromium.launch(headless=False, args=None)
+    playwright = await async_playwright().start()
+    browser = await playwright.chromium.launch(headless=False, args=None)
     page = await browser.new_page()
     await page.set_viewport_size({"width": 1700, "height": 900})  # Set the viewport size
-    _ = await page.goto("https://www.google.com")
+    await page.goto("https://www.google.com")
+    
+    
     return page
