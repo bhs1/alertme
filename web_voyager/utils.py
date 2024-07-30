@@ -9,3 +9,7 @@ async def mask_sensitive_data(text):
         masked_password = '*' * len(password)
         return text.replace(password, masked_password)
     return text
+
+
+# Test
+
