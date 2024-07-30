@@ -15,15 +15,17 @@ import base64
 from langchain_core.runnables import chain as chain_decorator
 from langchain_core.tracers.langchain import wait_for_all_tracers
 
-    
+
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
 from langchain_core.pydantic_v1 import BaseModel, Field
 sys.path.insert(0, '/Users/bensolis-cohen/Projects/alertme')
+sys.path.insert(0, '/Users/bensolis-cohen/Projects/alertme/web_voyager')
 from langgraph_utils import generate_graph_image
 from langsmith import traceable
+from utils import mask_sensitive_data
 
 import re
 
@@ -319,7 +321,18 @@ async def reflect(state: AgentState):
     (5) Return the summary in the agent state
     """
 
-    print(f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}\033[0m")
+    try:
+        bbox_id = int(state['prediction'].args[0]) if state['prediction'].args else None
+    except ValueError:
+        bbox_id = None
+    bbox_text = state['bboxes'][bbox_id]['text'] if bbox_id is not None else "N/A"
+    if bbox_text and bbox_text != "N/A":
+        print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}, Bounding box text: {bbox_text}\033[0m"
+    else:
+        print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}\033[0m"
+    masked_print_str = await mask_sensitive_data(print_str)
+    print(masked_print_str)
+
     page = state["page"]
     prediction = state.get("prediction")
     action_taken = f"Action attempted: {prediction.action} with args: {prediction.args}. Which results in:"
@@ -458,18 +471,10 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
-async def main():
-    page = await setup_browser()
-
-    #await ask_agent("Could you explain the WebVoyager paper (on arxiv)?", page)
-    #await ask_agent("Navigate to amazon.com and buy the cheapest microwave oven on Amazon under $50. Add it to cart and proceed to checkout.", page)
-    #res = await ask_agent("Book a tee time at harding park for tomorrow.", page)
-    
-    # Retrieve credentials from environment variables
+async def perform_task(page):
     username = os.getenv('GTC_USERNAME')
     password = os.getenv('GTC_PASSWORD')
-
-    res = await ask_agent(f"""Go to url: https://gtc.clubautomation.com/. Use username: {username}, password: {password}.
+    task = f"""Go to url: https://gtc.clubautomation.com/. Use username: {username}, password: {password}.
 Task: Search for courts that satisfy the criteria (do not reserve):
  - date: 08/05/2024
  - from_time: 10am
@@ -477,24 +482,25 @@ Task: Search for courts that satisfy the criteria (do not reserve):
  - duration: 60 mins.
  
  Print the available times.
-""", page)
-    #await ask_agent("Could you check google maps to see when i should leave to get to SFO by 7 o'clock? starting from SF downtown.", page)
-    
-    print(f"Final response: {res}")
+"""
+    return await ask_agent(task, page)
 
-    # Store actions_log at the end
-    with open("/Users/bensolis-cohen/Projects/alertme/web_voyager/data/actions_log.json", "w") as f:
+async def save_actions_log():
+    log_path = "/Users/bensolis-cohen/Projects/alertme/web_voyager/data/actions_log.json"
+    with open(log_path, "w") as f:
         json.dump(actions_log, f, indent=4)
-        
-    wait_for_all_tracers()
-    with open("/Users/bensolis-cohen/Projects/alertme/web_voyager/data/actions_log.json", "w") as f:
-        json.dump(actions_log, f, indent=4)
-        
-    wait_for_all_tracers()
+
+async def main():
+    page = await setup_browser()
     
+    res = await perform_task(page)
+    masked_res = await mask_sensitive_data(res)
+    print(f"Final response: {masked_res}")
+
+    await save_actions_log()
+    wait_for_all_tracers()
 
 if __name__ == "__main__":
-
     original_stderr = sys.stderr
     sys.stderr = open(os.devnull, 'w')
 

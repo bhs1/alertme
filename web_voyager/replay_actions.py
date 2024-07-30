@@ -2,6 +2,7 @@ import json
 import asyncio
 from playwright_actions import *
 from playwright_actions import setup_browser
+from utils import mask_sensitive_data
 
 async def replay_actions(page, actions_log_path):    
     # Read actions_log from file
@@ -24,7 +25,9 @@ async def replay_actions(page, actions_log_path):
             except Exception as e:
                 print(f"Warning: XPath '{params['xpath']}' not found within 10 seconds: {e}")
 
-        print(f"Replaying action: {action['action']}, {action['params']}")
+        print_str = f"Replaying action: {action['action']}, {action['params']}"
+        masked_print_str = await mask_sensitive_data(print_str)
+        print(masked_print_str)
         if "x" in params and "y" in params:
             await display_red_dot(page, params["x"], params["y"])
             #print("Press enter to execute action at red dot...")
