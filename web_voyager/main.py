@@ -452,6 +452,12 @@ async def ask_agent(question: str, page):
 
 from playwright_actions import setup_browser
 
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
 async def main():
     page = await setup_browser()
 
@@ -459,8 +465,11 @@ async def main():
     #await ask_agent("Navigate to amazon.com and buy the cheapest microwave oven on Amazon under $50. Add it to cart and proceed to checkout.", page)
     #res = await ask_agent("Book a tee time at harding park for tomorrow.", page)
     
-# TODO: put passowrd in .env file.
-    res = await ask_agent("""Go to url: https://gtc.clubautomation.com/. Use username: bensc77, password: wjbr8KLh6t6NCm.
+    # Retrieve credentials from environment variables
+    username = os.getenv('GTC_USERNAME')
+    password = os.getenv('GTC_PASSWORD')
+
+    res = await ask_agent(f"""Go to url: https://gtc.clubautomation.com/. Use username: {username}, password: {password}.
 Task: Search for courts that satisfy the criteria (do not reserve):
  - date: 08/05/2024
  - from_time: 10am
@@ -474,6 +483,10 @@ Task: Search for courts that satisfy the criteria (do not reserve):
     print(f"Final response: {res}")
 
     # Store actions_log at the end
+    with open("/Users/bensolis-cohen/Projects/alertme/web_voyager/data/actions_log.json", "w") as f:
+        json.dump(actions_log, f, indent=4)
+        
+    wait_for_all_tracers()
     with open("/Users/bensolis-cohen/Projects/alertme/web_voyager/data/actions_log.json", "w") as f:
         json.dump(actions_log, f, indent=4)
         
