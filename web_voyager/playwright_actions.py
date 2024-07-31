@@ -1,6 +1,6 @@
 from playwright.async_api import Page
 import platform
-import asyncio
+from playwright_stealth import stealth_async
 
 async def click(page: Page, x: float, y: float):
     await page.mouse.click(x, y)
@@ -17,6 +17,7 @@ async def type_text(page: Page, x: float, y: float, text: str):
 
 async def scroll(page: Page, x: float, y: float, direction: str, scroll_direction: int):
     if direction.upper() == "WINDOW":
+        print(f"Scrolling window by {scroll_direction}")
         await page.evaluate(f"window.scrollBy(0, {scroll_direction})")
     else:
         await page.mouse.move(x, y)
@@ -55,6 +56,7 @@ async def setup_browser():
     playwright = await async_playwright().start()
     browser = await playwright.chromium.launch(headless=False, args=None)
     page = await browser.new_page()
+    await stealth_async(page)
     await page.set_viewport_size({"width": 1700, "height": 900})  # Set the viewport size
     await page.goto("https://www.google.com")
     

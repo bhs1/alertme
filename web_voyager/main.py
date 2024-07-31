@@ -1,4 +1,9 @@
-# Optional: add tracing to visualize the agent trajectories
+
+import sys
+
+sys.path.insert(0, '/Users/bensolis-cohen/Projects/alertme')
+sys.path.insert(0, '/Users/bensolis-cohen/Projects/alertme/web_voyager')
+
 from dotenv import load_dotenv
 from playwright_actions import setup_browser
 from prompt import compare_screenshots_prompt
@@ -14,13 +19,13 @@ from utils import mask_sensitive_data
 from langsmith import traceable
 from langgraph_utils import generate_graph_image
 import os
+import uuid
 
 from typing import List, Optional, TypedDict
 
 from playwright.async_api import Page
 
 import asyncio
-import sys
 
 import base64
 
@@ -31,8 +36,6 @@ from langchain_core.tracers.langchain import wait_for_all_tracers
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
 from langchain_core.pydantic_v1 import BaseModel, Field
-sys.path.insert(0, '/Users/bensolis-cohen/Projects/alertme')
-sys.path.insert(0, '/Users/bensolis-cohen/Projects/alertme/web_voyager')
 
 
 # Ensure the logs directory exists
@@ -165,12 +168,17 @@ async def scroll(state: AgentState):
             return "Failed to scroll due to incorrect arguments."
 
         target, direction = scroll_args
-        scroll_amount = 500 if target.upper() == "WINDOW" else 200
-        scroll_direction = -scroll_amount if direction.lower() == "up" else scroll_amount
 
-        x, y = state["bboxes"][int(
-            target)]["x"], state["bboxes"][int(target)]["y"]
-        xpath = state["bboxes"][int(target)].get("xpath", "")
+        if target.upper() == "WINDOW":
+            x, y = 0, 0
+            xpath = ""
+            scroll_amount = 500
+        else:
+            x, y = state["bboxes"][int(
+                target)]["x"], state["bboxes"][int(target)]["y"]
+            xpath = state["bboxes"][int(target)].get("xpath", "")
+            scroll_amount = 200
+        scroll_direction = -scroll_amount if direction.lower() == "up" else scroll_amount
         await playwright_scroll(page, x, y, direction, scroll_direction)
         store_action("scroll", {"x": x, "y": y, "direction": direction,
                      "scroll_direction": scroll_direction, "xpath": xpath})
@@ -279,11 +287,14 @@ def format_descriptions(state):
     return {**state, "bbox_descriptions": bbox_descriptions}
 
 
-# Will need a later version of langchain to pull
-# this image prompt template
-prompt = web_voyager_prompt
-llm = ChatOpenAI(model="gpt-4o", max_tokens=4096,
-                 temperature=0).with_structured_output(Prediction)
+# Chains
+llm = ChatOpenAI(model="gpt-4o", temperature=0)
+
+agent = annotate | RunnablePassthrough.assign(
+    prediction=format_descriptions | web_voyager_prompt | llm.with_structured_output(Prediction)
+)
+
+compare_chain = compare_screenshots_prompt | llm.with_structured_output(Reflection)
 
 
 async def update_scratchpad(state: AgentState):
@@ -294,7 +305,24 @@ async def update_scratchpad(state: AgentState):
     if step is None:
         step = 1
 
-    latest_step = f"""Action attempted: {state['prediction'].action} with args: {state['prediction'].args}
+    args = state['prediction'].args or []
+    bbox_id = None
+    if args:
+        try:
+            bbox_id = int(args[0])
+        except ValueError:
+            bbox_id = None
+
+    modified_args = args.copy()
+    if bbox_id is not None:
+        modified_args[0] = "Numerical_Label"
+
+    bbox_text = state['bboxes'][bbox_id]['text'] if bbox_id is not None else "N/A"
+    action_attempted = f"Action attempted: {state['prediction'].action} with args: {modified_args}"
+    if bbox_text and bbox_text != "N/A":
+        action_attempted += f", bounding box text: '{bbox_text}'"
+
+    latest_step = f"""{action_attempted}
 
 {state['action_summary']}
     """
@@ -314,11 +342,6 @@ def format_scratchpad(scratchpad):
     content = "\n----------------------------------\n".join(
         [f"{i+1}. {entry}" for i, entry in enumerate(scratchpad)])
     return "======================================================\n" + content + "\n======================================================"
-
-
-agent = annotate | RunnablePassthrough.assign(
-    prediction=format_descriptions | prompt | llm
-)
 
 
 async def take_screenshot(page):
@@ -348,6 +371,7 @@ async def reflect(state: AgentState):
     else:
         print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}\033[0m"
     masked_print_str = await mask_sensitive_data(print_str)
+    
     print(masked_print_str)
 
     page = state["page"]
@@ -371,13 +395,11 @@ async def reflect(state: AgentState):
 
     save_image_to_file(new_screenshot, "new_screenshot.jpg")
     save_image_to_file(old_screenshot, "old_screenshot.jpg")
-
-    llm = compare_screenshots_prompt | ChatOpenAI(
-        model="gpt-4o", temperature=0).with_structured_output(Reflection)
+    run_id = str(uuid.uuid4())
     print("Calling LLM to reflect on action...")
     start_time = asyncio.get_event_loop().time()
-    comparison_result = llm.invoke({"new_screenshot": new_screenshot, "action_taken": action_taken, "old_screenshot": old_screenshot,
-                                   "input": state["input"]}, {"run_name": "ReflectOnDiff", "tags": ["reflect-on-diff"]})
+    comparison_result = compare_chain.invoke({"new_screenshot": new_screenshot, "action_taken": action_taken, "old_screenshot": old_screenshot,
+                                   "input": state["input"]}, {"run_name": "ReflectOnDiff", "tags": ["reflect-on-diff", run_id]})
     end_time = asyncio.get_event_loop().time()
     print(f"Time taken for comparison: {end_time - start_time:.2f} seconds")
 
@@ -392,6 +414,7 @@ Explanation:
         print(f"\033[1;31m{summary}\033[0m")  # Bold red
     else:
         print(f"\033[1;32m{summary}\033[0m")  # Bold green
+    print(f"Run ID: {run_id}")
 
     if "error" in state:
         summary += f"\nError: {state['error']}"
@@ -462,7 +485,7 @@ async def call_agent(question: str, page, max_steps: int = 300):
     final_answer = None
     steps = []
 
-    async for event in event_stream:
+    async for event in event_stream:        
         if "agent" not in event:
             continue
         pred = event["agent"].get("prediction") or {}
@@ -470,11 +493,11 @@ async def call_agent(question: str, page, max_steps: int = 300):
         action_input = pred.args
         steps.append(f"{len(steps) + 1}. {action}: {action_input}")
 
-        # start_time = asyncio.get_event_loop().time()
-        # print("Waiting for traces to upload...")
-        # wait_for_all_tracers()
-        # end_time = asyncio.get_event_loop().time()
-        # print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
+        start_time = asyncio.get_event_loop().time()
+        print("Waiting for traces to upload...")
+        wait_for_all_tracers()
+        end_time = asyncio.get_event_loop().time()
+        print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
 
         if "ANSWER" in action:
             final_answer = action_input[0]
@@ -504,6 +527,10 @@ Task: Search for courts that satisfy the criteria (do not reserve):
  
  Print the available times.
 """
+    #task = f"""Book me a tennis court at mission dolores park tomorrow."""
+    #task = f"""Go to https://bot.sannysoft.com/ and see which checks we fail"""
+    #task = f"""Go to https://nowsecure.nl and see which checks we fail"""
+    #task = """Go to google and then google hello and then scroll to the bottom of the window."""
     return await ask_agent(task, page)
 
 
