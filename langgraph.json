@@ -1,9 +1,12 @@
 {
   "python_version": "3.11",
   "dockerfile_lines": [
+    "RUN pwd",
+    "RUN ls",
+    "RUN echo 'Hello world'",
+    "RUN pip install playwright",
     "RUN playwright install",
-    "RUN playwright install-deps",
-    "RUN echo 'Hello world'"
+    "RUN playwright install-deps"
   ],
   "dependencies": [
     "."

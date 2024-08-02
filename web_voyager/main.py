@@ -504,6 +504,9 @@ generate_graph_image(
 async def call_agent(max_steps: int = 300):
     event_stream = graph.astream(
         {
+            "scratchpad": list(),
+        },
+        {
             "recursion_limit": max_steps,
         },
     )
