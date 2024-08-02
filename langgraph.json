@@ -1,0 +1,15 @@
+{
+  "python_version": "3.11",
+  "dockerfile_lines": [
+    "RUN playwright install",
+    "RUN playwright install-deps",
+    "RUN echo 'Hello world'"
+  ],
+  "dependencies": [
+    "."
+  ],
+  "graphs": {
+    "playwright_agent": "web_voyager/main.py:graph"
+  },
+  "env": "web_voyager/.env"
+}

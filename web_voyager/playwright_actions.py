@@ -2,9 +2,20 @@ from playwright.async_api import Page
 import platform
 from playwright_stealth import stealth_async
 
-async def click(page: Page, x: float, y: float):
+async def click(page: Page, x: float, y: float, text: str = "", exact: bool = False):
+    if text:
+        locator = page.get_by_text(text, exact=exact)
+        if await locator.count() == 1:
+            await locator.click()
+            await page.wait_for_load_state('networkidle')
+            return "locator"
+        else:
+            print(f"Multiple elements found for text: {text}")
+            print(await locator.all_text_contents())
+    
     await page.mouse.click(x, y)
     await page.wait_for_load_state('networkidle')
+    return "coordinates"
 
 async def type_text(page: Page, x: float, y: float, text: str):
     await page.mouse.click(x, y)
@@ -54,7 +65,7 @@ from playwright.async_api import async_playwright
 
 async def setup_browser():
     playwright = await async_playwright().start()
-    browser = await playwright.chromium.launch(headless=False, args=None)
+    browser = await playwright.chromium.launch(headless=True, args=None)
     page = await browser.new_page()
     await stealth_async(page)
     await page.set_viewport_size({"width": 1700, "height": 900})  # Set the viewport size

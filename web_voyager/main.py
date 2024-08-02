@@ -1,21 +1,21 @@
 
 import sys
 
-sys.path.insert(0, '/Users/bensolis-cohen/Projects/alertme')
-sys.path.insert(0, '/Users/bensolis-cohen/Projects/alertme/web_voyager')
+sys.path.insert(0, '.')
+sys.path.insert(0, './web_voyager')
 
 from dotenv import load_dotenv
-from playwright_actions import setup_browser
-from prompt import compare_screenshots_prompt
+from web_voyager.playwright_actions import setup_browser
+from web_voyager.prompt import compare_screenshots_prompt
 import io
 from PIL import Image
 import json
-from playwright_actions import click as playwright_click, type_text as playwright_type_text, scroll as playwright_scroll, go_back as playwright_go_back, to_google as playwright_to_google, to_url as playwright_to_url
+from web_voyager.playwright_actions import click as playwright_click, type_text as playwright_type_text, scroll as playwright_scroll, go_back as playwright_go_back, to_google as playwright_to_google, to_url as playwright_to_url
 import logging
-from prompt import web_voyager_prompt
+from web_voyager.prompt import web_voyager_prompt
 from langgraph.graph import END, StateGraph
 from langchain_core.runnables import RunnableLambda
-from utils import mask_sensitive_data
+from web_voyager.utils import mask_sensitive_data
 from langsmith import traceable
 from langgraph_utils import generate_graph_image
 import os
@@ -39,7 +39,7 @@ from langchain_core.pydantic_v1 import BaseModel, Field
 
 
 # Ensure the logs directory exists
-log_dir = "/Users/bensolis-cohen/Projects/alertme/web_voyager/logs"
+log_dir = "./web_voyager/logs"
 os.makedirs(log_dir, exist_ok=True)
 
 # Set up logging
@@ -133,9 +133,10 @@ async def click(state: AgentState):
         bbox = state["bboxes"][bbox_id]
         x, y = bbox["x"], bbox["y"]
         xpath = bbox.get("xpath", "")
-        await playwright_click(page, x, y)
+        click_result = await playwright_click(page, x, y, bbox.get("text", ""))
+        print(f"Clicked {bbox_id} with result {click_result}")
         store_action("click", {"x": x, "y": y,
-                     "bbox_id": bbox_id, "xpath": xpath})
+                     "bbox_id": bbox_id, "xpath": xpath, "click_result": click_result})
         return f"Clicked {bbox_id}"
     except Exception as e:
         return f"Error in click: {str(e)}"
@@ -230,7 +231,7 @@ async def to_url(state: AgentState):
 # Some javascript we will run on each step
 # to take a screenshot of the page, select the
 # elements to annotate, and add bounding boxes
-with open("/Users/bensolis-cohen/Projects/alertme/web_voyager/mark_page.js") as f:
+with open("./web_voyager/mark_page.js") as f:
     mark_page_script = f.read()
 
 
@@ -296,6 +297,24 @@ agent = annotate | RunnablePassthrough.assign(
 
 compare_chain = compare_screenshots_prompt | llm.with_structured_output(Reflection)
 
+async def setup(state: AgentState):
+    #task = f"""Book me a tennis court at mission dolores park tomorrow."""
+    #task = f"""Go to https://bot.sannysoft.com/ and see which checks we fail"""
+    #task = f"""Go to https://nowsecure.nl and see which checks we fail"""
+    #task = """Go to google and then google hello and then scroll to the bottom of the window."""
+    username = os.getenv('GTC_USERNAME')
+    password = os.getenv('GTC_PASSWORD')
+    task = f"""Go to url: https://gtc.clubautomation.com/. Use username: {username}, password: {password}.
+Task: Search for courts that satisfy the criteria (do not reserve):
+ - date: 08/05/2024
+ - from_time: 10am
+ - to_time: 9pm
+ - duration: 60 mins.
+ 
+ Print the available times.
+"""
+    page = await setup_browser()
+    return {"page" : page, "input": task}
 
 async def update_scratchpad(state: AgentState):
     """After a tool is invoked, we want to update
@@ -349,7 +368,6 @@ async def take_screenshot(page):
     compressed_screenshot = await compress_screenshot(screenshot)
     return compressed_screenshot
 
-
 @traceable(name="reflect")
 async def reflect(state: AgentState):
     """
@@ -389,7 +407,7 @@ async def reflect(state: AgentState):
     # Save the images to files in the scratch directory
     def save_image_to_file(image_data, filename):
         file_path = os.path.join(
-            "/Users/bensolis-cohen/Projects/alertme/web_voyager/scratch", filename)
+            "./web_voyager/scratch", filename)
         with open(file_path, "wb") as file:
             file.write(image_data.encode('utf-8'))
 
@@ -426,7 +444,6 @@ graph_builder = StateGraph(AgentState)
 
 
 graph_builder.add_node("agent", agent)
-graph_builder.set_entry_point("agent")
 
 tools = {
     "Click": click,
@@ -452,10 +469,17 @@ def select_tool(state: AgentState):
     # to the end user.
     action = state["prediction"].action
     if "ANSWER" in action:
-        return END
+        return "finish"
     return action
 
+async def end(state: AgentState):
+    res = state["prediction"].args[0] # TODO: Format this.
+    masked_res = await mask_sensitive_data(res)
+    print(f"Final response: {masked_res}")
 
+    await save_actions_log()
+    wait_for_all_tracers()
+    
 graph_builder.add_conditional_edges("agent", select_tool)
 graph_builder.add_node("reflect", RunnableLambda(reflect))
 
@@ -466,89 +490,39 @@ graph_builder.add_node("update_scratchpad", RunnableLambda(update_scratchpad))
 graph_builder.add_edge("reflect", "update_scratchpad")
 graph_builder.add_edge("update_scratchpad", "agent")
 
+graph_builder.add_node("setup", setup)
+graph_builder.add_node("finish", end)
+graph_builder.add_edge("finish", END)
+graph_builder.set_entry_point("setup")
+graph_builder.add_edge("setup", "agent")
+
 graph = graph_builder.compile()
 generate_graph_image(
-    graph, filename="/Users/bensolis-cohen/Projects/alertme/web_voyager/logs/web_voyager_graph.png")
+    graph, filename="./web_voyager/logs/web_voyager_graph.png")
 
 
-async def call_agent(question: str, page, max_steps: int = 300):
+async def call_agent(max_steps: int = 300):
     event_stream = graph.astream(
-        {
-            "page": page,
-            "input": question,
-            "scratchpad": list(),
-        },
         {
             "recursion_limit": max_steps,
         },
     )
-    final_answer = None
-    steps = []
 
-    async for event in event_stream:        
-        if "agent" not in event:
-            continue
-        pred = event["agent"].get("prediction") or {}
-        action = pred.action
-        action_input = pred.args
-        steps.append(f"{len(steps) + 1}. {action}: {action_input}")
-
+    async for event in event_stream:
         start_time = asyncio.get_event_loop().time()
         print("Waiting for traces to upload...")
         wait_for_all_tracers()
         end_time = asyncio.get_event_loop().time()
         print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
 
-        if "ANSWER" in action:
-            final_answer = action_input[0]
-            break
-    return final_answer
-
-
-async def ask_agent(question: str, page):
-    res = await call_agent(question, page)
-    print(f"Question: {question}")
-    return res
-
-
 # Load environment variables from .env file
 load_dotenv()
 
-
-async def perform_task(page):
-    username = os.getenv('GTC_USERNAME')
-    password = os.getenv('GTC_PASSWORD')
-    task = f"""Go to url: https://gtc.clubautomation.com/. Use username: {username}, password: {password}.
-Task: Search for courts that satisfy the criteria (do not reserve):
- - date: 08/05/2024
- - from_time: 10am
- - to_time: 9pm
- - duration: 60 mins.
- 
- Print the available times.
-"""
-    #task = f"""Book me a tennis court at mission dolores park tomorrow."""
-    #task = f"""Go to https://bot.sannysoft.com/ and see which checks we fail"""
-    #task = f"""Go to https://nowsecure.nl and see which checks we fail"""
-    #task = """Go to google and then google hello and then scroll to the bottom of the window."""
-    return await ask_agent(task, page)
-
-
 async def save_actions_log():
-    log_path = "/Users/bensolis-cohen/Projects/alertme/web_voyager/data/actions_log.json"
+    log_path = "./web_voyager/data/actions_log.json"
     with open(log_path, "w") as f:
         json.dump(actions_log, f, indent=4)
 
-
-async def main():
-    page = await setup_browser()
-
-    res = await perform_task(page)
-    masked_res = await mask_sensitive_data(res)
-    print(f"Final response: {masked_res}")
-
-    await save_actions_log()
-    wait_for_all_tracers()
 
 if __name__ == "__main__":
     original_stderr = sys.stderr
@@ -556,7 +530,7 @@ if __name__ == "__main__":
 
     loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(main())
+        loop.run_until_complete(call_agent())
     finally:
         loop.close()
         sys.stderr = original_stderr
