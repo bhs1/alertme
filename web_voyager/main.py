@@ -32,11 +32,12 @@ import base64
 from langchain_core.runnables import chain as chain_decorator
 from langchain_core.tracers.langchain import wait_for_all_tracers
 
-
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import ChatOpenAI
 from langchain_core.pydantic_v1 import BaseModel, Field
 
+# TODO: Make this file object oriented instead of using a global page object.
+global page
 
 # Ensure the logs directory exists
 log_dir = "./web_voyager/logs"
@@ -52,7 +53,6 @@ os.environ["LANGCHAIN_PROJECT"] = "Web-Voyager-3"
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_CALLBACKS_BACKGROUND"] = "true"
 
-
 class BBox(TypedDict):
     x: float
     y: float
@@ -60,6 +60,12 @@ class BBox(TypedDict):
     type: str
     ariaLabel: str
     outerHTML: str
+    parentHTML: str
+    isScrollable: bool
+    isTypeable: bool
+    isClickable: bool
+    index: str
+    xpath: str
 
 
 class Prediction(BaseModel):
@@ -102,15 +108,12 @@ async def compress_screenshot(screenshot, scale_factor: int = 1) -> str:
 
 
 class AgentState(TypedDict):
-    page: Page  # The Playwright web page lets us interact with the web environment
     input: str  # User request
     img: str  # b64 encoded screenshot
-    # The bounding boxes from the browser annotation function
     bboxes: List[BBox]
-    prediction: Prediction  # The Agent's output
-    # A system message (or messages) containing the intermediate steps
+    prediction: Prediction
     scratchpad: List[str]
-    observation: str  # The most recent response from a tool
+    observation: str
     action_summary: str
     step: int
     formatted_scratchpad: str
@@ -125,7 +128,7 @@ def store_action(action_name: str, params: dict):
 
 async def click(state: AgentState):
     try:
-        page = state["page"]
+        global page
         click_args = state["prediction"].args
         if click_args is None or len(click_args) != 1:
             return f"Failed to click bounding box labeled as number {click_args}"
@@ -134,9 +137,9 @@ async def click(state: AgentState):
         x, y = bbox["x"], bbox["y"]
         xpath = bbox.get("xpath", "")
         click_result = await playwright_click(page, x, y, bbox.get("text", ""))
-        print(f"Clicked {bbox_id} with result {click_result}")
+        print(f"Clicked {bbox_id} with result {click_result}")        
         store_action("click", {"x": x, "y": y,
-                     "bbox_id": bbox_id, "xpath": xpath, "click_result": click_result})
+                     "bbox_id": bbox_id, "xpath": xpath, "click_result": click_result, "text": bbox.get("text", ""), "parent_html": bbox.get("parentHTML", "")})
         return f"Clicked {bbox_id}"
     except Exception as e:
         return f"Error in click: {str(e)}"
@@ -144,7 +147,7 @@ async def click(state: AgentState):
 
 async def type_text(state: AgentState):
     try:
-        page = state["page"]
+        global page
         type_args = state["prediction"].args
         if type_args is None or len(type_args) != 2:
             return f"Failed to type in element from bounding box labeled as number {type_args}"
@@ -160,10 +163,9 @@ async def type_text(state: AgentState):
     except Exception as e:
         return f"Error in type_text: {str(e)}"
 
-
 async def scroll(state: AgentState):
     try:
-        page = state["page"]
+        global page
         scroll_args = state["prediction"].args
         if scroll_args is None or len(scroll_args) != 2:
             return "Failed to scroll due to incorrect arguments."
@@ -200,7 +202,7 @@ async def wait(state: AgentState):
 
 async def go_back(state: AgentState):
     try:
-        page = state["page"]
+        global page
         await playwright_go_back(page)
         store_action("go_back", {})
         return f"Navigated back a page to {page.url}."
@@ -210,7 +212,7 @@ async def go_back(state: AgentState):
 
 async def to_google(state: AgentState):
     try:
-        page = state["page"]
+        global page
         await playwright_to_google(page)
         store_action("to_google", {})
         return "Navigated to google.com."
@@ -220,7 +222,7 @@ async def to_google(state: AgentState):
 
 async def to_url(state: AgentState):
     try:
-        page = state["page"]
+        global page
         url = state["prediction"].args[0]
         await playwright_to_url(page, url)
         store_action("to_url", {"url": url})
@@ -254,18 +256,15 @@ async def mark_page(page):
     }
 
 
-async def annotate(state):
-    marked_page = await mark_page.with_retry().ainvoke(state["page"])
+async def annotate(state):    
+    marked_page = await mark_page.with_retry().ainvoke(page)
     return {**state, **marked_page}
 
 
 def format_descriptions(state):
     labels = []
     for bbox in state["bboxes"]:
-        text = bbox.get("ariaLabel") or ""
-        if not text.strip():
-            text = bbox["text"]
-        # el_type = bbox.get("type")
+        text = bbox.get("text", "").strip()
         scrollable = bbox.get("isScrollable", False)
         typable = bbox.get("isTypeable", False)
         clickable = bbox.get("isClickable", False)
@@ -279,10 +278,11 @@ def format_descriptions(state):
         if typable:
             available_actions.append(f"Type [{index}]")
 
-        actions_str = ", ".join(available_actions)
+        actions_str = ", ".join(available_actions)        
 
         labels.append(f'''(Box {index}) {actions_str}
-    - Text: "{text}", ''')
+    - Text: "{text}"
+''')
     bbox_descriptions = "\nAvailable actions:\n" + "\n".join(labels)
     print("Calling LLM to determine action...")
     return {**state, "bbox_descriptions": bbox_descriptions}
@@ -298,6 +298,7 @@ agent = annotate | RunnablePassthrough.assign(
 compare_chain = compare_screenshots_prompt | llm.with_structured_output(Reflection)
 
 async def setup(state: AgentState):
+    global page
     #task = f"""Book me a tennis court at mission dolores park tomorrow."""
     #task = f"""Go to https://bot.sannysoft.com/ and see which checks we fail"""
     #task = f"""Go to https://nowsecure.nl and see which checks we fail"""
@@ -306,15 +307,15 @@ async def setup(state: AgentState):
     password = os.getenv('GTC_PASSWORD')
     task = f"""Go to url: https://gtc.clubautomation.com/. Use username: {username}, password: {password}.
 Task: Search for courts that satisfy the criteria (do not reserve):
- - date: 08/05/2024
+ - date: 08/12/2024
  - from_time: 10am
  - to_time: 9pm
  - duration: 60 mins.
  
  Print the available times.
 """
-    page = await setup_browser()
-    return {"page" : page, "input": task}
+    page = await setup_browser()    
+    return {**state, "input": task}
 
 async def update_scratchpad(state: AgentState):
     """After a tool is invoked, we want to update
@@ -392,7 +393,7 @@ async def reflect(state: AgentState):
     
     print(masked_print_str)
 
-    page = state["page"]
+    global page
     prediction = state.get("prediction")
     action_taken = f"Action attempted: {prediction.action} with args: {prediction.args}. Which results in:"
     thought = prediction.thought
@@ -420,6 +421,12 @@ async def reflect(state: AgentState):
                                    "input": state["input"]}, {"run_name": "ReflectOnDiff", "tags": ["reflect-on-diff", run_id]})
     end_time = asyncio.get_event_loop().time()
     print(f"Time taken for comparison: {end_time - start_time:.2f} seconds")
+    
+    start_time = asyncio.get_event_loop().time()
+    print("Waiting for traces to upload...")
+    wait_for_all_tracers()
+    end_time = asyncio.get_event_loop().time()
+    print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
 
     explanation = comparison_result.explanation
     success_or_failure_result = comparison_result.success_or_failure_result
@@ -502,7 +509,7 @@ generate_graph_image(
 
 
 async def call_agent(max_steps: int = 300):
-    event_stream = graph.astream(
+    event_stream = await graph.ainvoke(
         {
             "scratchpad": list(),
         },
@@ -510,13 +517,6 @@ async def call_agent(max_steps: int = 300):
             "recursion_limit": max_steps,
         },
     )
-
-    async for event in event_stream:
-        start_time = asyncio.get_event_loop().time()
-        print("Waiting for traces to upload...")
-        wait_for_all_tracers()
-        end_time = asyncio.get_event_loop().time()
-        print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
 
 # Load environment variables from .env file
 load_dotenv()

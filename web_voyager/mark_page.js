@@ -75,6 +75,18 @@ function isWithinScrollableArea(element) {
     return false;
 }
 
+function getParentHTML(element, maxLength = 500) {
+  let currentElement = element;
+  while (currentElement && currentElement.outerHTML.length <= maxLength) {
+    if (currentElement.parentElement) {
+      currentElement = currentElement.parentElement;
+    } else {
+      break;
+    }
+  }
+  return currentElement.outerHTML;
+}
+
 function markPage() {
   unmarkPage();
 
@@ -226,6 +238,7 @@ function markPage() {
       text: item.text,
       ariaLabel: item.ariaLabel,
       outerHTML: item.element.outerHTML,
+      parentHTML: getParentHTML(item.element),
       isScrollable: item.isScrollableArea,
       isTypeable: item.isTypeable,
       isClickable: item.isClickable,
