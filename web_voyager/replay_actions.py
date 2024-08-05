@@ -25,14 +25,16 @@ async def replay_actions(page, actions_log_path):
             except Exception as e:
                 print(f"Warning: XPath '{params['xpath']}' not found within 10 seconds: {e}")
 
-        print_str = f"Replaying action: {action['action']}, {action['params']}"
+        params_copy = action['params'].copy()
+        params_copy.pop('parent_html', None)
+        print_str = f"Replaying action: {action['action']}, {params_copy}"
         masked_print_str = await mask_sensitive_data(print_str)
         print(masked_print_str)
         if "x" in params and "y" in params:
             await display_red_dot(page, params["x"], params["y"])
-            print("Press enter to execute action at red dot...")
-            await asyncio.get_event_loop().run_in_executor(None, input)
-            await asyncio.sleep(.2)
+            # print("Press enter to execute action at red dot...")
+            # await asyncio.get_event_loop().run_in_executor(None, input)
+            # await asyncio.sleep(.2)
 
         if action_name == "click":
             await click(page, params["x"], params["y"], params["text"], exact=True)
