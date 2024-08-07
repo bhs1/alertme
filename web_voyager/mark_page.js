@@ -77,14 +77,17 @@ function isWithinScrollableArea(element) {
 
 function getParentHTML(element, maxLength = 500) {
   let currentElement = element;
-  while (currentElement && currentElement.outerHTML.length <= maxLength) {
-    if (currentElement.parentElement) {
-      currentElement = currentElement.parentElement;
-    } else {
-      break;
+  let previousHTML = currentElement.outerHTML;
+
+  while (currentElement && currentElement.parentElement) {
+    currentElement = currentElement.parentElement;
+    if (currentElement.outerHTML.length > maxLength) {
+      return previousHTML;
     }
+    previousHTML = currentElement.outerHTML;
   }
-  return currentElement.outerHTML;
+
+  return previousHTML;
 }
 
 function markPage() {

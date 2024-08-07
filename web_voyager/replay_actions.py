@@ -52,7 +52,7 @@ async def replay_actions(page, actions_log_path):
 if __name__ == "__main__":
     async def main():
         page = await setup_browser()
-        await replay_actions(page, "/Users/bensolis-cohen/Projects/alertme/web_voyager/data/actions_log.json")
+        await replay_actions(page, "./web_voyager/data/action_log_result.json")
         
         print("Replay completed. Press Enter to close the browser...")
         await asyncio.get_event_loop().run_in_executor(None, input)
