@@ -4,6 +4,7 @@ Description/Design: https://docs.google.com/document/d/1zaHVEfOX0qt_evsIHcGXlp9t
 
 
 # web_voyager Setup
+- Create and activate a virtualenv
 - ```pip install -r requirements.txt```
 - In the web_voyager directory, copy .env-example to .env
 - Create OpenAI and Lanchain accounts, generate keys, and put them in your .env file.
