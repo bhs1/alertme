@@ -6,3 +6,4 @@ venv
 __pycache__
 data/
 web_voyager/logs
+program.prof

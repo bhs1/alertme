@@ -423,7 +423,7 @@ async def reflect(state: AgentState):
     
     start_time = asyncio.get_event_loop().time()
     print("Waiting for traces to upload...")
-    wait_for_all_tracers()
+    #wait_for_all_tracers()
     end_time = asyncio.get_event_loop().time()
     print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
 
@@ -484,7 +484,9 @@ async def end(state: AgentState):
     print(f"Final response: {masked_res}")
 
     await save_actions_log()
+    print("Waiting for remaining traces to upload...")
     wait_for_all_tracers()
+    print("Traces uploaded. Ending...")
     
 graph_builder.add_conditional_edges("agent", select_tool)
 graph_builder.add_node("reflect", RunnableLambda(reflect))
