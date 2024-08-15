@@ -7,3 +7,4 @@ langchain==0.2.3
 langgraph==0.1.9
 pillow==10.4.0
 langchain-openai==0.1.17
+deepdiff==7.0.1

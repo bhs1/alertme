@@ -117,6 +117,34 @@ old_screenshot_prompt = ImagePromptTemplate(
     template={"url": "data:image/png;base64,{old_screenshot}"}
 )
 
+final_screenshot_prompt = ImagePromptTemplate(
+    input_variables=["final_screenshot"],
+    template={"url": "data:image/png;base64,{final_screenshot}"}
+)
+
+human_extract_info_prompt = HumanMessagePromptTemplate.from_template(
+"""
+According to this prompt
+    
+{input_prompt}
+
+extract the information you need from the screenshot below.
+
+Be sure to follow this output format example when you extract the result:
+
+{output_format_example}
+"""
+)
+
+concatenated_extract_info_prompt = HumanMessagePromptTemplate(prompt=[human_extract_info_prompt, final_screenshot_prompt])
+
+final_extract_info_prompt = ChatPromptTemplate(
+    input_variables=["final_screenshot", "input_prompt", "output_format_example"],
+    messages=[
+        concatenated_extract_info_prompt
+    ]
+)
+
 # Action taken prompt
 action_taken_prompt = PromptTemplate(
     input_variables=["action_taken", "input"],

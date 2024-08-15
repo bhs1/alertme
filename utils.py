@@ -45,3 +45,4 @@ def configure_logging(log_file='data/app.log'):
     logging.info(f"Starting new run {run_id}")
 
     return run_id
+

@@ -3,61 +3,97 @@ import asyncio
 from playwright_actions import *
 from playwright_actions import setup_browser
 from utils import mask_sensitive_data
+import ast
 
-async def replay_actions(page, actions_log_path):    
-    # Read actions_log from file
-    with open(actions_log_path, "r") as f:
-        actions_log = json.load(f)
+class ActionReplayer:
+    def __init__(self, page = None, file_path = "", actions_string=""):
+        self.page = page
+        self.file_path = file_path
+        self.actions_string = actions_string
+
+    async def initialize(self):
+        if not self.page:
+            self.page = await setup_browser()
     
-    for action in actions_log:
-        action_name = action["action"]
-        params = action["params"]
-        if "xpath" in params:
-            try:
-                #print(f"Waiting for xpath: {params['xpath']}")
-                locator = page.locator(f"xpath={params['xpath']}")
-                #Wait for at least one element to be visible
-                #start_time = asyncio.get_event_loop().time()
-                await locator.first.wait_for(state="visible", timeout=100000) # 100 secs
-                #end_time = asyncio.get_event_loop().time()
-                #print(f"Found {await locator.count()} elements matching the XPath")
-                #print(f"Time waited: {end_time - start_time:.2f} seconds")
-            except Exception as e:
-                print(f"Warning: XPath '{params['xpath']}' not found within 10 seconds: {e}")
+    async def get_page(self):
+        return self.page
+    
+    async def close(self):
+        await self.page.context.browser.close()
 
-        params_copy = action['params'].copy()
+    async def load_actions(self):
+        print(f"Loading actions_string: {self.actions_string}")
+        if self.file_path:
+            with open(self.file_path, "r") as f:
+                return json.load(f)
+        else:
+            # Use ast.literal_eval to safely evaluate the Python literal
+            python_obj = ast.literal_eval(self.actions_string)
+            # Convert the Python object to proper JSON
+            return json.loads(json.dumps(python_obj))
+
+    async def wait_for_xpath(self, xpath):
+        try:
+            locator = self.page.locator(f"xpath={xpath}")
+            await locator.first.wait_for(state="visible", timeout=100000)
+        except Exception as e:
+            print(f"Warning: XPath '{xpath}' not found within 100 seconds: {e}")
+
+    async def print_action(self, action, params):
+        params_copy = params.copy()
         params_copy.pop('parent_html', None)
-        print_str = f"Replaying action: {action['action']}, {params_copy}"
+        print_str = f"Replaying action: {action}, {params_copy}"
         masked_print_str = await mask_sensitive_data(print_str)
         print(masked_print_str)
-        if "x" in params and "y" in params:
-            await display_red_dot(page, params["x"], params["y"])
-            # print("Press enter to execute action at red dot...")
-            # await asyncio.get_event_loop().run_in_executor(None, input)
-            # await asyncio.sleep(.2)
 
+    async def display_dot(self, x, y):
+        await display_red_dot(self.page, x, y)
+
+    async def execute_action(self, action_name, params):
         if action_name == "click":
-            await click(page, params["x"], params["y"], params["text"], exact=True)
+            await click(self.page, params["x"], params["y"], params["text"], exact=True)
         elif action_name == "type_text":
-            await type_text(page, params["x"], params["y"], params["text"])
+            await type_text(self.page, params["x"], params["y"], params["text"])
         elif action_name == "scroll":
-            await scroll(page, params["x"], params["y"], params["direction"], params["scroll_direction"])
+            await scroll(self.page, params["x"], params["y"], params["direction"], params["scroll_direction"])
         elif action_name == "go_back":
-            await go_back(page)
+            await go_back(self.page)
         elif action_name == "to_google":
-            await to_google(page)
+            await to_google(self.page)
         elif action_name == "to_url":
-            await to_url(page, params["url"])
-            
-if __name__ == "__main__":
-    async def main():
-        page = await setup_browser()
-        await replay_actions(page, "./web_voyager/data/action_log_result.json")
-        
-        print("Replay completed. Press Enter to close the browser...")
-        await asyncio.get_event_loop().run_in_executor(None, input)
-        
-        # Close the browser
-        await page.context.browser.close()
+            await to_url(self.page, params["url"])
+
+    async def replay_actions(self):
+        await self.initialize()
+        try:
+            actions_log = await self.load_actions()
+            for action in actions_log:
+                action_name = action["action"]
+                params = action["params"]
+                
+                if "xpath" in params:
+                    await self.wait_for_xpath(params["xpath"])
+
+                await self.print_action(action_name, params)
+
+                if "x" in params and "y" in params:
+                    await self.display_dot(params["x"], params["y"])
+
+                await self.execute_action(action_name, params)
+        except Exception as e:
+            print(f"An error occurred during replay: {e}")
+            await self.close()
+            raise
+
+async def main():
+    replayer = ActionReplayer(file_path="./web_voyager/data/action_log_result.json")
+    await replayer.replay_actions()
     
+    print("Replay completed. Press Enter to close the browser...")
+    await asyncio.get_event_loop().run_in_executor(None, input)
+    
+    # Close the browser
+    await replayer.close()
+
+if __name__ == "__main__":
     asyncio.run(main())

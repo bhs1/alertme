@@ -6,15 +6,13 @@ sys.path.insert(0, './web_voyager')
 from dotenv import load_dotenv
 from web_voyager.playwright_actions import setup_browser
 from web_voyager.prompt import compare_screenshots_prompt
-import io
-from PIL import Image
 import json
 from web_voyager.playwright_actions import click as playwright_click, type_text as playwright_type_text, scroll as playwright_scroll, go_back as playwright_go_back, to_google as playwright_to_google, to_url as playwright_to_url
 import logging
 from web_voyager.prompt import web_voyager_prompt
 from langgraph.graph import END, StateGraph
 from langchain_core.runnables import RunnableLambda
-from web_voyager.utils import mask_sensitive_data
+from web_voyager.utils import mask_sensitive_data, compress_screenshot
 from langsmith import traceable
 from langgraph_utils import generate_graph_image
 import os
@@ -86,21 +84,6 @@ class Reflection(BaseModel):
     success_or_failure_result: str = Field(
         description="Must be one of SUCCESS, PARTIAL_SUCCESS, or FAILURE.")
 
-
-async def compress_screenshot(screenshot, scale_factor: int = 1) -> str:
-    """Compress the screenshot by reducing its width and height by 4x."""
-    image = Image.open(io.BytesIO(screenshot))
-
-    new_size = (image.width // scale_factor, image.height // scale_factor)
-    compressed_image = image.resize(new_size, Image.LANCZOS)
-
-    # Convert back to base64
-    buffer = io.BytesIO()
-    # Save as PNG to avoid JPEG compression
-    compressed_image.save(buffer, format="PNG")
-    compressed_b64_image = base64.b64encode(buffer.getvalue()).decode()
-
-    return compressed_b64_image
 
 # This represents the state of the agent
 # as it proceeds through execution
@@ -296,23 +279,15 @@ agent = annotate | RunnablePassthrough.assign(
 
 compare_chain = compare_screenshots_prompt | llm.with_structured_output(Reflection)
 
+import web_voyager.tasks.tennis_task as tennis_task
+
 async def setup(state: AgentState):
     global page
     #task = f"""Book me a tennis court at mission dolores park tomorrow."""
     #task = f"""Go to https://bot.sannysoft.com/ and see which checks we fail"""
     #task = f"""Go to https://nowsecure.nl and see which checks we fail"""
     #task = """Go to google and then google hello and then scroll to the bottom of the window."""
-    username = os.getenv('GTC_USERNAME')
-    password = os.getenv('GTC_PASSWORD')
-    task = f"""Go to url: https://gtc.clubautomation.com/. Use username: {username}, password: {password}.
-Task: Search for courts that satisfy the criteria (do not reserve):
- - date: 08/12/2024
- - from_time: 10am
- - to_time: 9pm
- - duration: 60 mins.
- 
- Print the available times.
-"""
+    task = tennis_task.get_prompt()
     page = await setup_browser()    
     return {**state, "input": task}
 
@@ -423,7 +398,7 @@ async def reflect(state: AgentState):
     
     start_time = asyncio.get_event_loop().time()
     print("Waiting for traces to upload...")
-    #wait_for_all_tracers()
+    wait_for_all_tracers()
     end_time = asyncio.get_event_loop().time()
     print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
 
@@ -485,8 +460,11 @@ async def end(state: AgentState):
 
     await save_actions_log()
     print("Waiting for remaining traces to upload...")
+    start_time = asyncio.get_event_loop().time()
     wait_for_all_tracers()
-    print("Traces uploaded. Ending...")
+    end_time = asyncio.get_event_loop().time()
+    print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
+    print("Ending...")
     
 graph_builder.add_conditional_edges("agent", select_tool)
 graph_builder.add_node("reflect", RunnableLambda(reflect))
@@ -507,7 +485,6 @@ graph_builder.add_edge("setup", "agent")
 graph = graph_builder.compile()
 generate_graph_image(
     graph, filename="./web_voyager/logs/web_voyager_graph.png")
-
 
 async def call_agent(max_steps: int = 300):
     event_stream = await graph.ainvoke(
