@@ -33,11 +33,7 @@ class ActionReplayer:
             return json.loads(json.dumps(python_obj))
 
     async def wait_for_xpath(self, xpath):
-        try:
-            locator = self.page.locator(f"xpath={xpath}")
-            await locator.first.wait_for(state="visible", timeout=100000)
-        except Exception as e:
-            print(f"Warning: XPath '{xpath}' not found within 100 seconds: {e}")
+        await wait_for_xpath(self.page, xpath)
 
     async def print_action(self, action, params):
         params_copy = params.copy()
@@ -55,7 +51,7 @@ class ActionReplayer:
         elif action_name == "type_text":
             await type_text(self.page, params["x"], params["y"], params["text"])
         elif action_name == "scroll":
-            await scroll(self.page, params["x"], params["y"], params["direction"], params["scroll_direction"])
+            await scroll_until_visible(self.page, params["x"], params["y"], params["direction"], params["scroll_direction"], params["text"])
         elif action_name == "go_back":
             await go_back(self.page)
         elif action_name == "to_google":
@@ -86,7 +82,7 @@ class ActionReplayer:
             raise
 
 async def main():
-    replayer = ActionReplayer(file_path="./web_voyager/data/action_log_result.json")
+    replayer = ActionReplayer(file_path="./web_voyager/data/actions_log.json")
     await replayer.replay_actions()
     
     print("Replay completed. Press Enter to close the browser...")

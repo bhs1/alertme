@@ -6,13 +6,19 @@ load_dotenv()
 def get_prompt():
     username = os.getenv('GTC_USERNAME')
     password = os.getenv('GTC_PASSWORD')
-    task = f"""Go to url: https://gtc.clubautomation.com/. Use username: {username}, password: {password}.
-Task: Search for courts that satisfy the criteria (do not reserve):
- - date: 08/12/2024
- - from_time: 10am
- - to_time: 9pm
- - duration: 60 mins.
- 
- Print the available times.
+    task = f"""
+Task: 
+ (1) Search for courts that satisfy the criteria in the task_params below (do not reserve).
+ (2) Print the available times.
 """
-    return task
+
+    task_params = {
+        "url": "https://gtc.clubautomation.com/",
+        "username": username,
+        "password": password,
+        "date": "08/22/2024",
+        "from_time": "10:00 AM",
+        "to_time": "09:00 PM",
+        "duration": "60 Min"
+    }
+    return task, task_params

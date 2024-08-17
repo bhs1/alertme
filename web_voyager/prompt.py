@@ -18,8 +18,8 @@ information to identify the Numerical Label corresponding to the Web Element tha
 the guidelines and choose ONE of the following actions:
 
 1. Click: Click a Web Element.
-2. Type: Delete existing content in a textbox, type content, then press enter.
-3. Scroll: Scroll up or down. Multiple scrolls are allowed to browse the webpage. ATTENTION: The default scroll is the whole window. But if the scroll widget is located in a certain area of the webpage, then you have to specify a Web Element in that area using Numerical_Label.
+2. Type: Delete existing text in a textbox, type text, then press enter.
+3. Scroll: Scroll up or down until text is visible. ATTENTION: The default scroll is the whole window. But if the scroll widget is located in a certain area of the webpage, then you have to specify a Web Element in that area using Numerical_Label.
  - ATTENTION: If Scroll is not an available action for an element, then you should instead scroll the nearest scrollable element in the image.
 4. Wait
 5. Go back
@@ -29,14 +29,19 @@ the guidelines and choose ONE of the following actions:
 
 Correspondingly, raw_predicted_action_string should STRICTLY follow the format:
 
-- Click [Numerical_Label];
-- Type [Numerical_Label]; [Content] 
-- Scroll [Numerical_Label or WINDOW]; [up or down] e.g. Scroll [30]; down 
+- Click [Numerical_Label]
+- Type [Numerical_Label], [Text]
+- Scroll [Numerical_Label or WINDOW], [up or down], [Text] e.g. Scroll [30], down, "Some Text we want to find."
 - Wait 
 - GoBack
 - Google
-- ToUrl [URL]
-- ANSWER; [content]
+- ToUrl [Text] E.g. ToUrl www.mywebsite.com
+- ANSWER [Content]
+
+Annotate task_params:
+- If you are using [Text] from task_params map below, output the name of the task_param in task_param_used field.
+- Double check task_params values for [Text], if [Text] is a value in the task_param map, then it's likely its key should be in task_param_used.
+
 
 Key Guidelines You MUST follow:
 
@@ -57,6 +62,7 @@ Your reply should strictly follow the format:
 Thought: {{Your brief thoughts}}
 Action: {{One Action format you choose}}
 Action args: {{List of action args}}
+task_param_used: {{Name of the task_param used to fill the [Text] in the action string.}}
 Then the User will provide:
 Observation: {{A labeled screenshot Given by User}}
 """
@@ -84,6 +90,16 @@ Overall goal:
 """
 )
 
+params_prompt = PromptTemplate(
+    input_variables=["task_params"],
+    template="""
+
+task_params:
+{task_params}
+
+"""
+)
+
 scratchpad_prompt = PromptTemplate(
     input_variables=["formatted_scratchpad"],
     template="""
@@ -94,7 +110,7 @@ Most recent actions:
 """
 )
 
-human_message_prompt = HumanMessagePromptTemplate(prompt=[image_prompt, bbox_prompt, input_prompt, scratchpad_prompt])
+human_message_prompt = HumanMessagePromptTemplate(prompt=[input_prompt, params_prompt, image_prompt, bbox_prompt, scratchpad_prompt])
 
 # Chat prompt template
 web_voyager_prompt = ChatPromptTemplate(
@@ -127,6 +143,8 @@ human_extract_info_prompt = HumanMessagePromptTemplate.from_template(
 According to this prompt
     
 {input_prompt}
+
+{params_prompt}
 
 extract the information you need from the screenshot below.
 

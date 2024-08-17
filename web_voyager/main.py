@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from web_voyager.playwright_actions import setup_browser
 from web_voyager.prompt import compare_screenshots_prompt
 import json
-from web_voyager.playwright_actions import click as playwright_click, type_text as playwright_type_text, scroll as playwright_scroll, go_back as playwright_go_back, to_google as playwright_to_google, to_url as playwright_to_url
+from web_voyager.playwright_actions import click as playwright_click, type_text as playwright_type_text, scroll_until_visible as playwright_scroll, go_back as playwright_go_back, to_google as playwright_to_google, to_url as playwright_to_url
 import logging
 from web_voyager.prompt import web_voyager_prompt
 from langgraph.graph import END, StateGraph
@@ -71,6 +71,12 @@ class Prediction(BaseModel):
         description="Prediction action string and args, formatted as described.")
     action: str = Field(description="One action you choose")
     args: Optional[List[str]] = Field(description="List of action args.")
+    task_param_used_thought: Optional[str] = Field(description="Thought: Your brief thoughts on why you think you used this task param to fill in the [Text] of the action.")
+    task_param_used: Optional[str] = Field(description="Name of the task_param used to fill the [Text] in the action string.")
+    
+class TaskParamExpertDetermination(BaseModel):
+    determination: str = Field(description="Must be one of CORRECT or INCORRECT.")
+    updated_task_param_used: Optional[str] = Field(description="Name of the task_param used to fill the [Text] in the action string.")
 
 
 class Reflection(BaseModel):
@@ -99,6 +105,8 @@ class AgentState(TypedDict):
     action_summary: str
     step: int
     formatted_scratchpad: str
+    task_params: dict
+    error: str
 
 
 actions_log = []
@@ -112,6 +120,7 @@ async def click(state: AgentState):
     try:
         global page
         click_args = state["prediction"].args
+        task_param_used = state["prediction"].task_param_used
         if click_args is None or len(click_args) != 1:
             return f"Failed to click bounding box labeled as number {click_args}"
         bbox_id = int(click_args[0])
@@ -121,7 +130,7 @@ async def click(state: AgentState):
         click_result = await playwright_click(page, x, y, bbox.get("text", ""))
         print(f"Clicked {bbox_id} with result {click_result}")        
         store_action("click", {"x": x, "y": y,
-                     "bbox_id": bbox_id, "xpath": xpath, "click_result": click_result, "text": bbox.get("text", ""), "parent_html": bbox.get("parentHTML", "")})
+                     "bbox_id": bbox_id, "xpath": xpath, "click_result": click_result, "text": bbox.get("text", ""), "parent_html": bbox.get("parentHTML", ""), "task_param_used": task_param_used})
         return f"Clicked {bbox_id}"
     except Exception as e:
         return f"Error in click: {str(e)}"
@@ -131,6 +140,7 @@ async def type_text(state: AgentState):
     try:
         global page
         type_args = state["prediction"].args
+        task_param_used = state["prediction"].task_param_used
         if type_args is None or len(type_args) != 2:
             return f"Failed to type in element from bounding box labeled as number {type_args}"
         bbox_id = int(type_args[0])
@@ -140,7 +150,7 @@ async def type_text(state: AgentState):
         xpath = bbox.get("xpath", "")
         await playwright_type_text(page, x, y, text_content)
         store_action("type_text", {
-                     "x": x, "y": y, "bbox_id": bbox_id, "text": text_content, "xpath": xpath})
+                     "x": x, "y": y, "bbox_id": bbox_id, "text": text_content, "xpath": xpath, "task_param_used": task_param_used})
         return f"Typed {text_content} and submitted"
     except Exception as e:
         return f"Error in type_text: {str(e)}"
@@ -149,10 +159,12 @@ async def scroll(state: AgentState):
     try:
         global page
         scroll_args = state["prediction"].args
-        if scroll_args is None or len(scroll_args) != 2:
+        task_param_used = state["prediction"].task_param_used
+        if scroll_args is None or len(scroll_args) != 3:
+            print(f"Failed to scroll due to incorrect arguments: {scroll_args}")
             return "Failed to scroll due to incorrect arguments."
 
-        target, direction = scroll_args
+        target, direction, text = scroll_args
 
         if target.upper() == "WINDOW":
             x, y = 0, 0
@@ -164,11 +176,12 @@ async def scroll(state: AgentState):
             xpath = state["bboxes"][int(target)].get("xpath", "")
             scroll_amount = 200
         scroll_direction = -scroll_amount if direction.lower() == "up" else scroll_amount
-        await playwright_scroll(page, x, y, direction, scroll_direction)
+        await playwright_scroll(page, x, y, direction, scroll_direction, text)
         store_action("scroll", {"x": x, "y": y, "direction": direction,
-                     "scroll_direction": scroll_direction, "xpath": xpath})
-        return f"Scrolled {direction} in {'window' if target.upper() == 'WINDOW' else 'element'}"
+                     "scroll_direction": scroll_direction, "xpath": xpath, "text": text, "task_param_used": task_param_used})
+        return f"Scrolled {direction} in {'window' if target.upper() == 'WINDOW' else 'element'} until {text} is visible."
     except Exception as e:
+        print(f"Error in scroll: {str(e)}")
         return f"Error in scroll: {str(e)}"
 
 
@@ -287,9 +300,9 @@ async def setup(state: AgentState):
     #task = f"""Go to https://bot.sannysoft.com/ and see which checks we fail"""
     #task = f"""Go to https://nowsecure.nl and see which checks we fail"""
     #task = """Go to google and then google hello and then scroll to the bottom of the window."""
-    task = tennis_task.get_prompt()
+    task, task_params = tennis_task.get_prompt()
     page = await setup_browser()    
-    return {**state, "input": task}
+    return {**state, "input": task, "task_params": task_params}
 
 async def update_scratchpad(state: AgentState):
     """After a tool is invoked, we want to update
@@ -320,8 +333,9 @@ async def update_scratchpad(state: AgentState):
 
 {state['action_summary']}
     """
-    # print("================== STEP ====================")
-    # print(latest_step)
+    if state.get("error"):
+        latest_step += f"\nError: {state['error']}"
+        state["error"] = ""
     old.append(latest_step)
     if len(old) > 3:
         old = old[-3:]  # Keep only the latest 3 steps
@@ -360,9 +374,9 @@ async def reflect(state: AgentState):
         bbox_id = None
     bbox_text = state['bboxes'][bbox_id]['text'] if bbox_id is not None else "N/A"
     if bbox_text and bbox_text != "N/A":
-        print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}, Bounding box text: {bbox_text}\033[0m"
+        print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}, and task_param_used: {state['prediction'].task_param_used}, Bounding box text: {bbox_text}\033[0m"
     else:
-        print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}\033[0m"
+        print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}, and task_param_used: {state['prediction'].task_param_used}\033[0m"
     masked_print_str = await mask_sensitive_data(print_str)
     
     print(masked_print_str)
@@ -451,6 +465,9 @@ def select_tool(state: AgentState):
     action = state["prediction"].action
     if "ANSWER" in action:
         return "finish"
+    if action not in tools:
+        state["error"] = f"Invalid action: {action}"
+        return "update_scratchpad"
     return action
 
 async def end(state: AgentState):
@@ -466,13 +483,13 @@ async def end(state: AgentState):
     print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
     print("Ending...")
     
-graph_builder.add_conditional_edges("agent", select_tool)
 graph_builder.add_node("reflect", RunnableLambda(reflect))
 
 for node_name, tool in tools.items():
     graph_builder.add_edge(node_name, "reflect")
 
 graph_builder.add_node("update_scratchpad", RunnableLambda(update_scratchpad))
+graph_builder.add_conditional_edges("agent", select_tool)
 graph_builder.add_edge("reflect", "update_scratchpad")
 graph_builder.add_edge("update_scratchpad", "agent")
 

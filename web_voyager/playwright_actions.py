@@ -1,4 +1,4 @@
-from playwright.async_api import Page
+from playwright.async_api import Page, expect
 import platform
 from playwright_stealth import stealth_async
 from playwright_dompath.dompath_sync import xpath_path, css_path
@@ -75,14 +75,53 @@ async def type_text(page: Page, x: float, y: float, text: str):
     await page.keyboard.press("Enter")
     await page.wait_for_load_state('networkidle')
 
-# First try to scroll into view using text argument and then fallback to coordinates.
-async def scroll(page: Page, x: float, y: float, direction: str, scroll_direction: int, text: str = ""):
-    if direction.upper() == "WINDOW":
-        print(f"Scrolling window by {scroll_direction}")
-        await page.evaluate(f"window.scrollBy(0, {scroll_direction})")
-    else:
-        await page.mouse.move(x, y)
-        await page.mouse.wheel(0, scroll_direction)
+async def scroll_until_visible(page: Page, x: float, y: float, direction: str, scroll_direction: int, text: str = "", exact: bool = True):
+    max_scrolls = 3
+    scroll_count = 0
+    print(f"Scrolling until {text} is visible.")
+
+    while scroll_count < max_scrolls:
+        if text:
+            try:
+                visible_locators = await page.get_by_text(text, exact=exact).locator("visible=true").all()
+                if len(visible_locators) > 0:
+                    found_visible_element = False
+                    for locator in visible_locators:
+                        # TODO(P2): Filter elements with negative bbox coords or not in viewport.
+                        try:                            
+                            #await expect(locator).to_be_attached()
+                            # await expect(locator).to_be_visible()
+                            # await expect(locator).not_to_be_disabled()
+                            # await expect(locator).not_to_be_hidden()
+                            print("Checking viewport...")
+                            # TODO(P2): Find a faster way to check if element is truly visible to user.
+                            await expect(locator).to_be_in_viewport()
+                            print("Done.")
+                            print(f"Found visible element with text: {text}")
+                            found_visible_element = True
+                        except Exception as e:
+                            print(f"Not visisble because: {str(e)[:50]}...")
+                            continue
+                    if found_visible_element:
+                        return True
+            except Exception as e:
+                print(f"Exception while searching for text: {str(e)}")
+
+        if direction.upper() == "WINDOW":
+            print(f"Scrolling window by {scroll_direction}")
+            await page.evaluate(f"window.scrollBy(0, {scroll_direction})")
+        else:
+            print(f"Scrolling element at {x}, {y} by {scroll_direction}")
+            await page.mouse.move(x, y)
+            await page.mouse.wheel(0, scroll_direction)
+
+        print(f"Waiting for 100ms")
+        await page.wait_for_timeout(100)
+        print("Done.")
+        scroll_count += 1
+
+    print(f"Element with text '{text}' not found after {max_scrolls} scrolls")
+    return False
 
 async def go_back(page: Page):
     await page.go_back()
@@ -123,3 +162,10 @@ async def setup_browser():
     
     
     return page
+
+async def wait_for_xpath(page, xpath, timeout=100000):
+    try:
+        locator = page.locator(f"xpath={xpath}")
+        await locator.first.wait_for(state="visible", timeout=timeout)
+    except Exception as e:
+        print(f"Warning: XPath '{xpath}' not found within {timeout/1000} seconds: {e}")
