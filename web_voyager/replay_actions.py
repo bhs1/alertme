@@ -1,8 +1,10 @@
+import sys
+sys.path.insert(0, '.')
 import json
 import asyncio
 from playwright_actions import *
 from playwright_actions import setup_browser
-from utils import mask_sensitive_data
+from web_voyager.utils import mask_sensitive_data
 import ast
 
 class ActionReplayer:

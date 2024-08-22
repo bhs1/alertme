@@ -81,11 +81,11 @@ bbox_prompt = PromptTemplate(
 )
 
 input_prompt = PromptTemplate(
-    input_variables=["input"],
+    input_variables=["task"],
     template="""
 
 Overall goal:
-{input}
+{task}
 
 """
 )
@@ -114,7 +114,7 @@ human_message_prompt = HumanMessagePromptTemplate(prompt=[input_prompt, params_p
 
 # Chat prompt template
 web_voyager_prompt = ChatPromptTemplate(
-    input_variables=["bbox_descriptions", "img", "input", "formatted_scratchpad"],
+    input_variables=["bbox_descriptions", "img", "task", "formatted_scratchpad"],
     messages=[
         system_message_prompt,
         human_message_prompt
@@ -165,7 +165,7 @@ final_extract_info_prompt = ChatPromptTemplate(
 
 # Action taken prompt
 action_taken_prompt = PromptTemplate(
-    input_variables=["action_taken", "input"],
+    input_variables=["action_taken", "task"],
     template="""Action taken: {action_taken}
     """
 )

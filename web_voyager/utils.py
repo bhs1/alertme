@@ -27,3 +27,15 @@ async def compress_screenshot(screenshot, scale_factor: int = 1) -> str:
     compressed_b64_image = base64.b64encode(buffer.getvalue()).decode()
 
     return compressed_b64_image
+
+import math
+def calculate_distance(bbox, x, y):
+    center_x = bbox['x'] + bbox['width'] / 2
+    center_y = bbox['y'] + bbox['height'] / 2
+    print(f"center_x: {center_x}, center_y: {center_y}")
+    return math.sqrt((x - center_x)**2 + (y - center_y)**2)
+
+async def take_screenshot(page):
+    screenshot = await page.screenshot()
+    compressed_screenshot = await compress_screenshot(screenshot)
+    return compressed_screenshot

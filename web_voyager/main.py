@@ -12,7 +12,7 @@ import logging
 from web_voyager.prompt import web_voyager_prompt
 from langgraph.graph import END, StateGraph
 from langchain_core.runnables import RunnableLambda
-from web_voyager.utils import mask_sensitive_data, compress_screenshot
+from web_voyager.utils import mask_sensitive_data, compress_screenshot, take_screenshot
 from langsmith import traceable
 from langgraph_utils import generate_graph_image
 import os
@@ -45,6 +45,10 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     filename=os.path.join(log_dir, 'info.txt'),
                     filemode='a')
+
+logging.getLogger("httpx").setLevel(logging.WARNING)
+#2024-08-20 12:10:37,978 - langsmith.client - WARNING - [Run 20240820_120917] client.py:1430 - [Run 20240820_120917] client.py:1430 - Failed to batch ingest runs: LangSmithError('Failed to POST https://api.smith.langchain.com/runs/batch in LangSmith API. HTTPError(\'403 Client Error: Forbidden for url: https://api.smith.langchain.com/runs/batch\', \'<!doctype html><meta charset="utf-8"><meta name=viewport content="width=device-width, initial-scale=1"><title>403</title>403 Forbidden\')')
+logging.getLogger("langsmith.client").setLevel(logging.ERROR)
 
 os.environ["LANGCHAIN_PROJECT"] = "Web-Voyager-3"
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
@@ -96,7 +100,7 @@ class Reflection(BaseModel):
 
 
 class AgentState(TypedDict):
-    input: str  # User request
+    task: str  # User request
     img: str  # b64 encoded screenshot
     bboxes: List[BBox]
     prediction: Prediction
@@ -115,6 +119,9 @@ actions_log = []
 def store_action(action_name: str, params: dict):
     actions_log.append({"action": action_name, "params": params})
 
+def update_previous_action_with_reflection(reflection_obj):    
+    last_action = actions_log[-1]
+    last_action["reflection"] = reflection_obj.dict()
 
 async def click(state: AgentState):
     try:
@@ -296,13 +303,8 @@ import web_voyager.tasks.tennis_task as tennis_task
 
 async def setup(state: AgentState):
     global page
-    #task = f"""Book me a tennis court at mission dolores park tomorrow."""
-    #task = f"""Go to https://bot.sannysoft.com/ and see which checks we fail"""
-    #task = f"""Go to https://nowsecure.nl and see which checks we fail"""
-    #task = """Go to google and then google hello and then scroll to the bottom of the window."""
-    task, task_params = tennis_task.get_prompt()
     page = await setup_browser()    
-    return {**state, "input": task, "task_params": task_params}
+    return {**state}
 
 async def update_scratchpad(state: AgentState):
     """After a tool is invoked, we want to update
@@ -351,11 +353,6 @@ def format_scratchpad(scratchpad):
         [f"{i+1}. {entry}" for i, entry in enumerate(scratchpad)])
     return "======================================================\n" + content + "\n======================================================"
 
-
-async def take_screenshot(page):
-    screenshot = await page.screenshot()
-    compressed_screenshot = await compress_screenshot(screenshot)
-    return compressed_screenshot
 
 @traceable(name="reflect")
 async def reflect(state: AgentState):
@@ -406,7 +403,7 @@ async def reflect(state: AgentState):
     print("Calling LLM to reflect on action...")
     start_time = asyncio.get_event_loop().time()
     comparison_result = compare_chain.invoke({"new_screenshot": new_screenshot, "action_taken": action_taken, "old_screenshot": old_screenshot,
-                                   "input": state["input"]}, {"run_name": "ReflectOnDiff", "tags": ["reflect-on-diff", run_id]})
+                                   "task": state["task"]}, {"run_name": "ReflectOnDiff", "tags": ["reflect-on-diff", run_id]})
     end_time = asyncio.get_event_loop().time()
     print(f"Time taken for comparison: {end_time - start_time:.2f} seconds")
     
@@ -432,7 +429,9 @@ Explanation:
     if "error" in state:
         summary += f"\nError: {state['error']}"
 
+    
     state["action_summary"] = summary
+    update_previous_action_with_reflection(comparison_result)
     return state
 
 graph_builder = StateGraph(AgentState)
@@ -503,10 +502,12 @@ graph = graph_builder.compile()
 generate_graph_image(
     graph, filename="./web_voyager/logs/web_voyager_graph.png")
 
-async def call_agent(max_steps: int = 300):
+async def call_agent(task: str, task_params: dict, max_steps: int = 300):
     event_stream = await graph.ainvoke(
         {
             "scratchpad": list(),
+            "task": task,
+            "task_params": task_params
         },
         {
             "recursion_limit": max_steps,
@@ -522,13 +523,11 @@ async def save_actions_log():
         json.dump(actions_log, f, indent=4)
 
 
-if __name__ == "__main__":
+def run_web_voyager(task: str, task_params: dict):
     original_stderr = sys.stderr
     sys.stderr = open(os.devnull, 'w')
+    asyncio.run(call_agent(task=task, task_params=task_params))
+    sys.stderr = original_stderr
 
-    loop = asyncio.get_event_loop()
-    try:
-        loop.run_until_complete(call_agent())
-    finally:
-        loop.close()
-        sys.stderr = original_stderr
+if __name__ == "__main__":
+    run_web_voyager(task=tennis_task.get_prompt(), task_params=tennis_task.get_task_params())

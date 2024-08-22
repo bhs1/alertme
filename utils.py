@@ -1,5 +1,8 @@
 import logging
 from datetime import datetime
+import yaml
+import json
+
 
 def load_response_data(file_path):
     try:
@@ -46,3 +49,18 @@ def configure_logging(log_file='data/app.log'):
 
     return run_id
 
+def format_to_yaml(test_case):
+    # If test_case is already a dict, use it directly
+    if isinstance(test_case, dict):
+        test_case_dict = test_case
+    else:
+        # If it's a string, remove outer quotes and parse as JSON
+        test_case_dict = json.loads(test_case.strip("'\""))
+    
+    # Convert the dictionary to YAML
+    yaml_string = yaml.dump(test_case_dict, default_flow_style=False)
+    
+    # Remove the top-level dashes that yaml.dump adds
+    yaml_string = yaml_string.replace('---\n', '')
+    
+    return yaml_string

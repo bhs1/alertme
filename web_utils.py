@@ -6,8 +6,8 @@ def get_html_content(page):
 def get_screenshot(page):
     return page.screenshot(full_page=True)
 
-def get_xpaths(page):
-    return page.evaluate('''
+async def get_xpaths(page):
+    return await page.evaluate('''
         () => {
             const getXPath = (el) => {
                 if (el.id) return `//*[@id="${el.id}"]`;

@@ -1,9 +1,7 @@
 from codegen import CodeGenerator, combined_code, exec_as_main
 import os
 
-def generate_response_func(code_generator, test_cases):
-    # Find a few more interesting cases.
-    # If they fail or take many iterations, try with a debug node.
+def generate_response_func(test_cases):
     os.environ["LANGCHAIN_PROJECT"] = "generate_response_func"
     USER_PROMPT = f"""Write a function to extract and list all available playing times 
                 from HTTP response content.
@@ -13,12 +11,7 @@ def generate_response_func(code_generator, test_cases):
                 
                 Example output:
                 {test_cases[0]['outputs']}
-
-                If there are multiple activity types, use a dictionary instead of a list and associate times
-                with the correct activity.            
-
-                Please pay attention to the system message above to see how to format your response.
-                """
+            """
 
     code_solution = CodeGenerator().generate_code(USER_PROMPT, test_cases)
     print("RESULT:\n\n" + str(combined_code(code_solution)) + "\n\n")
