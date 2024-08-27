@@ -9,11 +9,12 @@ from web_voyager.prompt import compare_screenshots_prompt
 import json
 from web_voyager.playwright_actions import click as playwright_click, type_text as playwright_type_text, scroll_until_visible as playwright_scroll, go_back as playwright_go_back, to_google as playwright_to_google, to_url as playwright_to_url
 import logging
-from web_voyager.prompt import web_voyager_prompt
+from web_voyager.prompt import web_voyager_prompt, param_conversion_code_prompt_template
 from langgraph.graph import END, StateGraph
 from langchain_core.runnables import RunnableLambda
 from web_voyager.utils import mask_sensitive_data, compress_screenshot, take_screenshot
 from langsmith import traceable
+from utils import save_image_to_file
 from langgraph_utils import generate_graph_image
 import os
 import uuid
@@ -68,6 +69,9 @@ class BBox(TypedDict):
     index: str
     xpath: str
 
+class TaskParamCode(BaseModel):
+    thought: str = Field(description="Thought: Your brief thoughts on how you plan to extract input_string to output_string.")
+    code: str = Field(description="Code to extract input_string to output_string.")
 
 class Prediction(BaseModel):
     thought: Optional[str] = Field(description="Thought: Your brief thoughts.")
@@ -77,10 +81,8 @@ class Prediction(BaseModel):
     args: Optional[List[str]] = Field(description="List of action args.")
     task_param_used_thought: Optional[str] = Field(description="Thought: Your brief thoughts on why you think you used this task param to fill in the [Text] of the action.")
     task_param_used: Optional[str] = Field(description="Name of the task_param used to fill the [Text] in the action string.")
+    action_summary: Optional[str] = Field(description="In a few words describe the action taken.")
     
-class TaskParamExpertDetermination(BaseModel):
-    determination: str = Field(description="Must be one of CORRECT or INCORRECT.")
-    updated_task_param_used: Optional[str] = Field(description="Name of the task_param used to fill the [Text] in the action string.")
 
 
 class Reflection(BaseModel):
@@ -111,6 +113,9 @@ class AgentState(TypedDict):
     formatted_scratchpad: str
     task_params: dict
     error: str
+    task_param_code: str
+    previous_action_summaries: List[str]
+    reflection: Reflection
 
 
 actions_log = []
@@ -119,9 +124,10 @@ actions_log = []
 def store_action(action_name: str, params: dict):
     actions_log.append({"action": action_name, "params": params})
 
-def update_previous_action_with_reflection(reflection_obj):    
+def update_previous_action_with_reflection(reflection_obj, task_param_code):    
     last_action = actions_log[-1]
     last_action["reflection"] = reflection_obj.dict()
+    last_action["task_param_code"] = task_param_code
 
 async def click(state: AgentState):
     try:
@@ -227,7 +233,7 @@ async def to_url(state: AgentState):
         global page
         url = state["prediction"].args[0]
         await playwright_to_url(page, url)
-        store_action("to_url", {"url": url})
+        store_action("to_url", {"url": url, "task_param_used": state["prediction"].task_param_used})
         return f"Navigated to {url}."
     except Exception as e:
         return f"Error in to_url: {str(e)}"
@@ -293,9 +299,22 @@ def format_descriptions(state):
 # Chains
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
-agent = annotate | RunnablePassthrough.assign(
-    prediction=format_descriptions | web_voyager_prompt | llm.with_structured_output(Prediction)
-)
+async def agent_node(state: AgentState):
+    start_time = asyncio.get_event_loop().time()
+    print("Waiting for traces to upload...")
+    wait_for_all_tracers()
+    end_time = asyncio.get_event_loop().time()
+    print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
+    agent = annotate | RunnablePassthrough.assign(
+        prediction=format_descriptions | web_voyager_prompt | llm.with_structured_output(Prediction)
+    )
+    result = await agent.ainvoke(state, {"tags": ["agent-node"]})
+    start_time = asyncio.get_event_loop().time()
+    print("Waiting for traces to upload...")
+    wait_for_all_tracers()
+    end_time = asyncio.get_event_loop().time()
+    print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
+    return {**result}
 
 compare_chain = compare_screenshots_prompt | llm.with_structured_output(Reflection)
 
@@ -344,8 +363,18 @@ async def update_scratchpad(state: AgentState):
 
     step += 1
     formatted_scratchpad = format_scratchpad(old)
+    
+    previous_action_summaries = state.get('previous_action_summaries', [])
+    if not previous_action_summaries:
+        previous_action_summaries = []
 
-    return {**state, "scratchpad": old, "formatted_scratchpad": formatted_scratchpad, "step": step}
+    success_or_failure_result = state['reflection'].success_or_failure_result
+    action_summary = state['prediction'].action_summary + f", Result: ({success_or_failure_result})"
+    if action_summary:
+        previous_action_summaries.append(action_summary)
+    formatted_scratchpad += "\nPrevious actions attempted:\n" + "\n".join(previous_action_summaries)
+
+    return {**state, "scratchpad": old, "formatted_scratchpad": formatted_scratchpad, "step": step, "previous_action_summaries" : previous_action_summaries}
 
 
 def format_scratchpad(scratchpad):
@@ -353,6 +382,55 @@ def format_scratchpad(scratchpad):
         [f"{i+1}. {entry}" for i, entry in enumerate(scratchpad)])
     return "======================================================\n" + content + "\n======================================================"
 
+def get_action_text(prediction: Prediction, state: AgentState):
+    action = prediction.action
+    args = prediction.args
+    try:
+        if action == "Type":
+            return args[1]
+        elif action == "ToUrl":
+            return args[0]
+        elif action == "Scroll":
+            return args[2]
+        elif action == "Click":
+            bbox_id = int(args[0])
+            bbox = state["bboxes"][bbox_id]
+            return bbox["text"]
+    except Exception as e:
+        # TODO(P3): Feed this back to the agent to regenerate the action with correct args.
+        print(f"Warning: Malformed action args: {str(e)}")
+    return ""
+
+@traceable(name="generate_task_param_code")
+async def generate_task_param_code(state: AgentState):
+    prediction = state["prediction"]
+    task_param_used = prediction.task_param_used
+    if not task_param_used:
+        return {**state}
+    if task_param_used not in state["task_params"]:
+        # TODO(P3): Feed this back to the agent to regenerate the action with correct args.
+        print(f"Warning: Task param {task_param_used} not found in task params {state['task_params']}. Replacing with error_task_param_used_not_found.")
+        state["prediction"].task_param_used = "error_task_param_used_not_found"
+        return {**state}
+
+    task_param_value = state["task_params"][task_param_used]
+    action_text = get_action_text(prediction, state)
+    if action_text == task_param_value or action_text == "":
+        return {**state}
+    
+    chain = param_conversion_code_prompt_template | llm.with_structured_output(TaskParamCode)
+    print(f"Generating task param code for {task_param_used} with value {task_param_value} and action text {action_text}")
+    start_time_llm = asyncio.get_event_loop().time()
+    task_param_code_obj = chain.invoke({"input_string": task_param_value, "output_string": action_text}, {"tags": ["generate-task-param-code"]})
+    end_time_llm = asyncio.get_event_loop().time()
+    print(f"LLM call time: {end_time_llm - start_time_llm:.2f} seconds")
+    
+    start_time_traces = asyncio.get_event_loop().time()
+    print("Waiting for traces to upload...")
+    wait_for_all_tracers()
+    end_time_traces = asyncio.get_event_loop().time()
+    print(f"Traces uploaded. Time taken: {end_time_traces - start_time_traces:.2f} seconds")
+    return {"task_param_code": task_param_code_obj.code}
 
 @traceable(name="reflect")
 async def reflect(state: AgentState):
@@ -377,6 +455,7 @@ async def reflect(state: AgentState):
     masked_print_str = await mask_sensitive_data(print_str)
     
     print(masked_print_str)
+    print(f"Observation: {await mask_sensitive_data(state['observation'])}")
 
     global page
     prediction = state.get("prediction")
@@ -389,13 +468,6 @@ async def reflect(state: AgentState):
     # Call annotate on the new screenshot
     annotated_state = await annotate({"page": page})
     new_screenshot = annotated_state["img"]
-
-    # Save the images to files in the scratch directory
-    def save_image_to_file(image_data, filename):
-        file_path = os.path.join(
-            "./web_voyager/scratch", filename)
-        with open(file_path, "wb") as file:
-            file.write(image_data.encode('utf-8'))
 
     save_image_to_file(new_screenshot, "new_screenshot.jpg")
     save_image_to_file(old_screenshot, "old_screenshot.jpg")
@@ -431,30 +503,10 @@ Explanation:
 
     
     state["action_summary"] = summary
-    update_previous_action_with_reflection(comparison_result)
+    state["reflection"] = comparison_result
+    update_previous_action_with_reflection(comparison_result, state["task_param_code"])
+    state["task_param_code"] = "" # Clear the task param code
     return state
-
-graph_builder = StateGraph(AgentState)
-
-
-graph_builder.add_node("agent", agent)
-
-tools = {
-    "Click": click,
-    "Type": type_text,
-    "Scroll": scroll,
-    "Wait": wait,
-    "GoBack": go_back,
-    "Google": to_google,
-    "ToUrl": to_url,
-}
-
-for node_name, tool in tools.items():
-    graph_builder.add_node(
-        node_name,
-        RunnableLambda(tool) | (lambda observation: {
-            "observation": observation}),
-    )
 
 
 def select_tool(state: AgentState):
@@ -481,14 +533,36 @@ async def end(state: AgentState):
     end_time = asyncio.get_event_loop().time()
     print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
     print("Ending...")
-    
+
+graph_builder = StateGraph(AgentState)
+
+
+graph_builder.add_node("agent", agent_node)
+graph_builder.add_edge("agent", "generate_task_param_code")
+graph_builder.add_node("generate_task_param_code", generate_task_param_code)
 graph_builder.add_node("reflect", RunnableLambda(reflect))
 
+tools = {
+    "Click": click,
+    "Type": type_text,
+    "Scroll": scroll,
+    "Wait": wait,
+    "GoBack": go_back,
+    "Google": to_google,
+    "ToUrl": to_url,
+}
+
 for node_name, tool in tools.items():
+    graph_builder.add_node(
+        node_name,
+        RunnableLambda(tool) | (lambda observation: {
+            "observation": observation}),
+    )
     graph_builder.add_edge(node_name, "reflect")
 
+graph_builder.add_conditional_edges("generate_task_param_code", select_tool)
+
 graph_builder.add_node("update_scratchpad", RunnableLambda(update_scratchpad))
-graph_builder.add_conditional_edges("agent", select_tool)
 graph_builder.add_edge("reflect", "update_scratchpad")
 graph_builder.add_edge("update_scratchpad", "agent")
 

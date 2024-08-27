@@ -1,6 +1,7 @@
 from playwright.async_api import Page, expect
 import platform
 from web_voyager.utils import calculate_distance, mask_sensitive_data
+from web_voyager.playwright_utils import is_visible_in_viewport
 
 async def wait_for_xpath(page, xpath, timeout=100000):
     try:
@@ -75,6 +76,21 @@ async def type_text(page: Page, x: float, y: float, text: str):
     await page.keyboard.press("Enter")
     await page.wait_for_load_state('networkidle')
     print(f"Typed text: {await mask_sensitive_data(text)}")
+    
+async def element_is_in_viewport(locator, method = "intersection_observer"):
+    if method == "intersection_observer":
+        try:                            
+            print("Checking viewport...")
+            # TODO(P2): Find a faster way to check if element is truly visible to user.
+            await expect(locator).to_be_in_viewport(timeout=1)
+            return True
+        except Exception as e:
+            print(f"Not visisble because: {str(e)[:50]}...")
+            return False
+    elif method == "javascript":
+        return await is_visible_in_viewport(locator)
+        
+    
 
 async def scroll_until_visible(page: Page, x: float, y: float, direction: str, scroll_direction: int, text: str = "", exact: bool = True):
     max_scrolls = 3
@@ -86,25 +102,12 @@ async def scroll_until_visible(page: Page, x: float, y: float, direction: str, s
             try:
                 visible_locators = await page.get_by_text(text, exact=exact).locator("visible=true").all()
                 if len(visible_locators) > 0:
-                    found_visible_element = False
                     for locator in visible_locators:
                         # TODO(P2): Filter elements with negative bbox coords or not in viewport.
-                        try:                            
-                            #await expect(locator).to_be_attached()
-                            # await expect(locator).to_be_visible()
-                            # await expect(locator).not_to_be_disabled()
-                            # await expect(locator).not_to_be_hidden()
-                            print("Checking viewport...")
-                            # TODO(P2): Find a faster way to check if element is truly visible to user.
-                            await expect(locator).to_be_in_viewport()
+                        if await element_is_in_viewport(locator, method="intersection_observer"):
                             print("Done.")
                             print(f"Found visible element with text: {text}")
-                            found_visible_element = True
-                        except Exception as e:
-                            print(f"Not visisble because: {str(e)[:50]}...")
-                            continue
-                    if found_visible_element:
-                        return True
+                            return True
             except Exception as e:
                 print(f"Exception while searching for text: {str(e)}")
 

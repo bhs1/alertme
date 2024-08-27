@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 import yaml
 import json
+import os
 
 
 def load_response_data(file_path):
@@ -64,3 +65,10 @@ def format_to_yaml(test_case):
     yaml_string = yaml_string.replace('---\n', '')
     
     return yaml_string
+
+# Save the images to files in the scratch directory
+def save_image_to_file(image_data, filename):
+    file_path = os.path.join(
+        "./web_voyager/scratch", filename)
+    with open(file_path, "wb") as file:
+        file.write(image_data.encode('utf-8'))

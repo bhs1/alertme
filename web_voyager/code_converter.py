@@ -25,7 +25,7 @@ from web_voyager.playwright_actions import click, type_text, scroll_until_visibl
 
 async def main(page, task_params):
 """
-        for action in self.actions:
+        for i, action in enumerate(self.actions):
             action_type = action['action']
             params = action['params']
             reflection = action.get('reflection', {})
@@ -39,27 +39,39 @@ async def main(page, task_params):
             if 'xpath' in params:
                 code += f"    await wait_for_xpath(page, '{params['xpath']}')\n"
                         
-            arg = None
-            if 'task_param_used' in params and params['task_param_used']:
+            arg = ""
+            if 'task_param_used' in params and params['task_param_used'] and params['task_param_used'] != "error_task_param_used_not_found":
                 task_param_used = params['task_param_used']
-                arg = f"task_params['{task_param_used}']"            
-                
+                arg = f"task_params['{task_param_used}']"
+                code += f"    text_arg = {arg}\n"
+                if 'task_param_code' in action and action['task_param_code'] and action['task_param_code'] != "null":
+                    indented_code = '\n'.join('    ' + line for line in action['task_param_code'].split('\n'))
+                    code += f"""
+{indented_code}
+    try:
+        text_arg = convert(text_arg)
+    except Exception as e:
+        print(f"Error converting task parameter: {{e}}")
+        text_arg = {arg}
+""".replace("convert(", f"convert{i}(")
+            else:
+                code += f"    text_arg = \"{arg}\"\n"
             if action_type == 'to_url':
                 if not arg:
                     arg = f"'{params['url']}'"
-                code += f"    await to_url(page, {arg})\n"
+                code += f"    await to_url(page, text_arg)\n"
             elif action_type == 'type_text':
                 if not arg:
                     arg = f"'{params['text']}'"
-                code += f"    await type_text(page, {params['x']}, {params['y']}, {arg})\n"
+                code += f"    await type_text(page, {params['x']}, {params['y']}, text_arg)\n"
             elif action_type == 'click':
                 if not arg:
                     arg = f"'{params.get('text', '')}'"
-                code += f"    await click(page, {params['x']}, {params['y']}, {arg})\n"
+                code += f"    await click(page, {params['x']}, {params['y']}, text_arg)\n"
             elif action_type == 'scroll':
                 if not arg:
                     arg = f"'{params.get('text', '')}'"
-                code += f"    await scroll_until_visible(page, {params['x']}, {params['y']}, '{params['direction']}', {params['scroll_direction']}, {arg})\n"
+                code += f"    await scroll_until_visible(page, {params['x']}, {params['y']}, '{params['direction']}', {params['scroll_direction']}, text_arg)\n"
             
             code += "\n"  # Add a blank line between actions for readability
         
@@ -69,6 +81,7 @@ async def main(page, task_params):
 async def async_run(task_params):
     page = await setup_browser()
     await main(page, task_params)
+    await asyncio.sleep(1)
     await save_page_html(page)
     await page.close()
     
@@ -76,8 +89,11 @@ def run(task_params):
     asyncio.run(async_run(task_params))
 
 # For testing only
-# if __name__ == "__main__":
-#    run({self.task_params})
+if __name__ == "__main__":
+    run({self.task_params})
+    # print("Press Enter to exit...")
+    # input()
+    
 """
         return code
 
@@ -86,11 +102,13 @@ def run(task_params):
             f.write(self.generate_code())
 
 import os
-username = os.getenv('GTC_USERNAME')
-password = os.getenv('GTC_PASSWORD')
-    
-# Usage example:
-from tasks.tennis_task import get_task_params
-converter = ActionConverter('web_voyager/data/actions_log.json')
-converter.override_task_params(get_task_params())
-converter.save_code('web_voyager/data/generated_replay_actions.py')
+
+if __name__ == "__main__":
+    username = os.getenv('GTC_USERNAME')
+    password = os.getenv('GTC_PASSWORD')
+        
+    # Usage example:
+    from tasks.tennis_task import get_task_params
+    converter = ActionConverter('web_voyager/data/actions_log.json')
+    converter.override_task_params(get_task_params())
+    converter.save_code('web_voyager/data/generated_replay_actions.py')

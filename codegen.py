@@ -478,8 +478,11 @@ the issue. Remember to define "global debug_output" at the top of any scope that
         error = state["error"]
         iterations = state["iterations"]
 
-        if error == "no" or iterations == self.max_iterations:
-            self.log("---DECISION: FINISH---")
+        if error == "no":
+            self.log("---DECISION: FINISH WITH SUCCESS---")
+            return "end"
+        elif iterations == self.max_iterations:
+            self.log(f"---DECISION: FINISH WITH FAILURE EXCEEDED MAX ITERATIONS: {self.max_iterations}---")
             return "end"
         else:
             self.log("---DECISION: RE-TRY SOLUTION---")

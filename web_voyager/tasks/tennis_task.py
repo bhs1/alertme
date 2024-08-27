@@ -17,7 +17,7 @@ load_dotenv()
 def get_prompt():
     task = f"""
 Task: 
-    Search for courts that satisfy the criteria in the task_params below (do not reserve).
+    Search for courts that satisfy the criteria in the task_params below (do not reserve). Print the results.
 """
     return task
 
@@ -34,8 +34,8 @@ def get_task_params():
         "url": "https://gtc.clubautomation.com/",
         "username": username,
         "password": password,
-        "date": "08/22/2024",
-        "from_time": "10:00 AM",
+        "date": "08/29/2024",
+        "from_time": "10am",
         "to_time": "09:00 PM",
         "duration": "60 Min"
     }
@@ -69,7 +69,11 @@ def get_html_response_text():
     file_path = '/Users/bensolis-cohen/Projects/alertme/data/response.txt'
     with open(file_path, 'r') as file:
         return file.read()
-    
+def get_empty_response_text():
+    file_path = '/Users/bensolis-cohen/Projects/alertme/data/empty_response.txt'
+    with open(file_path, 'r') as file:
+        return file.read()
+
 def get_available_playing_times():
     return {
         'Pickleball / Mini Tennis': ['2:00pm'],
@@ -81,4 +85,5 @@ def get_available_playing_times():
     }
 
 def get_html_parser_test_cases():
-    return [{'inputs': get_html_response_text(), 'outputs': get_available_playing_times()}]
+    return [{'inputs': get_html_response_text(), 'outputs': get_available_playing_times()},
+            {'inputs': get_empty_response_text(), 'outputs': {}}]

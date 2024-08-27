@@ -6,7 +6,7 @@ def generate_graph_image(graph, filename="data/graph.png"):
         graph_image = graph.get_graph().draw_mermaid_png()
         with open(filename, "wb") as f:
             f.write(graph_image)
-        logging.info("Graph saved as 'data/graph.png'.")
+        logging.info(f"Graph saved as {filename}.")
     except Exception as e:
         logging.info(f"Failed to save graph: {e}")
         

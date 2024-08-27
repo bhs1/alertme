@@ -12,24 +12,26 @@ from langchain.schema import AIMessage, HumanMessage, ChatMessage, SystemMessage
 from typing import List, Union
 
 # System message template
-system_template = """Imagine you are a robot browsing the web, just like humans. Now you need to complete a task. In each iteration, you will receive an Observation that includes a screenshot of a webpage and some texts. This screenshot will
-feature Numerical Labels placed in the BOTTOM RIGHT corner of each Web Element. Carefully analyze the visual
-information to identify the Numerical Label corresponding to the Web Element that requires interaction, then follow
+system_template = """Imagine you are a robot browsing the web, just like humans. Now you need to complete a task. \
+In each iteration, you will receive an Observation that includes a screenshot of a webpage and some texts. This screenshot will \
+feature Numerical Labels placed in the BOTTOM RIGHT corner of each Web Element. Carefully analyze the visual \
+information to identify the Numerical Label corresponding to the Web Element that requires interaction, then follow \
 the guidelines and choose ONE of the following actions:
 
 1. Click: Click a Web Element.
 2. Type: Delete existing text in a textbox, type text, then press enter.
-3. Scroll: Scroll up or down until text is visible. ATTENTION: The default scroll is the whole window. But if the scroll widget is located in a certain area of the webpage, then you have to specify a Web Element in that area using Numerical_Label.
- - ATTENTION: If Scroll is not an available action for an element, then you should instead scroll the nearest scrollable element in the image.
+3. Scroll: Scroll up or down until text is visible. ATTENTION: The default scroll is the whole window. \
+But if the scroll widget is located in a certain area of the webpage, then you have to specify a Web Element \
+in that area using Numerical_Label.
+- ATTENTION: If Scroll is not an available action for an element, then you should instead scroll the nearest scrollable element in the image.
 4. Wait
 5. Go back
 7. Return to google to start over.
 8. Go to a specific URL
-9. Respond with the final answer
+9. Respond with the final answer.
 
 Correspondingly, raw_predicted_action_string should STRICTLY follow the format:
-
-- Click [Numerical_Label]
+- Click [Numerical_Label], [Text] (bounding box text)
 - Type [Numerical_Label], [Text]
 - Scroll [Numerical_Label or WINDOW], [up or down], [Text] e.g. Scroll [30], down, "Some Text we want to find."
 - Wait 
@@ -42,9 +44,7 @@ Annotate task_params:
 - If you are using [Text] from task_params map below, output the name of the task_param in task_param_used field.
 - Double check task_params values for [Text], if [Text] is a value in the task_param map, then it's likely its key should be in task_param_used.
 
-
 Key Guidelines You MUST follow:
-
 * Action guidelines *
 0) For actions with Numerical_Label, you should only take the action if the Numerical_Label is available in the "Available actions" field.
 1) Execute only one action per iteration.
@@ -53,19 +53,27 @@ Key Guidelines You MUST follow:
 4) Don't try the same action multiple times if it keeps failing.
 5) When trying to understand text in the images, check the "Text" field in "Available actions" for the answer.
 
-* Web Browsing Guidelines *
-1) Don't interact with useless web elements like Login, Sign-in, donation that appear in Webpages
-2) Select strategically to minimize time wasted.
-
 Your reply should strictly follow the format:
-
 Thought: {{Your brief thoughts}}
 Action: {{One Action format you choose}}
 Action args: {{List of action args}}
-task_param_used: {{Name of the task_param used to fill the [Text] in the action string.}}
-Then the User will provide:
-Observation: {{A labeled screenshot Given by User}}
+task_param_used_thought: {{Thought: Your brief thoughts on why you think you used this task param to fill in the [Text] of the action.}}
+text_literal_used: {{[Text] from action string}}
+task_param_used: {{Name of the task_param used to fill the [Text] in the action string. Be sure it is a key in task_params.}}
+Action summary: {{In a few words describe the action taken.}}
 """
+
+param_conversion_code_prompt_template = ChatPromptTemplate([
+    HumanMessagePromptTemplate.from_template(
+"""
+Generate code to convert this input string: {input_string} to this output string: {output_string}. The code should be a python function of the form:
+
+def convert(input_string):
+    # Add code to extract output_string from input_string>    
+    return output_string
+"""
+    )
+])
 
 system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
 

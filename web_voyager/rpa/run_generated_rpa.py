@@ -12,10 +12,10 @@ task_params2 = {
     "url": "https://gtc.clubautomation.com/",
     "username": get_username(),
     "password": get_password(),
-    "date": "08/23/2024",
-    "from_time": "03:00 PM",
-    "to_time": "06:00 PM",
+    "date": "08/29/2024",
+    "from_time": "12pm",
+    "to_time": "04:00 PM",
     "duration": "60 Min"
 }
 run(task_params2)
-print(f"Available playing times: {func(read_html_from_file())}")
+print(f"\n\nRPA result: {func(read_html_from_file())}\n\n")
