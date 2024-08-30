@@ -1,11 +1,13 @@
+import os
 import json
 from typing import List, Dict
 from dotenv import load_dotenv
 
 load_dotenv()
 
+
 class ActionConverter:
-    def __init__(self, log_file: str, task_params = {}):
+    def __init__(self, log_file: str, task_params={}):
         self.log_file = log_file
         self.actions = self._load_actions()
         self.task_params = task_params
@@ -29,23 +31,24 @@ async def main(page, task_params):
             action_type = action['action']
             params = action['params']
             reflection = action.get('reflection', {})
-            
+
             # Add reflection information as comments
             code += f"    # Intention: {reflection.get('intention_of_action', 'N/A')}\n"
             code += f"    # Result: {reflection.get('result_of_action', 'N/A')}\n"
             code += f"    # Success/Failure: {reflection.get('success_or_failure_result', 'N/A')}\n"
-            
+
             # Add wait_for_xpath before each action
             if 'xpath' in params:
                 code += f"    await wait_for_xpath(page, '{params['xpath']}')\n"
-                        
+
             arg = ""
-            if 'task_param_used' in params and params['task_param_used'] and params['task_param_used'] != "error_task_param_used_not_found":
+            if 'task_param_used' in params and params['task_param_used'] and params['task_param_used'] != 'None' and params['task_param_used'] != "error_task_param_used_not_found":
                 task_param_used = params['task_param_used']
                 arg = f"task_params['{task_param_used}']"
                 code += f"    text_arg = {arg}\n"
                 if 'task_param_code' in action and action['task_param_code'] and action['task_param_code'] != "null":
-                    indented_code = '\n'.join('    ' + line for line in action['task_param_code'].split('\n'))
+                    indented_code = '\n'.join(
+                        '    ' + line for line in action['task_param_code'].split('\n'))
                     code += f"""
 {indented_code}
     try:
@@ -72,9 +75,9 @@ async def main(page, task_params):
                 if not arg:
                     arg = f"'{params.get('text', '')}'"
                 code += f"    await scroll_until_visible(page, {params['x']}, {params['y']}, '{params['direction']}', {params['scroll_direction']}, text_arg)\n"
-            
+
             code += "\n"  # Add a blank line between actions for readability
-        
+
         # Add the main function and script execution
         code += f"""
 
@@ -101,12 +104,11 @@ if __name__ == "__main__":
         with open(output_file, 'w') as f:
             f.write(self.generate_code())
 
-import os
 
 if __name__ == "__main__":
     username = os.getenv('GTC_USERNAME')
     password = os.getenv('GTC_PASSWORD')
-        
+
     # Usage example:
     from tasks.tennis_task import get_task_params
     converter = ActionConverter('web_voyager/data/actions_log.json')

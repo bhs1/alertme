@@ -61,11 +61,13 @@ class ActionReplayer:
         elif action_name == "to_url":
             await to_url(self.page, params["url"])
 
-    async def replay_actions(self):
+    async def replay_actions(self, pause_after_each_action = False):
         await self.initialize()
         try:
             actions_log = await self.load_actions()
             for action in actions_log:
+                if pause_after_each_action:
+                    input("Press Enter to continue...")
                 action_name = action["action"]
                 params = action["params"]
                 
@@ -85,7 +87,7 @@ class ActionReplayer:
 
 async def main():
     replayer = ActionReplayer(file_path="./web_voyager/data/actions_log.json")
-    await replayer.replay_actions()
+    await replayer.replay_actions(pause_after_each_action=False)
     
     print("Replay completed. Press Enter to close the browser...")
     await asyncio.get_event_loop().run_in_executor(None, input)

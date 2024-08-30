@@ -3,6 +3,7 @@ alertme
 .env
 scratch
 venv
+venv11
 __pycache__
 data/
 web_voyager/logs

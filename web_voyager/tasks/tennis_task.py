@@ -17,7 +17,8 @@ load_dotenv()
 def get_prompt():
     task = f"""
 Task: 
-    Search for courts that satisfy the criteria in the task_params below (do not reserve). Print the results.
+    Search for courts that satisfy the criteria in the task_params below (do not reserve).
+    Be sure to set ALL task_params from_time, to_time, date, and duration. Print the results.
 """
     return task
 
@@ -34,7 +35,7 @@ def get_task_params():
         "url": "https://gtc.clubautomation.com/",
         "username": username,
         "password": password,
-        "date": "08/29/2024",
+        "date": "09/04/2024",
         "from_time": "10am",
         "to_time": "09:00 PM",
         "duration": "60 Min"

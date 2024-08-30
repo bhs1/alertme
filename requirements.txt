@@ -4,7 +4,9 @@ playwright-dompath==0.0.1
 python-dotenv==1.0.1
 setuptools==72.1.0
 langchain==0.2.3
-langgraph==0.1.9
+langgraph==0.2.14
 pillow==10.4.0
 langchain-openai==0.1.17
 deepdiff==7.0.1
+langgraph-checkpoint-sqlite
+bs4

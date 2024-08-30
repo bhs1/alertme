@@ -9,15 +9,17 @@ from web_voyager.prompt import compare_screenshots_prompt
 import json
 from web_voyager.playwright_actions import click as playwright_click, type_text as playwright_type_text, scroll_until_visible as playwright_scroll, go_back as playwright_go_back, to_google as playwright_to_google, to_url as playwright_to_url
 import logging
-from web_voyager.prompt import web_voyager_prompt, param_conversion_code_prompt_template
+from web_voyager.prompt import web_voyager_prompt, param_conversion_code_prompt_template, task_param_used_prompt_template
 from langgraph.graph import END, StateGraph
 from langchain_core.runnables import RunnableLambda
 from web_voyager.utils import mask_sensitive_data, compress_screenshot, take_screenshot
-from langsmith import traceable
 from utils import save_image_to_file
 from langgraph_utils import generate_graph_image
 import os
 import uuid
+from langsmith import traceable
+
+
 
 from typing import List, Optional, TypedDict
 
@@ -53,7 +55,7 @@ logging.getLogger("langsmith.client").setLevel(logging.ERROR)
 
 os.environ["LANGCHAIN_PROJECT"] = "Web-Voyager-3"
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
-os.environ["LANGCHAIN_CALLBACKS_BACKGROUND"] = "true"
+
 
 class BBox(TypedDict):
     x: float
@@ -70,8 +72,12 @@ class BBox(TypedDict):
     xpath: str
 
 class TaskParamCode(BaseModel):
-    thought: str = Field(description="Thought: Your brief thoughts on how you plan to extract input_string to output_string.")
+    code_thought: str = Field(description="Thought: Your brief thoughts on how you plan to extract input_string to output_string.")
     code: str = Field(description="Code to extract input_string to output_string.")
+
+class TaskParamSelection(BaseModel):
+    task_param_used_explanation: Optional[str] = Field(description="task_param_used_explanation")
+    task_param_used: str = Field(description="Name of the task_param used to fill the [Text] in action string.")
 
 class Prediction(BaseModel):
     thought: Optional[str] = Field(description="Thought: Your brief thoughts.")
@@ -79,11 +85,6 @@ class Prediction(BaseModel):
         description="Prediction action string and args, formatted as described.")
     action: str = Field(description="One action you choose")
     args: Optional[List[str]] = Field(description="List of action args.")
-    task_param_used_thought: Optional[str] = Field(description="Thought: Your brief thoughts on why you think you used this task param to fill in the [Text] of the action.")
-    task_param_used: Optional[str] = Field(description="Name of the task_param used to fill the [Text] in the action string.")
-    action_summary: Optional[str] = Field(description="In a few words describe the action taken.")
-    
-
 
 class Reflection(BaseModel):
     """Reflection output"""
@@ -95,6 +96,7 @@ class Reflection(BaseModel):
         description="Brief explanation of why the action was a success, partial success, or failure.")
     success_or_failure_result: str = Field(
         description="Must be one of SUCCESS, PARTIAL_SUCCESS, or FAILURE.")
+    action_summary: Optional[str] = Field(description="In a few words describe the action taken and the result.")
 
 
 # This represents the state of the agent
@@ -116,6 +118,8 @@ class AgentState(TypedDict):
     task_param_code: str
     previous_action_summaries: List[str]
     reflection: Reflection
+    task_param_used: str
+    bbox_descriptions: str
 
 
 actions_log = []
@@ -133,8 +137,9 @@ async def click(state: AgentState):
     try:
         global page
         click_args = state["prediction"].args
-        task_param_used = state["prediction"].task_param_used
-        if click_args is None or len(click_args) != 1:
+        task_param_used = state['task_param_used']
+        if click_args is None or len(click_args) == 0 or len(click_args) == 3:
+            # TODO(P2): Add more validation to click args.
             return f"Failed to click bounding box labeled as number {click_args}"
         bbox_id = int(click_args[0])
         bbox = state["bboxes"][bbox_id]
@@ -153,7 +158,7 @@ async def type_text(state: AgentState):
     try:
         global page
         type_args = state["prediction"].args
-        task_param_used = state["prediction"].task_param_used
+        task_param_used = state['task_param_used']
         if type_args is None or len(type_args) != 2:
             return f"Failed to type in element from bounding box labeled as number {type_args}"
         bbox_id = int(type_args[0])
@@ -172,7 +177,7 @@ async def scroll(state: AgentState):
     try:
         global page
         scroll_args = state["prediction"].args
-        task_param_used = state["prediction"].task_param_used
+        task_param_used = state['task_param_used']
         if scroll_args is None or len(scroll_args) != 3:
             print(f"Failed to scroll due to incorrect arguments: {scroll_args}")
             return "Failed to scroll due to incorrect arguments."
@@ -233,7 +238,7 @@ async def to_url(state: AgentState):
         global page
         url = state["prediction"].args[0]
         await playwright_to_url(page, url)
-        store_action("to_url", {"url": url, "task_param_used": state["prediction"].task_param_used})
+        store_action("to_url", {"url": url, "task_param_used": state['task_param_used']})
         return f"Navigated to {url}."
     except Exception as e:
         return f"Error in to_url: {str(e)}"
@@ -280,41 +285,55 @@ def format_descriptions(state):
 
         available_actions = []
         if scrollable:
-            available_actions.append(f"Scroll [{index}]")
+            available_actions.append(f"Scroll")
         if clickable:
-            available_actions.append(f"Click [{index}]")
+            available_actions.append(f"Click")
         if typable:
-            available_actions.append(f"Type [{index}]")
+            available_actions.append(f"Type")
 
         actions_str = ", ".join(available_actions)        
 
         labels.append(f'''(Box {index}) {actions_str}
     - Text: "{text}"
 ''')
-    bbox_descriptions = "\nAvailable actions:\n" + "\n".join(labels)
-    print("Calling LLM to determine action...")
+    bbox_descriptions = "\nAvailable actions (choose one):\n" + "\n".join(labels)
+    bbox_descriptions += """
+
+Not associated with a box:
+    Wait 
+    GoBack
+    Google
+    ToUrl
+    ANSWER
+"""
+    print("Calling LLM to determine action...")    
     return {**state, "bbox_descriptions": bbox_descriptions}
 
 
 # Chains
 llm = ChatOpenAI(model="gpt-4o", temperature=0)
 
+# Add this near the top of the file, after other global variables
+should_wait_for_all_tracers = True
+
+# Updated function with timing logic
+def wait_for_tracers():
+    if should_wait_for_all_tracers:
+        print("Waiting for traces to upload...")
+        start_time = asyncio.get_event_loop().time()
+        wait_for_all_tracers()
+        end_time = asyncio.get_event_loop().time()
+        print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
+    else:
+        print("Skipping trace upload wait.")
+
+@traceable(name="agent_node")
 async def agent_node(state: AgentState):
-    start_time = asyncio.get_event_loop().time()
-    print("Waiting for traces to upload...")
-    wait_for_all_tracers()
-    end_time = asyncio.get_event_loop().time()
-    print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
-    agent = annotate | RunnablePassthrough.assign(
-        prediction=format_descriptions | web_voyager_prompt | llm.with_structured_output(Prediction)
-    )
-    result = await agent.ainvoke(state, {"tags": ["agent-node"]})
-    start_time = asyncio.get_event_loop().time()
-    print("Waiting for traces to upload...")
-    wait_for_all_tracers()
-    end_time = asyncio.get_event_loop().time()
-    print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
-    return {**result}
+    state = await (RunnableLambda(annotate) | RunnableLambda(format_descriptions)).ainvoke(state)
+    agent =  web_voyager_prompt | llm.with_structured_output(Prediction)
+    prediction = await agent.ainvoke(state, {"tags": ["agent-node"]})        
+    wait_for_tracers()
+    return {**state, "prediction": prediction}
 
 compare_chain = compare_screenshots_prompt | llm.with_structured_output(Reflection)
 
@@ -364,17 +383,17 @@ async def update_scratchpad(state: AgentState):
     step += 1
     formatted_scratchpad = format_scratchpad(old)
     
-    previous_action_summaries = state.get('previous_action_summaries', [])
-    if not previous_action_summaries:
-        previous_action_summaries = []
+    # previous_action_summaries = state.get('previous_action_summaries', [])
+    # if not previous_action_summaries:
+    #     previous_action_summaries = []
 
-    success_or_failure_result = state['reflection'].success_or_failure_result
-    action_summary = state['prediction'].action_summary + f", Result: ({success_or_failure_result})"
-    if action_summary:
-        previous_action_summaries.append(action_summary)
-    formatted_scratchpad += "\nPrevious actions attempted:\n" + "\n".join(previous_action_summaries)
+    # success_or_failure_result = state['reflection'].success_or_failure_result
+    # action_summary = state['prediction'].action_summary + f", Result: ({success_or_failure_result})"
+    # if action_summary:
+    #     previous_action_summaries.append(action_summary)
+    #formatted_scratchpad += "\nPrevious actions attempted (keep in mind that the actions may have been undone or failed, so check the screenshot to verify current state.):\n" + "\n".join(previous_action_summaries)
 
-    return {**state, "scratchpad": old, "formatted_scratchpad": formatted_scratchpad, "step": step, "previous_action_summaries" : previous_action_summaries}
+    return {**state, "scratchpad": old, "formatted_scratchpad": formatted_scratchpad, "step": step } # "previous_action_summaries" : previous_action_summaries}
 
 
 def format_scratchpad(scratchpad):
@@ -401,16 +420,38 @@ def get_action_text(prediction: Prediction, state: AgentState):
         print(f"Warning: Malformed action args: {str(e)}")
     return ""
 
+@traceable(name="generate_task_param_used")
+async def generate_task_param_used(state: AgentState):        
+    prediction = state["prediction"]
+    try:
+        bbox_id = int(prediction.args[0]) if prediction.args else None
+    except ValueError:
+        bbox_id = None
+    bbox_text = state['bboxes'][bbox_id]['text'] if bbox_id else "N/A"
+    action_string = prediction.action + " " +  str(prediction.args)
+    print("Predicting task_param_used...")
+    chain = task_param_used_prompt_template | llm.with_structured_output(TaskParamSelection)
+    task_param_response = await chain.ainvoke(
+        {"raw_predicted_action_string": action_string,
+         "action_thought": prediction.thought,
+         "bbox_text": bbox_text,
+        **state},
+        {"tags": ["generate-task-param-used"]})
+    task_param_used = task_param_response.task_param_used
+    print(f"Predicted task_param_used: {task_param_used}")
+    wait_for_tracers()
+    return {**state, "task_param_used": task_param_used}
+
 @traceable(name="generate_task_param_code")
 async def generate_task_param_code(state: AgentState):
     prediction = state["prediction"]
-    task_param_used = prediction.task_param_used
-    if not task_param_used:
+    task_param_used = state["task_param_used"]
+    if not task_param_used or task_param_used == "None":
         return {**state}
     if task_param_used not in state["task_params"]:
         # TODO(P3): Feed this back to the agent to regenerate the action with correct args.
         print(f"Warning: Task param {task_param_used} not found in task params {state['task_params']}. Replacing with error_task_param_used_not_found.")
-        state["prediction"].task_param_used = "error_task_param_used_not_found"
+        state['task_param_used'] = "error_task_param_used_not_found"
         return {**state}
 
     task_param_value = state["task_params"][task_param_used]
@@ -421,15 +462,11 @@ async def generate_task_param_code(state: AgentState):
     chain = param_conversion_code_prompt_template | llm.with_structured_output(TaskParamCode)
     print(f"Generating task param code for {task_param_used} with value {task_param_value} and action text {action_text}")
     start_time_llm = asyncio.get_event_loop().time()
-    task_param_code_obj = chain.invoke({"input_string": task_param_value, "output_string": action_text}, {"tags": ["generate-task-param-code"]})
+    task_param_code_obj = await chain.ainvoke({"input_string": task_param_value, "output_string": action_text}, {"tags": ["generate-task-param-code"]})
     end_time_llm = asyncio.get_event_loop().time()
     print(f"LLM call time: {end_time_llm - start_time_llm:.2f} seconds")
     
-    start_time_traces = asyncio.get_event_loop().time()
-    print("Waiting for traces to upload...")
-    wait_for_all_tracers()
-    end_time_traces = asyncio.get_event_loop().time()
-    print(f"Traces uploaded. Time taken: {end_time_traces - start_time_traces:.2f} seconds")
+    wait_for_tracers()
     return {"task_param_code": task_param_code_obj.code}
 
 @traceable(name="reflect")
@@ -449,13 +486,12 @@ async def reflect(state: AgentState):
         bbox_id = None
     bbox_text = state['bboxes'][bbox_id]['text'] if bbox_id is not None else "N/A"
     if bbox_text and bbox_text != "N/A":
-        print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}, and task_param_used: {state['prediction'].task_param_used}, Bounding box text: {bbox_text}\033[0m"
+        print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}, and task_param_used: {state['task_param_used']}, Bounding box text: {bbox_text}\033[0m"
     else:
-        print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}, and task_param_used: {state['prediction'].task_param_used}\033[0m"
+        print_str = f"\033[1mExecuted action: {state['prediction'].action} with args: {state['prediction'].args}, and task_param_used: {state['task_param_used']}\033[0m"
     masked_print_str = await mask_sensitive_data(print_str)
     
-    print(masked_print_str)
-    print(f"Observation: {await mask_sensitive_data(state['observation'])}")
+    print(masked_print_str)    
 
     global page
     prediction = state.get("prediction")
@@ -474,16 +510,12 @@ async def reflect(state: AgentState):
     run_id = str(uuid.uuid4())
     print("Calling LLM to reflect on action...")
     start_time = asyncio.get_event_loop().time()
-    comparison_result = compare_chain.invoke({"new_screenshot": new_screenshot, "action_taken": action_taken, "old_screenshot": old_screenshot,
-                                   "task": state["task"]}, {"run_name": "ReflectOnDiff", "tags": ["reflect-on-diff", run_id]})
+    comparison_result = await compare_chain.ainvoke({"new_screenshot": new_screenshot, "action_taken": action_taken, "old_screenshot": old_screenshot,
+                                   "task": state["task"]}, {"tags": ["reflect-on-diff", prediction.action, run_id]})
     end_time = asyncio.get_event_loop().time()
     print(f"Time taken for comparison: {end_time - start_time:.2f} seconds")
     
-    start_time = asyncio.get_event_loop().time()
-    print("Waiting for traces to upload...")
-    wait_for_all_tracers()
-    end_time = asyncio.get_event_loop().time()
-    print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
+    wait_for_tracers()
 
     explanation = comparison_result.explanation
     success_or_failure_result = comparison_result.success_or_failure_result
@@ -528,17 +560,17 @@ async def end(state: AgentState):
 
     await save_actions_log()
     print("Waiting for remaining traces to upload...")
-    start_time = asyncio.get_event_loop().time()
-    wait_for_all_tracers()
-    end_time = asyncio.get_event_loop().time()
-    print(f"Traces uploaded. Time taken: {end_time - start_time:.2f} seconds")
+    wait_for_tracers()
     print("Ending...")
 
 graph_builder = StateGraph(AgentState)
 
 
 graph_builder.add_node("agent", agent_node)
-graph_builder.add_edge("agent", "generate_task_param_code")
+graph_builder.add_node("generate_task_param_used", generate_task_param_used)
+graph_builder.add_edge("agent", "generate_task_param_used")
+# TODO: add self directed conditional edges for these in case validation fails.
+graph_builder.add_edge("generate_task_param_used", "generate_task_param_code")
 graph_builder.add_node("generate_task_param_code", generate_task_param_code)
 graph_builder.add_node("reflect", RunnableLambda(reflect))
 
@@ -576,16 +608,18 @@ graph = graph_builder.compile()
 generate_graph_image(
     graph, filename="./web_voyager/logs/web_voyager_graph.png")
 
+
 async def call_agent(task: str, task_params: dict, max_steps: int = 300):
-    event_stream = await graph.ainvoke(
+    config = {
+        "recursion_limit": max_steps
+    }
+    await graph.ainvoke(
         {
             "scratchpad": list(),
             "task": task,
             "task_params": task_params
         },
-        {
-            "recursion_limit": max_steps,
-        },
+        config
     )
 
 # Load environment variables from .env file
@@ -597,11 +631,13 @@ async def save_actions_log():
         json.dump(actions_log, f, indent=4)
 
 
-def run_web_voyager(task: str, task_params: dict):
+def run_web_voyager(task: str, task_params: dict, wait_for_tracers: bool = True):
+    global should_wait_for_all_tracers
+    should_wait_for_all_tracers = wait_for_tracers
     original_stderr = sys.stderr
     sys.stderr = open(os.devnull, 'w')
     asyncio.run(call_agent(task=task, task_params=task_params))
     sys.stderr = original_stderr
 
 if __name__ == "__main__":
-    run_web_voyager(task=tennis_task.get_prompt(), task_params=tennis_task.get_task_params())
+    run_web_voyager(task=tennis_task.get_prompt(), task_params=tennis_task.get_task_params(), wait_for_tracers=True)

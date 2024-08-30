@@ -12,10 +12,21 @@ task_params2 = {
     "url": "https://gtc.clubautomation.com/",
     "username": get_username(),
     "password": get_password(),
-    "date": "08/29/2024",
+    "date": "09/05/2024",
     "from_time": "12pm",
-    "to_time": "04:00 PM",
+    "to_time": "08:00 PM",
     "duration": "60 Min"
+}
+run(task_params2)
+print(f"\n\nRPA result: {func(read_html_from_file())}\n\n")
+task_params2 = {
+    "url": "https://gtc.clubautomation.com/",
+    "username": get_username(),
+    "password": get_password(),
+    "date": "09/06/2024",
+    "from_time": "10am",
+    "to_time": "06:00 PM",
+    "duration": "30 Min"
 }
 run(task_params2)
 print(f"\n\nRPA result: {func(read_html_from_file())}\n\n")
