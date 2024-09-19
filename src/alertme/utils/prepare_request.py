@@ -1,10 +1,11 @@
-from alertme.utils.codegen import combined_code, exec_as_main
-from langchain_openai import ChatOpenAI
-from langchain_core.pydantic_v1 import BaseModel, Field
-from typing import List
-import os
 import json
+import os
+from typing import List
 
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_openai import ChatOpenAI
+
+from alertme.utils.codegen import combined_code, exec_as_main
 
 
 def process_request_test_cases(test_case_tuples, request_params_map):

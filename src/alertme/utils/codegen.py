@@ -1,23 +1,19 @@
-from operator import itemgetter
-import uuid
-from langgraph.graph import END, StateGraph
-from langgraph.checkpoint.sqlite import SqliteSaver
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langgraph.graph.message import AnyMessage, add_messages
-from typing import Dict, TypedDict, List
-from typing import Annotated
-from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_openai import ChatOpenAI
-import os
-from dotenv import load_dotenv
 import json
+import uuid
 from difflib import ndiff
+from typing import TypedDict, List
+
 import deepdiff
+from dotenv import load_dotenv
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_openai import ChatOpenAI
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.graph import END, StateGraph
 
 from alertme.utils.langgraph_utils import generate_graph_image
 from alertme.utils.path_utils import get_logs_path, get_data_path
+from alertme.utils.prepare_request import combine_request_data, get_request_replace_func, replace_fields
 
 # Constants
 
@@ -39,14 +35,18 @@ if __name__ == "__main__":
 
 CODE_PREFIX = "__name__ = '__main__'\n"
 
+
 def exec_as_main(code: str, global_scope: dict = {}):
     exec(CODE_PREFIX + code, global_scope)
+
 
 # Data model
 class Code(BaseModel):
     """Code output"""
+
     correction_summary: str = Field(
-        description="Summary of what was corrected to produce this code. Include the ### Improvement Plan from the reflection.")
+        description="Summary of what was corrected to produce this code. Include the ### Improvement Plan from the reflection."
+    )
     imports: str = Field(description="Code block import statements")
     code: str = Field(description="Code block not including import statements")
 
@@ -71,7 +71,9 @@ class GraphState(TypedDict):
     reflection_prompt: str
     reflection_summary: str
 
+
 # Utilities
+
 
 def combined_code(code_solution: Code) -> str:
     """
@@ -100,8 +102,9 @@ class CodeGenerator:
         self.llm = ChatOpenAI(model="gpt-4o", temperature=0)
         self.code_gen_prompt_template = ChatPromptTemplate.from_messages(
             [
-                ("user",
-                 f"""
+                (
+                    "user",
+                    f"""
     Coding agent general guideance:
          - You are an expert programmer. Ensure any code you provide can be executed with all
          required imports and variables defined. Structure your answer: 1) a prefix describing
@@ -123,15 +126,16 @@ class CodeGenerator:
          that you're trying to parse as json, be sure to add it to the global debug_output so you can debug which character caused
          the issue. It MUST be called "debug_output" and it MUST be a string.
          Here is the user question:
-         """
-                 ),
+         """,
+                ),
                 ("placeholder", "{messages}"),
             ]
         )
 
         # Set to false to make more readable and save resource
         self.code_gen_chain = self.code_gen_prompt_template | self.llm.with_structured_output(
-            Code, include_raw=False)
+            Code, include_raw=False
+        )
         self.builder = StateGraph(GraphState)
         self._setup_graph()
 
@@ -163,7 +167,12 @@ class CodeGenerator:
 
     def correction_list_to_string(self, correction_list: List[tuple]):
         return """\n\n================================================\n
-    """.join([f"Correction Summary: {correction[0]}\nImports:\n{correction[1]}\nCode:\n{correction[2]}" for correction in correction_list])
+    """.join(
+            [
+                f"Correction Summary: {correction[0]}\nImports:\n{correction[1]}\nCode:\n{correction[2]}"
+                for correction in correction_list
+            ]
+        )
 
     # TODO: Add a field called context that is the context we want to keep. This should be distinct from messages
     # Which is only the directive for the next instruction.
@@ -178,12 +187,13 @@ class CodeGenerator:
             GraphState: Updated state with reflection summary
         """
         previous_corrections = state["previous_corrections"]
-        last_test_results = state["last_test_results"]        
+        last_test_results = state["last_test_results"]
 
-        self.log(
-            "---REFLECTING ON ERRORS, DEBUG STATEMENTS, and FORMULATING IMPROVEMENT PLAN---")
+        self.log("---REFLECTING ON ERRORS, DEBUG STATEMENTS, and FORMULATING IMPROVEMENT PLAN---")
         # Ensure only the last three corrections are used, or fewer if less than three exist
-        last_three_corrections = previous_corrections[-3:] if len(previous_corrections) >= 3 else previous_corrections
+        last_three_corrections = (
+            previous_corrections[-3:] if len(previous_corrections) >= 3 else previous_corrections
+        )
         context = f"""\
     Previous Corrections, Reflections and Code diffs:\n\n {self.correction_list_to_string(last_three_corrections)}
         """
@@ -206,13 +216,16 @@ just call it out and continue. In this case you should output SUSPECT_BAD_TEST_C
     we've tried before and whether it made a difference. If it did not make a difference, why not?
         
     (3) Sketch out the specific pseudocode of the fixes you plan to implement. Feel free to include actual code snipits."""
-        messages = [self.system_prompt_tuple,
-                    ("assistant", context), ("user", prompt)]
+        messages = [self.system_prompt_tuple, ("assistant", context), ("user", prompt)]
         reflection_summary = self.llm.invoke(messages).content
         return {"reflection_prompt": prompt, "reflection_summary": reflection_summary, "error": "yes"}
-# Nodes
 
-    def _generate(self, state: GraphState,):
+    # Nodes
+
+    def _generate(
+        self,
+        state: GraphState,
+    ):
         """
         Generate a code solution
 
@@ -232,7 +245,7 @@ just call it out and continue. In this case you should output SUSPECT_BAD_TEST_C
         reflection_prompt = state["reflection_prompt"]
         reflection_summary = state["reflection_summary"]
         messages = [self.system_prompt_tuple]
-        if (error == "yes"):
+        if error == "yes":
             self.log("--------- Rewriting code with print statements -----------")
             prompt = f"""We just gave you this prompt:\n\n {reflection_prompt} \n\n and as a result \
 of the above prompt you gave this relfection summary:\n\n {reflection_summary}\n
@@ -246,11 +259,10 @@ the issue. Remember to define "global debug_output" at the top of any scope that
                  """
             self.log("Generating solution using prompt:")
             self.log(prompt)
-            messages += [
-                ("user", prompt)]
+            messages += [("user", prompt)]
 
-        # Solution        
-        code = self.code_gen_chain.invoke({"messages": messages})            
+        # Solution
+        code = self.code_gen_chain.invoke({"messages": messages})
         previous_corrections = state["previous_corrections"]
         previous_corrections.append([code.correction_summary, code.imports, code.code])
 
@@ -299,17 +311,16 @@ the issue. Remember to define "global debug_output" at the top of any scope that
         num_test_cases = len(test_cases)
         succeeded = 0
         for test_case in test_cases:
-            global_scope = {
-                "global_input": test_case["inputs"],
-                "global_output": "",
-                "debug_output": ""
-            }
+            global_scope = {"global_input": test_case["inputs"], "global_output": "", "debug_output": ""}
             try:
                 exec_as_main(runnable_code, global_scope)
-                output_match, differences = self.check_code(global_scope["global_output"], test_case["outputs"])
+                output_match, differences = self.check_code(
+                    global_scope["global_output"], test_case["outputs"]
+                )
                 if output_match:
                     test_results.append(
-                        f"Correct test case! Your output matched the expected output: {test_case['outputs']}. Successful debug output in case it's useful: {global_scope['debug_output']}")
+                        f"Correct test case! Your output matched the expected output: {test_case['outputs']}. Successful debug output in case it's useful: {global_scope['debug_output']}"
+                    )
                     succeeded += 1
                 else:
                     # TODO(opt): Do we need test case input? It is rather large...maybe an LLM summary of test input?
@@ -322,25 +333,28 @@ the issue. Remember to define "global debug_output" at the top of any scope that
             Debug test case output:
             {global_scope['debug_output']}
             Differences:
-            {differences}""")
+            {differences}"""
+                    )
             except Exception as e:
-                test_results.append(f"""Failed test case.
+                test_results.append(
+                    f"""Failed test case.
             Actual test case output:
             Exception {e}
             Expected test case output:
             {test_case['outputs']}
             Debug test case output:
-            {global_scope['debug_output']}""")
+            {global_scope['debug_output']}"""
+                )
         if succeeded == num_test_cases:
-            self.log(
-                f"=========== CODE BLOCK CHECK: SUCCEEDED in {iterations} iterations ===========")
+            self.log(f"=========== CODE BLOCK CHECK: SUCCEEDED in {iterations} iterations ===========")
             return {
                 "error": "no",
             }
         pass_rate = succeeded / num_test_cases if num_test_cases else "N/A"
         self.log("---CODE BLOCK CHECK: FAILED---")
         responses = "\n".join(
-            [f"<test case {i} begin >\n{r}\n</test case>" for i, r in enumerate(test_results)])
+            [f"<test case {i} begin >\n{r}\n</test case>" for i, r in enumerate(test_results)]
+        )
         test_result_message = f"""Incorrect submission.\nPass rate: {pass_rate}\nResults:\n{responses}"""
         self.log("Code:\n" + runnable_code)
         self.log("Test results:\n" + test_result_message)
@@ -433,7 +447,7 @@ the issue. Remember to define "global debug_output" at the top of any scope that
                             detailed_differences[subkey] = {
                                 'old_value': old_value,
                                 'new_value': new_value,
-                                'character_diff': char_diff
+                                'character_diff': char_diff,
                             }
                 self.log(f"Comparing as JSON objects: No Match. Differences: {detailed_differences}")
                 return False, str(detailed_differences)
@@ -446,7 +460,6 @@ the issue. Remember to define "global debug_output" at the top of any scope that
                 self.log(f"Comparing as strings: No Match. Exception: {e}")
                 return False, f"Expected: {expected_output}, Got: {global_output}"
 
-
     def validate_test_cases_json(test_cases: List[TestCase]) -> bool:
         """
         Validates that all 'inputs' in the test cases are valid JSON.
@@ -457,16 +470,15 @@ the issue. Remember to define "global debug_output" at the top of any scope that
         Returns:
             bool: True if all 'inputs' are valid JSON, False otherwise.
         """
-        import json
         for test_case in test_cases:
             try:
                 self.log("validating inputs is json:\n" + test_case['inputs'])
                 json.loads(test_case['inputs'])
             except json.JSONDecodeError:
-                    return False
+                return False
             return True
 
-# Conditional edges
+    # Conditional edges
     def _decide_to_finish(self, state: GraphState):
         """
         Determines whether to finish.
@@ -499,8 +511,7 @@ the issue. Remember to define "global debug_output" at the top of any scope that
         self.log_file_initialized = True
 
     def generate_code(self, user_prompt, test_cases):
-        self.system_prompt_tuple = (
-            "system", f"Overall task to solve: {user_prompt}")
+        self.system_prompt_tuple = ("system", f"Overall task to solve: {user_prompt}")
         _printed = set()
         thread_id = str(uuid.uuid4())
         config = {
@@ -508,38 +519,36 @@ the issue. Remember to define "global debug_output" at the top of any scope that
                 # Checkpoints are accessed by thread_id
                 "thread_id": thread_id,
             },
-            "recursion_limit": 50
+            "recursion_limit": 50,
         }
         events = self.graph.stream(
-            {"previous_corrections": [], "iterations": 0, "test_cases": test_cases}, config, stream_mode="values"
+            {"previous_corrections": [], "iterations": 0, "test_cases": test_cases},
+            config,
+            stream_mode="values",
         )
         for event in events:
             self._print_event(event, _printed)
         return event['code_solution']
 
-import json
 
 if __name__ == "__main__":
     load_dotenv()
     # Global variable to track if the log file has been cleared
     log_file_initialized = False
-    from alertme.utils.prepare_request import combine_request_data, get_request_replace_func, replace_fields
 
     data_path = get_data_path()
     with open(data_path / 'request.json', 'r') as f:
         request = json.load(f)
     with open(data_path / 'request_output.json', 'r') as f:
         expected_output = f.read()
-    #request_params_map = get_request_params_map(request)
-    #print(request_params_map)
+    # request_params_map = get_request_params_map(request)
+    # print(request_params_map)
     # Got this from above.
-    REQUEST_PARAMS_MAP = {"date": "06/25/2024",
-                          "interval": "30", "timeFrom": "14", "timeTo": "0"}
-    # Combine the data    
+    REQUEST_PARAMS_MAP = {"date": "06/25/2024", "interval": "30", "timeFrom": "14", "timeTo": "0"}
+    # Combine the data
     combined_data = combine_request_data(REQUEST_PARAMS_MAP, request)
     test_cases = [{'inputs': combined_data, 'outputs': expected_output}]
     func_str = get_request_replace_func(test_cases)
-    #with open("data/succesful_func.txt", "r") as f:
+    # with open("data/succesful_func.txt", "r") as f:
     #    func_str = f.read()
     print(replace_fields(request, REQUEST_PARAMS_MAP, func_str))
-

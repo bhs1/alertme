@@ -1,10 +1,12 @@
-import os
 import json
+import os
 from pathlib import Path
 from typing import List, Dict
+
 from dotenv import load_dotenv
 
 from alertme.utils.path_utils import get_data_path
+from alertme.web_voyager.tasks.tennis_task import get_task_params
 
 load_dotenv()
 
@@ -45,13 +47,21 @@ async def main(page, task_params):
                 code += f"    await wait_for_xpath(page, '{params['xpath']}')\n"
 
             arg = ""
-            if 'task_param_used' in params and params['task_param_used'] and params['task_param_used'] != 'None' and params['task_param_used'] != "error_task_param_used_not_found":
+            if (
+                'task_param_used' in params
+                and params['task_param_used']
+                and params['task_param_used'] != 'None'
+                and params['task_param_used'] != "error_task_param_used_not_found"
+            ):
                 task_param_used = params['task_param_used']
                 arg = f"task_params['{task_param_used}']"
                 code += f"    text_arg = {arg}\n"
-                if 'task_param_code' in action and action['task_param_code'] and action['task_param_code'] != "null":
-                    indented_code = '\n'.join(
-                        '    ' + line for line in action['task_param_code'].split('\n'))
+                if (
+                    'task_param_code' in action
+                    and action['task_param_code']
+                    and action['task_param_code'] != "null"
+                ):
+                    indented_code = '\n'.join('    ' + line for line in action['task_param_code'].split('\n'))
                     code += f"""
 {indented_code}
     try:
@@ -59,7 +69,9 @@ async def main(page, task_params):
     except Exception as e:
         print(f"Error converting task parameter: {{e}}")
         text_arg = {arg}
-""".replace("convert(", f"convert{i}(")
+""".replace(
+                        "convert(", f"convert{i}("
+                    )
             else:
                 code += f"    text_arg = \"{arg}\"\n"
             if action_type == 'to_url':
@@ -113,7 +125,6 @@ if __name__ == "__main__":
     password = os.getenv('GTC_PASSWORD')
 
     # Usage example:
-    from alertme.web_voyager.tasks.tennis_task import get_task_params
     converter = ActionConverter(get_data_path() / 'actions_log.json')
     converter.override_task_params(get_task_params())
     logfile_path = get_data_path() / 'generated_replay_actions.py'

@@ -13,7 +13,8 @@ def generate_graph_image(graph, filename='graph.png'):
         logging.info(f"Graph saved as {output_path}.")
     except Exception as e:
         logging.info(f"Failed to save graph: {e}")
-        
+
+
 def print_event(event: dict, _printed: set, max_length=1500):
     current_state = event.get("dialog_state")
     if current_state:

@@ -1,8 +1,10 @@
-import os
-import dotenv
-from PIL import Image
-import io
 import base64
+import io
+import os
+
+import dotenv
+import math
+from PIL import Image
 
 dotenv.load_dotenv()
 
@@ -28,7 +30,6 @@ async def compress_screenshot(screenshot, scale_factor: int = 1) -> str:
 
     return compressed_b64_image
 
-import math
 def calculate_distance(bbox, x, y):
     center_x = bbox['x'] + bbox['width'] / 2
     center_y = bbox['y'] + bbox['height'] / 2

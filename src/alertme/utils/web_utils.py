@@ -1,17 +1,17 @@
-import os
-from pathlib import PurePath
-
 from alertme.utils.path_utils import get_logs_path, get_data_path
 
 
 def get_html_content(page):
     return page.content()
 
+
 def get_screenshot(page):
     return page.screenshot(full_page=True)
 
+
 async def get_xpaths(page):
-    return await page.evaluate('''
+    return await page.evaluate(
+        '''
         () => {
             const getXPath = (el) => {
                 if (el.id) return `//*[@id="${el.id}"]`;
@@ -34,7 +34,9 @@ async def get_xpaths(page):
                 }))
             };
         }
-    ''')
+    '''
+    )
+
 
 def write_html_content(content, action_name):
     logs_path = get_logs_path('html_logs')
@@ -43,12 +45,14 @@ def write_html_content(content, action_name):
         f.write(content)
     print(f"HTML content saved to {logfile_path}")
 
+
 def write_screenshot(screenshot, action_name):
     data_path = get_data_path('screenshots')
     screenshot_path = data_path / f'{action_name.replace(" ", "_")}.png'
     with open(screenshot_path, 'wb') as f:
         f.write(screenshot)
     print(f"Screenshot saved to {screenshot_path}")
+
 
 def write_xpaths(xpaths, action_name):
     data_path = get_data_path('xpaths')
@@ -65,11 +69,13 @@ def write_xpaths(xpaths, action_name):
             f.write(f"{item['xpath']} - {item['type']}\n")
     print(f"XPaths logged to {xpath_logfile_path}")
 
+
 def print_html_and_screenshot(page, action_name):
     html_content = get_html_content(page)
     screenshot = get_screenshot(page)
     write_html_content(html_content, action_name)
     write_screenshot(screenshot, action_name)
+
 
 def extract_and_log_xpaths(page, action_name):
     xpaths = get_xpaths(page)

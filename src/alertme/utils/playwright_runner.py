@@ -1,10 +1,15 @@
-from playwright.sync_api import sync_playwright
-from web_utils import get_html_content, get_xpaths
-import time
-import sys
 import json
-import logging, multiprocessing, queue, threading, traceback
+import logging
+import multiprocessing
+import queue
+import sys
+import threading
+import time
+import traceback
 
+from playwright.sync_api import sync_playwright
+
+from alertme.utils.web_utils import get_html_content, get_xpaths
 
 
 class PlaywrightRunner:
@@ -27,8 +32,7 @@ class PlaywrightRunner:
                     try:
                         command = self.command_queue.get(timeout=1)
                         if command == "STOP":
-                            logging.info(
-                                "Received STOP command. Exiting loop.")
+                            logging.info("Received STOP command. Exiting loop.")
                             break
                         globals_dict = command["globals_dict"]
                         globals_dict["page"] = self.page
@@ -38,20 +42,19 @@ class PlaywrightRunner:
                             "xpaths": get_xpaths(self.page),
                             "url": self.page.url,
                             "global_output": globals_dict.get("global_output"),
-                            "debug_output": globals_dict.get("debug_output")
+                            "debug_output": globals_dict.get("debug_output"),
                         }
                         self.result_queue.put(result)
                     except queue.Empty:
                         continue
                     except Exception as e:
-                        logging.error(
-                            f"Error during code execution: {e}", exc_info=True)
+                        logging.error(f"Error during code execution: {e}", exc_info=True)
                         result = {
                             "html": self.page.content(),
                             "xpaths": get_xpaths(self.page),
                             "url": self.page.url,
                             "global_output": f"Error during code execution: {e}\n",
-                            "debug_output": f"Error during code execution: {e}\n{traceback.format_exc()}"
+                            "debug_output": f"Error during code execution: {e}\n{traceback.format_exc()}",
                         }
                         self.result_queue.put(result)
                 self.browser.close()
@@ -95,6 +98,7 @@ def write_to_stderr(data):
         except BlockingIOError:
             time.sleep(0.1)  # Wait a short time before trying again
 
+
 def run_playwright_code(code, input_data):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=False)
@@ -103,23 +107,25 @@ def run_playwright_code(code, input_data):
             "global_input": {"page": page, "input": input_data},
             "global_output": "",
             "global_debug": "",
-            "__name__": "__main__"
+            "__name__": "__main__",
         }
         try:
             write_to_stderr({"status": "Executing code..."})
             exec(code, global_scope)
             write_to_stderr({"status": "Code execution completed."})
-            
+
             # Print global_output to stdout
             print(global_scope['global_output'])
-            
+
             # Write other data as JSON to stderr
-            write_to_stderr({
-                "global_debug": global_scope["global_debug"],
-                "html": get_html_content(page),
-                "xpaths": get_xpaths(page)
-            })
-            
+            write_to_stderr(
+                {
+                    "global_debug": global_scope["global_debug"],
+                    "html": get_html_content(page),
+                    "xpaths": get_xpaths(page),
+                }
+            )
+
             # Add a delay to keep the browser open
             time.sleep(5)
         except Exception as e:
@@ -128,10 +134,11 @@ def run_playwright_code(code, input_data):
             write_to_stderr({"status": "Closing browser..."})
             browser.close()
 
+
 if __name__ == "__main__":
     code = sys.argv[1]
     input_data = json.loads(sys.argv[2])
-    
+
     print("Starting Playwright runner...", file=sys.stderr)
     run_playwright_code(code, input_data)
     print("Playwright runner completed.", file=sys.stderr)

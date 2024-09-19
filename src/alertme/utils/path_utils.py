@@ -1,5 +1,5 @@
 import os
-from pathlib import Path, PurePath
+from pathlib import Path
 
 from dotenv import find_dotenv
 

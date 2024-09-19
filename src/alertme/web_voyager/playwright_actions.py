@@ -1,12 +1,12 @@
-import sys
+from playwright.async_api import async_playwright
 from playwright_stealth import stealth_async
-import os
 
 from alertme.utils.path_utils import get_output_path
 
 
 async def display_red_dot(page, x, y):
-    await page.evaluate("""
+    await page.evaluate(
+        """
         ({x, y}) => {
             const dot = document.createElement('div');
             dot.style.position = 'fixed';
@@ -21,9 +21,10 @@ async def display_red_dot(page, x, y):
             document.body.appendChild(dot);
             setTimeout(() => dot.remove(), 10000);  // Remove dot after 10 seconds
         }
-    """, {"x": x, "y": y})
+    """,
+        {"x": x, "y": y},
+    )
 
-from playwright.async_api import async_playwright
 
 async def setup_browser():
     playwright = await async_playwright().start()
@@ -32,9 +33,9 @@ async def setup_browser():
     await stealth_async(page)
     await page.set_viewport_size({"width": 1700, "height": 900})  # Set the viewport size
     await page.goto("https://www.google.com")
-    
-    
+
     return page
+
 
 async def save_page_html(page, filename='html_result.txt'):
     html_content = await page.content()

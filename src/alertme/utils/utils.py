@@ -1,8 +1,8 @@
+import json
 import logging
 from datetime import datetime
+
 import yaml
-import json
-import os
 
 from alertme.utils.path_utils import get_output_path, get_logs_path
 
@@ -14,11 +14,12 @@ def load_response_data(file_path):
         return response_data
     except Exception as e:
         return str(e)
-    
+
+
 def configure_logging(log_file='app.log'):
     # Generate a unique run identifier
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
+
     # Configure logging
     logging.basicConfig(level=logging.INFO)
     logfile_path = get_logs_path() / log_file
@@ -53,6 +54,7 @@ def configure_logging(log_file='app.log'):
 
     return run_id
 
+
 def format_to_yaml(test_case):
     # If test_case is already a dict, use it directly
     if isinstance(test_case, dict):
@@ -60,14 +62,15 @@ def format_to_yaml(test_case):
     else:
         # If it's a string, remove outer quotes and parse as JSON
         test_case_dict = json.loads(test_case.strip("'\""))
-    
+
     # Convert the dictionary to YAML
     yaml_string = yaml.dump(test_case_dict, default_flow_style=False)
-    
+
     # Remove the top-level dashes that yaml.dump adds
     yaml_string = yaml_string.replace('---\n', '')
-    
+
     return yaml_string
+
 
 # Save the images to files in the scratch directory
 def save_image_to_file(image_data, filename):

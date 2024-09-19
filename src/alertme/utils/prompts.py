@@ -1,6 +1,3 @@
-from utils import format_to_yaml
-import os
-
 def get_reflection_prompt(last_test_results):
     return f"""(1) Determine what went wrong in each of the following test results: {last_test_results}.
 Explain for each failing test case how does the actual output differ from the expected \
@@ -16,6 +13,7 @@ If useful, consider the Debug Output when reasoning about your response.
         
     (3) Sketch out the specific pseudocode of the fixes you plan to implement. Feel free to include actual code snipits.
     """
+
 
 def get_reasoning_prompt(html, xpaths, url, prev_output, prev_debug, code_so_far):
     return f"""
@@ -38,15 +36,19 @@ def get_reasoning_prompt(html, xpaths, url, prev_output, prev_debug, code_so_far
             continue_navigation string to your output, along with what you think we should do next to navigate closer to the final objective page.
             """
 
+
 def get_generate_next_nav_step_prompt(reasoning_output):
     return f"""Consider the plan in {reasoning_output}. Write playwright code to \
 proceed ONE more webpage step towards our final objective.
                 """
 
-def get_generate_prompt(reflection_prompt, reflection_summary, condensed_e2e_nav_code, condensed_e2e_nav_code_summary):
+
+def get_generate_prompt(
+    reflection_prompt, reflection_summary, condensed_e2e_nav_code, condensed_e2e_nav_code_summary
+):
     if not reflection_summary:
         reflection_summary = "No reflection summary yet since this is first iteration."
-        
+
     return f"""We just gave you this prompt:\n\n {reflection_prompt} \n\n and as a result \
 of the above prompt you gave this relfection summary:\n\n {reflection_summary}\n
 Main directive: Rewrite the code to fix the test cases. Be sure to follow the plan \
@@ -66,12 +68,13 @@ Code:
 def get_generate_prompt_v2(reflection_prompt, reflection_summary):
     if not reflection_summary:
         reflection_summary = "No reflection summary yet since this is first iteration."
-        
+
     return f"""We just gave you this prompt:\n\n {reflection_prompt} \n\n and as a result \
 of the above prompt you gave this relfection summary:\n\n {reflection_summary}\n
 Main directive: Rewrite the code to fix the test cases. Be sure to follow the plan \
 in the reflection summary.
              """
+
 
 def get_code_prompt_tuple(CODE_SUFFIX):
     prompt = f"""
@@ -101,7 +104,4 @@ playwright web driver and use the page object provided to you via the get_page()
     - It will be useful for you to print out HTTP requests and responses, HTML responses, and error logs in your debug output.
     These will be useful to help you debug your code. You should start doing this even in your first solution.
 """
-    return (
-        "user", prompt
-    )
-    
+    return ("user", prompt)

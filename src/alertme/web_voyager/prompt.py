@@ -1,15 +1,10 @@
-from langchain_core.prompts.image import ImagePromptTemplate
-from langchain_core.messages.tool import ToolMessage
-
 from langchain.prompts import (
     ChatPromptTemplate,
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
-    MessagesPlaceholder,
-    PromptTemplate
+    PromptTemplate,
 )
-from langchain.schema import AIMessage, HumanMessage, ChatMessage, SystemMessage, FunctionMessage
-from typing import List, Union
+from langchain_core.prompts.image import ImagePromptTemplate
 
 # System message template
 task_param_used_prompt = """Imagine you were a robot browsing the web, just like humans. You needed to complete a task. \
@@ -118,38 +113,31 @@ Action args: {{List of action args}}
 
 human_task_param_used_prompt = HumanMessagePromptTemplate.from_template(task_param_used_prompt)
 
-image_prompt = ImagePromptTemplate(
-    input_variables=["img"],
-    template={"url": "data:image/png;base64,{img}"}
-)
+image_prompt = ImagePromptTemplate(input_variables=["img"], template={"url": "data:image/png;base64,{img}"})
 
 human_current_screenshot_prompt = HumanMessagePromptTemplate(prompt=[image_prompt])
 
 task_param_used_prompt_template = ChatPromptTemplate(
-    messages=[
-        human_task_param_used_prompt,
-        human_current_screenshot_prompt
-    ]
+    messages=[human_task_param_used_prompt, human_current_screenshot_prompt]
 )
 
-param_conversion_code_prompt_template = ChatPromptTemplate([
-    HumanMessagePromptTemplate.from_template(
-"""
+param_conversion_code_prompt_template = ChatPromptTemplate(
+    [
+        HumanMessagePromptTemplate.from_template(
+            """
 Generate code to convert this input string: {input_string} to this output string: {output_string}. The code should be a python function of the form:
 
 def convert(input_string):
     # Add code to extract output_string from input_string>    
     return output_string
 """
-    )
-])
+        )
+    ]
+)
 
 system_message_prompt = SystemMessagePromptTemplate.from_template(system_template)
 
-bbox_prompt = PromptTemplate(
-    input_variables=["bbox_descriptions"],
-    template="{bbox_descriptions}"
-)
+bbox_prompt = PromptTemplate(input_variables=["bbox_descriptions"], template="{bbox_descriptions}")
 
 input_prompt = PromptTemplate(
     input_variables=["task"],
@@ -158,7 +146,7 @@ input_prompt = PromptTemplate(
 Overall goal:
 {task}
 
-"""
+""",
 )
 
 params_prompt = PromptTemplate(
@@ -168,7 +156,7 @@ params_prompt = PromptTemplate(
 task_params:
 {task_params}
 
-"""
+""",
 )
 
 scratchpad_prompt = PromptTemplate(
@@ -178,39 +166,35 @@ scratchpad_prompt = PromptTemplate(
 Most recent actions:
 {formatted_scratchpad}
 
-"""
+""",
 )
 
-human_message_prompt = HumanMessagePromptTemplate(prompt=[scratchpad_prompt, image_prompt, bbox_prompt, input_prompt, params_prompt])
+human_message_prompt = HumanMessagePromptTemplate(
+    prompt=[scratchpad_prompt, image_prompt, bbox_prompt, input_prompt, params_prompt]
+)
 
 # Chat prompt template
 web_voyager_prompt = ChatPromptTemplate(
     input_variables=["bbox_descriptions", "img", "task", "formatted_scratchpad"],
-    messages=[
-        system_message_prompt,
-        human_message_prompt
-    ]
+    messages=[system_message_prompt, human_message_prompt],
 )
 
 # Image prompt for new screenshot
 new_screenshot_prompt = ImagePromptTemplate(
-    input_variables=["new_screenshot"],
-    template={"url": "data:image/png;base64,{new_screenshot}"}
+    input_variables=["new_screenshot"], template={"url": "data:image/png;base64,{new_screenshot}"}
 )
 
 # Image prompt for input annotated screenshot
 old_screenshot_prompt = ImagePromptTemplate(
-    input_variables=["old_screenshot"],
-    template={"url": "data:image/png;base64,{old_screenshot}"}
+    input_variables=["old_screenshot"], template={"url": "data:image/png;base64,{old_screenshot}"}
 )
 
 final_screenshot_prompt = ImagePromptTemplate(
-    input_variables=["final_screenshot"],
-    template={"url": "data:image/png;base64,{final_screenshot}"}
+    input_variables=["final_screenshot"], template={"url": "data:image/png;base64,{final_screenshot}"}
 )
 
 human_extract_info_prompt = HumanMessagePromptTemplate.from_template(
-"""
+    """
 According to this prompt
     
 {input_prompt}
@@ -225,13 +209,13 @@ Be sure to follow this output format example when you extract the result:
 """
 )
 
-concatenated_extract_info_prompt = HumanMessagePromptTemplate(prompt=[human_extract_info_prompt, final_screenshot_prompt])
+concatenated_extract_info_prompt = HumanMessagePromptTemplate(
+    prompt=[human_extract_info_prompt, final_screenshot_prompt]
+)
 
 final_extract_info_prompt = ChatPromptTemplate(
     input_variables=["final_screenshot", "input_prompt", "output_format_example"],
-    messages=[
-        concatenated_extract_info_prompt
-    ]
+    messages=[concatenated_extract_info_prompt],
 )
 
 
@@ -239,10 +223,12 @@ final_extract_info_prompt = ChatPromptTemplate(
 action_taken_prompt = PromptTemplate(
     input_variables=["action_taken", "task"],
     template="""Action taken: {action_taken}
-    """
+    """,
 )
 
-reflection_human_prompt = HumanMessagePromptTemplate(prompt=[old_screenshot_prompt, action_taken_prompt, new_screenshot_prompt])
+reflection_human_prompt = HumanMessagePromptTemplate(
+    prompt=[old_screenshot_prompt, action_taken_prompt, new_screenshot_prompt]
+)
 
 # Combined prompt
 # TODO: Add the overall prompt message as well and say not to forget it (this should fix the 9am 9pm messup).
@@ -250,7 +236,8 @@ compare_screenshots_prompt = ChatPromptTemplate(
     input_variables=["new_screenshot", "action_taken", "input_annotated_screenshot"],
     messages=[
         reflection_human_prompt,
-        SystemMessagePromptTemplate.from_template("""
+        SystemMessagePromptTemplate.from_template(
+            """
 - Summarize the intention of the action.
 
 - Summarize the result of the action by comparing the before (first) and after (second) screenshots. Be very careful \
@@ -262,6 +249,7 @@ here to check the details of the second screenshot. Don't make stuff up.
   - PARTIAL_SUCCESS: Action result did not match the intent but did make partial progress towards the "Thought".
   
 Print out SUCCESS, FAILURE or PARTIAL_SUCCESS.
-    """),
-    ]
+    """
+        ),
+    ],
 )

@@ -1,6 +1,6 @@
-
 async def is_visible_in_viewport(page, locator):
-    return await page.evaluate("""
+    return await page.evaluate(
+        """
     (element) => {
         function isVisibleInViewport(element) {
             const elementStyle = window.getComputedStyle(element);
@@ -46,4 +46,6 @@ async def is_visible_in_viewport(page, locator):
         }
         return isVisibleInViewport(element);
     }
-    """, locator.element_handle())
+    """,
+        locator.element_handle(),
+    )
