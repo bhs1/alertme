@@ -7,6 +7,9 @@ from typing import List
 from dotenv import load_dotenv
 import os
 import json
+
+from alertme.utils.path_utils import get_data_path
+
 load_dotenv()
 
 def get_prompt():
@@ -38,7 +41,8 @@ def get_task_params():
     return task_params
 
 def get_ai_generated_start_code():
-    with open('web_voyager/data/generated_replay_actions.py', 'r') as file:
+    action_file = get_data_path() / 'generated_replay_actions.py'
+    with open(action_file, 'r') as file:
         return file.read()
 
 # from data.successful_response_func import func
@@ -62,11 +66,12 @@ Example output:
 """
 
 def get_html_response_text():
-    file_path = '/Users/bensolis-cohen/Projects/alertme/data/response.txt'
+    file_path = get_data_path() / 'response.txt'
     with open(file_path, 'r') as file:
         return file.read()
+
 def get_empty_response_text():
-    file_path = '/Users/bensolis-cohen/Projects/alertme/data/empty_response.txt'
+    file_path = get_data_path() / 'empty_response.txt'
     with open(file_path, 'r') as file:
         return file.read()
 

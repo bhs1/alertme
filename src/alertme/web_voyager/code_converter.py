@@ -1,19 +1,22 @@
 import os
 import json
+from pathlib import Path
 from typing import List, Dict
 from dotenv import load_dotenv
+
+from alertme.utils.path_utils import get_data_path
 
 load_dotenv()
 
 
 class ActionConverter:
-    def __init__(self, log_file: str, task_params={}):
-        self.log_file = log_file
+    def __init__(self, logfile_path: Path, task_params={}):
+        self.logfile_path = logfile_path
         self.actions = self._load_actions()
         self.task_params = task_params
 
     def _load_actions(self) -> List[Dict]:
-        with open(self.log_file, 'r') as f:
+        with open(self.logfile_path, 'r') as f:
             return json.load(f)
 
     def override_task_params(self, task_params: Dict):
@@ -100,7 +103,7 @@ if __name__ == "__main__":
 """
         return code
 
-    def save_code(self, output_file: str):
+    def save_code(self, output_file: Path):
         with open(output_file, 'w') as f:
             f.write(self.generate_code())
 
@@ -111,6 +114,7 @@ if __name__ == "__main__":
 
     # Usage example:
     from alertme.web_voyager.tasks.tennis_task import get_task_params
-    converter = ActionConverter('web_voyager/data/actions_log.json')
+    converter = ActionConverter(get_data_path() / 'actions_log.json')
     converter.override_task_params(get_task_params())
-    converter.save_code('web_voyager/data/generated_replay_actions.py')
+    logfile_path = get_data_path() / 'generated_replay_actions.py'
+    converter.save_code(get_data_path() / 'generated_replay_actions.py')

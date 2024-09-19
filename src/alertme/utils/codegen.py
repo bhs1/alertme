@@ -16,6 +16,8 @@ import json
 from difflib import ndiff
 import deepdiff
 
+from alertme.utils.langgraph_utils import generate_graph_image
+from alertme.utils.path_utils import get_logs_path, get_data_path
 
 # Constants
 
@@ -155,7 +157,7 @@ class CodeGenerator:
 
         memory = SqliteSaver.from_conn_string(":memory:")
         self.graph = self.builder.compile(checkpointer=memory)
-        self._generate_graph_image()
+        generate_graph_image(self.graph)
         # Parameters
         self.max_iterations = 10
 
@@ -488,18 +490,11 @@ the issue. Remember to define "global debug_output" at the top of any scope that
             self.log("---DECISION: RE-TRY SOLUTION---")
             return "retry"
 
-    def _generate_graph_image(self):
-        try:
-            graph_image = self.graph.get_graph().draw_mermaid_png()
-            with open("data/graph.png", "wb") as f:
-                f.write(graph_image)
-            self.log("Graph saved as 'data/graph.png'.")
-        except Exception as e:
-            self.log(f"Failed to save graph: {e}")
-    def log(self, message: str, filename="data/langchain_trace.txt"):
+    def log(self, message: str, filename='langchain_trace.txt'):
         mode = 'a' if self.log_file_initialized else 'w'
         print(message)
-        with open(filename, mode) as file:
+        log_path = get_logs_path() / filename
+        with open(log_path, mode) as file:
             file.write(str(message) + "\n")
         self.log_file_initialized = True
 
@@ -525,13 +520,15 @@ the issue. Remember to define "global debug_output" at the top of any scope that
 import json
 
 if __name__ == "__main__":
+    load_dotenv()
     # Global variable to track if the log file has been cleared
     log_file_initialized = False
     from alertme.utils.prepare_request import combine_request_data, get_request_replace_func, replace_fields
-    load_dotenv()
-    with open("data/request.json", "r") as f:
+
+    data_path = get_data_path()
+    with open(data_path / 'request.json', 'r') as f:
         request = json.load(f)
-    with open("data/request_output.json", "r") as f:
+    with open(data_path / 'request_output.json', 'r') as f:
         expected_output = f.read()
     #request_params_map = get_request_params_map(request)
     #print(request_params_map)

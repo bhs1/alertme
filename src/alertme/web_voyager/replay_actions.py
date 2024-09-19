@@ -1,11 +1,15 @@
 import json
 import asyncio
+from pathlib import Path
+from pkgutil import get_data
+
+from alertme.utils.path_utils import get_data_path
 from alertme.web_voyager.playwright_actions import setup_browser
 from alertme.web_voyager.screenshot_utils import mask_sensitive_data
 import ast
 
 class ActionReplayer:
-    def __init__(self, page = None, file_path = "", actions_string=""):
+    def __init__(self, file_path: Path, page = None, actions_string=""):
         self.page = page
         self.file_path = file_path
         self.actions_string = actions_string
@@ -83,7 +87,8 @@ class ActionReplayer:
             raise
 
 async def main():
-    replayer = ActionReplayer(file_path="./web_voyager/data/actions_log.json")
+    file_path = get_data_path() / 'actions_log.json'
+    replayer = ActionReplayer(file_path=file_path)
     await replayer.replay_actions(pause_after_each_action=False)
     
     print("Replay completed. Press Enter to close the browser...")

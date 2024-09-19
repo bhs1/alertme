@@ -2,6 +2,9 @@ import sys
 from playwright_stealth import stealth_async
 import os
 
+from alertme.utils.path_utils import get_output_path
+
+
 async def display_red_dot(page, x, y):
     await page.evaluate("""
         ({x, y}) => {
@@ -35,9 +38,7 @@ async def setup_browser():
 
 async def save_page_html(page, filename='html_result.txt'):
     html_content = await page.content()
-    output_dir = os.path.join('web_voyager', 'data')
-    os.makedirs(output_dir, exist_ok=True)
-    output_file = os.path.join(output_dir, filename)
+    output_file = get_output_path() / filename
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(html_content)
     print(f"Page HTML saved to {output_file}")

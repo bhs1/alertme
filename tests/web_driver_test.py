@@ -1,5 +1,6 @@
 import os
 
+from alertme.utils.path_utils import get_output_path
 from playwright.sync_api import sync_playwright
 
 from alertme.utils.web_utils import print_html_and_screenshot, extract_and_log_xpaths
@@ -105,9 +106,9 @@ def login_and_search_courts():
             print()  # Add an empty line for better readability
 
             # Take a screenshot of the search results
-            os.makedirs('data', exist_ok=True)
-            page.screenshot(path='data/court_times_screenshot.png', full_page=True)
-            print("Screenshot saved to data/court_times_screenshot.png")
+            screenshot_path = get_output_path() / 'court_times_screenshot.png'
+            page.screenshot(path=screenshot_path, full_page=True)
+            print(f"Screenshot saved to {screenshot_path}")
 
         except TimeoutError:
             print("Search button not found or not visible within the timeout period.")

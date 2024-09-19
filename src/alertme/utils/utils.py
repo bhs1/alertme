@@ -4,6 +4,8 @@ import yaml
 import json
 import os
 
+from alertme.utils.path_utils import get_output_path, get_logs_path
+
 
 def load_response_data(file_path):
     try:
@@ -13,13 +15,14 @@ def load_response_data(file_path):
     except Exception as e:
         return str(e)
     
-def configure_logging(log_file='data/app.log'):
+def configure_logging(log_file='app.log'):
     # Generate a unique run identifier
     run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     # Configure logging
     logging.basicConfig(level=logging.INFO)
-    file_handler = logging.FileHandler(log_file)
+    logfile_path = get_logs_path() / log_file
+    file_handler = logging.FileHandler(logfile_path)
     stream_handler = logging.StreamHandler()
 
     # Create a custom formatter
@@ -68,7 +71,6 @@ def format_to_yaml(test_case):
 
 # Save the images to files in the scratch directory
 def save_image_to_file(image_data, filename):
-    file_path = os.path.join(
-        "./web_voyager/scratch", filename)
+    file_path = get_output_path('scratch') / filename
     with open(file_path, "wb") as file:
         file.write(image_data.encode('utf-8'))

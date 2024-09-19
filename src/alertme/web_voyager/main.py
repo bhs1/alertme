@@ -15,6 +15,7 @@ from langgraph.graph import END, StateGraph
 from langsmith import traceable
 
 from alertme.utils.langgraph_utils import generate_graph_image
+from alertme.utils.path_utils import get_src_path, get_logs_path
 from alertme.utils.utils import save_image_to_file
 from alertme.web_voyager.playwright_actions import setup_browser
 from alertme.web_voyager.playwright_actions_core import click as playwright_click, \
@@ -29,14 +30,11 @@ from alertme.web_voyager.screenshot_utils import mask_sensitive_data, take_scree
 # TODO: Make this file object oriented instead of using a global page object.
 global page
 
-# Ensure the logs directory exists
-log_dir = "./web_voyager/logs"
-os.makedirs(log_dir, exist_ok=True)
-
 # Set up logging
+logfile_path = get_logs_path() / 'info.txt'
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    filename=os.path.join(log_dir, 'info.txt'),
+                    filename=logfile_path,
                     filemode='a')
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -236,7 +234,8 @@ async def to_url(state: AgentState):
 # Some javascript we will run on each step
 # to take a screenshot of the page, select the
 # elements to annotate, and add bounding boxes
-with open("./web_voyager/mark_page.js") as f:
+# TODO: Don't hardcode this
+with open(get_src_path() / 'alertme/web_voyager/mark_page.js') as f:
     mark_page_script = f.read()
 
 
@@ -595,8 +594,8 @@ graph_builder.set_entry_point("setup")
 graph_builder.add_edge("setup", "agent")
 
 graph = graph_builder.compile()
-generate_graph_image(
-    graph, filename="./web_voyager/logs/web_voyager_graph.png")
+
+generate_graph_image(graph, filename='web_voyager_graph.png')
 
 
 async def call_agent(task: str, task_params: dict, max_steps: int = 300):
@@ -616,7 +615,7 @@ async def call_agent(task: str, task_params: dict, max_steps: int = 300):
 load_dotenv()
 
 async def save_actions_log():
-    log_path = "./web_voyager/data/actions_log.json"
+    log_path = get_logs_path() / 'actions_log.json'
     with open(log_path, "w") as f:
         json.dump(actions_log, f, indent=4)
 

@@ -1,12 +1,16 @@
 import logging
 
-def generate_graph_image(graph, filename="data/graph.png"):
+from alertme.utils.path_utils import get_output_path
+
+
+def generate_graph_image(graph, filename='graph.png'):
     print("generating graph image")
     try:
         graph_image = graph.get_graph().draw_mermaid_png()
-        with open(filename, "wb") as f:
+        output_path = get_output_path() / filename
+        with open(output_path, 'wb') as f:
             f.write(graph_image)
-        logging.info(f"Graph saved as {filename}.")
+        logging.info(f"Graph saved as {output_path}.")
     except Exception as e:
         logging.info(f"Failed to save graph: {e}")
         

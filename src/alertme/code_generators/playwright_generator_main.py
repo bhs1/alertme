@@ -4,6 +4,8 @@ from alertme.utils.codegen import combined_code, CodeGenerator
 import os
 import logging
 from dotenv import load_dotenv
+from alertme.utils.codegen import combined_code, CodeGenerator
+from alertme.utils.path_utils import get_src_path, get_output_path
 from alertme.utils.utils import format_to_yaml
 
 
@@ -37,7 +39,9 @@ in the comment can be beneficial and removing a step can be detrimental.
     return prompt
 
 def get_playwright_actions_code_lib():
-    with open("web_voyager/playwright_actions_core.py", "r") as file:
+    # TODO: This is weird probably shouldn't be hardcoded
+    actions_lib_path = get_src_path() / 'alertme/web_voyager/playwright_actions_core.py'
+    with open(actions_lib_path, 'r') as file:
         playwright_actions_code_lib = file.read()
     return playwright_actions_code_lib
 
@@ -61,11 +65,11 @@ if __name__ == "__main__":
 
     result = combined_code(code_solution)
 
-    os.makedirs('data', exist_ok=True)
+    output_path = get_output_path() / 'activity_times_func.py'
 
-    with open('data/activity_times_func.py', 'w') as f:
+    with open(output_path, 'w') as f:
         f.write(result)
 
-    logging.info("Code has been written to data/activity_times_func.py")
+    logging.info(f"Code has been written to {output_path}")
 
     code_generator.close()

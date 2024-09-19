@@ -1,4 +1,8 @@
 import os
+from pathlib import PurePath
+
+from alertme.utils.path_utils import get_logs_path, get_data_path
+
 
 def get_html_content(page):
     return page.content()
@@ -33,23 +37,23 @@ async def get_xpaths(page):
     ''')
 
 def write_html_content(content, action_name):
-    os.makedirs('data/html_logs', exist_ok=True)
-    html_log_path = f'data/html_logs/{action_name.replace(" ", "_")}.txt'
-    with open(html_log_path, 'w', encoding='utf-8') as f:
+    logs_path = get_logs_path('html_logs')
+    logfile_path = logs_path / f'{action_name.replace(" ", "_")}.txt'
+    with open(logfile_path, 'w', encoding='utf-8') as f:
         f.write(content)
-    print(f"HTML content saved to {html_log_path}")
+    print(f"HTML content saved to {logfile_path}")
 
 def write_screenshot(screenshot, action_name):
-    os.makedirs('data/screenshots', exist_ok=True)
-    screenshot_path = f'data/screenshots/{action_name.replace(" ", "_")}.png'
+    data_path = get_data_path('screenshots')
+    screenshot_path = data_path / f'{action_name.replace(" ", "_")}.png'
     with open(screenshot_path, 'wb') as f:
         f.write(screenshot)
     print(f"Screenshot saved to {screenshot_path}")
 
 def write_xpaths(xpaths, action_name):
-    os.makedirs('data/xpaths', exist_ok=True)
-    xpath_log_path = f'data/xpaths/{action_name.replace(" ", "_")}_xpaths.txt'
-    with open(xpath_log_path, 'w', encoding='utf-8') as f:
+    data_path = get_data_path('xpaths')
+    xpath_logfile_path = data_path / f'{action_name.replace(" ", "_")}_xpaths.txt'
+    with open(xpath_logfile_path, 'w', encoding='utf-8') as f:
         f.write("Textboxes:\n")
         for item in xpaths.get('textboxes', []):
             f.write(f"{item['xpath']} - {item['type']}\n")
@@ -59,7 +63,7 @@ def write_xpaths(xpaths, action_name):
         f.write("\nRadio Buttons:\n")
         for item in xpaths.get('radios', []):
             f.write(f"{item['xpath']} - {item['type']}\n")
-    print(f"XPaths logged to {xpath_log_path}")
+    print(f"XPaths logged to {xpath_logfile_path}")
 
 def print_html_and_screenshot(page, action_name):
     html_content = get_html_content(page)
