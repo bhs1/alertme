@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools==75.1.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "alertme"
+requires-python = ">=3.11"
+version = "0.0.1"
+
+dependencies = [
+    "beautifulsoup4==4.12.3",
+    "deepdiff==7.0.1",
+    "langchain==0.2.3",
+    "langchain-openai==0.1.17",
+    "langgraph==0.2.14",
+    "langgraph-checkpoint-sqlite==1.0.3",
+    "pillow==10.4.0",
+    "playwright==1.44.0",
+    "playwright-dompath==0.0.1",
+    "playwright-stealth==1.0.6",
+    "python-dotenv==1.0.1"
+]
