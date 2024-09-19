@@ -46,9 +46,9 @@ def get_ai_generated_start_code():
     with open('web_voyager/data/generated_replay_actions.py', 'r') as file:
         return file.read()
 
-from data.successful_response_func import func
-def get_html_parser():
-    return func
+# from data.successful_response_func import func
+# def get_html_parser():
+#     return func
 
 def custom_code_task_guideance():
     return f"""
