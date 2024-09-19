@@ -1,10 +1,10 @@
 import sys
+
+
 sys.path.insert(0, '.')
 sys.path.insert(0, './web_voyager/')
 
-
-from drivergen import CodeGenerator
-from drivergen import combined_code
+from codegen import combined_code, CodeGenerator
 import os
 import logging
 from dotenv import load_dotenv

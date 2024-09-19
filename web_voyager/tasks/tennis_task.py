@@ -4,8 +4,7 @@ sys.path.insert(0, '.')
 
 import os
 from dotenv import load_dotenv
-    
-from drivergen import CodeGenerator, combined_code, CODE_SUFFIX
+
 from langchain_openai import ChatOpenAI
 from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import List
