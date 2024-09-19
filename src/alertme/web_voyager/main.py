@@ -26,9 +26,8 @@ from alertme.web_voyager.prompt import compare_screenshots_prompt, web_voyager_p
     param_conversion_code_prompt_template, \
     task_param_used_prompt_template
 from alertme.web_voyager.screenshot_utils import mask_sensitive_data, take_screenshot
+from playwright.async_api import Page
 
-# TODO: Make this file object oriented instead of using a global page object.
-global page
 
 # Set up logging
 logfile_path = get_logs_path() / 'info.txt'
@@ -108,6 +107,7 @@ class AgentState(TypedDict):
     reflection: Reflection
     task_param_used: str
     bbox_descriptions: str
+    page: Page
 
 
 actions_log = []
@@ -123,7 +123,6 @@ def update_previous_action_with_reflection(reflection_obj, task_param_code):
 
 async def click(state: AgentState):
     try:
-        global page
         click_args = state["prediction"].args
         task_param_used = state['task_param_used']
         if click_args is None or len(click_args) == 0 or len(click_args) == 3:
@@ -133,7 +132,7 @@ async def click(state: AgentState):
         bbox = state["bboxes"][bbox_id]
         x, y = bbox["x"], bbox["y"]
         xpath = bbox.get("xpath", "")
-        click_result = await playwright_click(page, x, y, bbox.get("text", ""))
+        click_result = await playwright_click(state['page'], x, y, bbox.get("text", ""))
         print(f"Clicked {bbox_id} with result {click_result}")        
         store_action("click", {"x": x, "y": y,
                      "bbox_id": bbox_id, "xpath": xpath, "click_result": click_result, "text": bbox.get("text", ""), "parent_html": bbox.get("parentHTML", ""), "task_param_used": task_param_used})
@@ -144,7 +143,6 @@ async def click(state: AgentState):
 
 async def type_text(state: AgentState):
     try:
-        global page
         type_args = state["prediction"].args
         task_param_used = state['task_param_used']
         if type_args is None or len(type_args) != 2:
@@ -154,7 +152,7 @@ async def type_text(state: AgentState):
         x, y = bbox["x"], bbox["y"]
         text_content = type_args[1]
         xpath = bbox.get("xpath", "")
-        await playwright_type_text(page, x, y, text_content)
+        await playwright_type_text(state['page'], x, y, text_content)
         store_action("type_text", {
                      "x": x, "y": y, "bbox_id": bbox_id, "text": text_content, "xpath": xpath, "task_param_used": task_param_used})
         return f"Typed {text_content} and submitted"
@@ -163,7 +161,6 @@ async def type_text(state: AgentState):
 
 async def scroll(state: AgentState):
     try:
-        global page
         scroll_args = state["prediction"].args
         task_param_used = state['task_param_used']
         if scroll_args is None or len(scroll_args) != 3:
@@ -182,7 +179,7 @@ async def scroll(state: AgentState):
             xpath = state["bboxes"][int(target)].get("xpath", "")
             scroll_amount = 200
         scroll_direction = -scroll_amount if direction.lower() == "up" else scroll_amount
-        await playwright_scroll(page, x, y, direction, scroll_direction, text)
+        await playwright_scroll(state['page'], x, y, direction, scroll_direction, text)
         store_action("scroll", {"x": x, "y": y, "direction": direction,
                      "scroll_direction": scroll_direction, "xpath": xpath, "text": text, "task_param_used": task_param_used})
         return f"Scrolled {direction} in {'window' if target.upper() == 'WINDOW' else 'element'} until {text} is visible."
@@ -203,18 +200,16 @@ async def wait(state: AgentState):
 
 async def go_back(state: AgentState):
     try:
-        global page
-        await playwright_go_back(page)
+        await playwright_go_back(state['page'])
         store_action("go_back", {})
-        return f"Navigated back a page to {page.url}."
+        return f"Navigated back a page to {state['page'].url}."
     except Exception as e:
         return f"Error in go_back: {str(e)}"
 
 
 async def to_google(state: AgentState):
     try:
-        global page
-        await playwright_to_google(page)
+        await playwright_to_google(state['page'])
         store_action("to_google", {})
         return "Navigated to google.com."
     except Exception as e:
@@ -223,9 +218,8 @@ async def to_google(state: AgentState):
 
 async def to_url(state: AgentState):
     try:
-        global page
         url = state["prediction"].args[0]
-        await playwright_to_url(page, url)
+        await playwright_to_url(state['page'], url)
         store_action("to_url", {"url": url, "task_param_used": state['task_param_used']})
         return f"Navigated to {url}."
     except Exception as e:
@@ -259,7 +253,7 @@ async def mark_page(page):
 
 
 async def annotate(state):    
-    marked_page = await mark_page.with_retry().ainvoke(page)
+    marked_page = await mark_page.with_retry().ainvoke(state['page'])
     return {**state, **marked_page}
 
 
@@ -329,8 +323,7 @@ compare_chain = compare_screenshots_prompt | llm.with_structured_output(Reflecti
 import alertme.web_voyager.tasks.tennis_task as tennis_task
 
 async def setup(state: AgentState):
-    global page
-    page = await setup_browser()    
+    state['page'] = await setup_browser()
     return {**state}
 
 async def update_scratchpad(state: AgentState):
@@ -482,7 +475,6 @@ async def reflect(state: AgentState):
     
     print(masked_print_str)    
 
-    global page
     prediction = state.get("prediction")
     action_taken = f"Action attempted: {prediction.action} with args: {prediction.args}. Which results in:"
     thought = prediction.thought
@@ -491,7 +483,7 @@ async def reflect(state: AgentState):
     old_screenshot = state.get("img")
     # new_screenshot = await take_screenshot(page)  # Take a new screenshot of the page
     # Call annotate on the new screenshot
-    annotated_state = await annotate({"page": page})
+    annotated_state = await annotate({"page": state['page']})
     new_screenshot = annotated_state["img"]
 
     save_image_to_file(new_screenshot, "new_screenshot.jpg")
