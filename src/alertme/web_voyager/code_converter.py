@@ -110,7 +110,7 @@ if __name__ == "__main__":
     password = os.getenv('GTC_PASSWORD')
 
     # Usage example:
-    from tasks.tennis_task import get_task_params
+    from alertme.web_voyager.tasks.tennis_task import get_task_params
     converter = ActionConverter('web_voyager/data/actions_log.json')
     converter.override_task_params(get_task_params())
     converter.save_code('web_voyager/data/generated_replay_actions.py')

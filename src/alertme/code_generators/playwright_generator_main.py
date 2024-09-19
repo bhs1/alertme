@@ -1,14 +1,10 @@
 import sys
 
-
-sys.path.insert(0, '.')
-sys.path.insert(0, './web_voyager/')
-
-from codegen import combined_code, CodeGenerator
+from alertme.utils.codegen import combined_code, CodeGenerator
 import os
 import logging
 from dotenv import load_dotenv
-from utils import format_to_yaml
+from alertme.utils.utils import format_to_yaml
 
 
 def get_generalize_code_prompt(test_cases, starter_code, task_prompt, playwright_actions_code_lib):        
@@ -47,7 +43,7 @@ def get_playwright_actions_code_lib():
 
 
 if __name__ == "__main__":
-    from web_voyager.tasks.tennis_task import get_prompt, get_ai_generated_start_code, get_task_params, get_html_parser, custom_code_task_guideance    
+    from alertme.web_voyager.tasks.tennis_task import get_prompt, get_ai_generated_start_code, get_task_params, get_html_parser, custom_code_task_guideance
     load_dotenv()
     task_params = get_task_params()
     expected_output = {

@@ -1,11 +1,5 @@
 import sys
-sys.path.insert(0, '.')
-from playwright.async_api import Page, expect
-import platform
 from playwright_stealth import stealth_async
-from playwright_dompath.dompath_sync import xpath_path, css_path
-import math
-from web_voyager.playwright_actions_core import *
 import os
 
 async def display_red_dot(page, x, y):

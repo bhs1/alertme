@@ -1,4 +1,4 @@
-from codegen import CodeGenerator, combined_code, exec_as_main
+from alertme.utils.codegen import CodeGenerator, combined_code, exec_as_main
 import os
 
 def generate_response_func(test_cases):

@@ -1,10 +1,9 @@
-from playwright.sync_api import sync_playwright
 import os
-from web_utils import print_html_and_screenshot, extract_and_log_xpaths
 
 from playwright.sync_api import sync_playwright
-import os
-from web_utils import print_html_and_screenshot, extract_and_log_xpaths
+
+from alertme.utils.web_utils import print_html_and_screenshot, extract_and_log_xpaths
+
 
 def login_and_search_courts():
     print("Starting the browser...")

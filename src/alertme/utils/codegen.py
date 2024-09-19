@@ -527,7 +527,7 @@ import json
 if __name__ == "__main__":
     # Global variable to track if the log file has been cleared
     log_file_initialized = False
-    from prepare_request import get_request_params_map, combine_request_data, get_request_replace_func, replace_fields
+    from alertme.utils.prepare_request import combine_request_data, get_request_replace_func, replace_fields
     load_dotenv()
     with open("data/request.json", "r") as f:
         request = json.load(f)

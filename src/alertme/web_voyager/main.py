@@ -1,40 +1,30 @@
-import sys
-
-sys.path.insert(0, '.')
-sys.path.insert(0, './web_voyager')
-
-from dotenv import load_dotenv
-from web_voyager.playwright_actions import setup_browser
-from web_voyager.prompt import compare_screenshots_prompt
+import asyncio
 import json
-from web_voyager.playwright_actions import click as playwright_click, type_text as playwright_type_text, scroll_until_visible as playwright_scroll, go_back as playwright_go_back, to_google as playwright_to_google, to_url as playwright_to_url
 import logging
-from web_voyager.prompt import web_voyager_prompt, param_conversion_code_prompt_template, task_param_used_prompt_template
-from langgraph.graph import END, StateGraph
-from langchain_core.runnables import RunnableLambda
-from web_voyager.utils import mask_sensitive_data, compress_screenshot, take_screenshot
-from utils import save_image_to_file
-from langgraph_utils import generate_graph_image
 import os
+import sys
 import uuid
-from langsmith import traceable
-
-
-
 from typing import List, Optional, TypedDict
 
-from playwright.async_api import Page
-
-import asyncio
-
-import base64
-
-from langchain_core.runnables import chain as chain_decorator
-from langchain_core.tracers.langchain import wait_for_all_tracers
-
-from langchain_core.runnables import RunnablePassthrough
-from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
 from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_core.runnables import RunnableLambda, chain as chain_decorator
+from langchain_core.tracers.langchain import wait_for_all_tracers
+from langchain_openai import ChatOpenAI
+from langgraph.graph import END, StateGraph
+from langsmith import traceable
+
+from alertme.utils.langgraph_utils import generate_graph_image
+from alertme.utils.utils import save_image_to_file
+from alertme.web_voyager.playwright_actions import setup_browser
+from alertme.web_voyager.playwright_actions_core import click as playwright_click, \
+    type_text as playwright_type_text, \
+    scroll_until_visible as playwright_scroll, go_back as playwright_go_back, \
+    to_google as playwright_to_google, to_url as playwright_to_url
+from alertme.web_voyager.prompt import compare_screenshots_prompt, web_voyager_prompt, \
+    param_conversion_code_prompt_template, \
+    task_param_used_prompt_template
+from alertme.web_voyager.screenshot_utils import mask_sensitive_data, take_screenshot
 
 # TODO: Make this file object oriented instead of using a global page object.
 global page
@@ -337,7 +327,7 @@ async def agent_node(state: AgentState):
 
 compare_chain = compare_screenshots_prompt | llm.with_structured_output(Reflection)
 
-import web_voyager.tasks.tennis_task as tennis_task
+import alertme.web_voyager.tasks.tennis_task as tennis_task
 
 async def setup(state: AgentState):
     global page

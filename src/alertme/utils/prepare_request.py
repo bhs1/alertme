@@ -1,8 +1,7 @@
-from codegen import CodeGenerator, combined_code, CODE_SUFFIX, exec_as_main
+from alertme.utils.codegen import combined_code, exec_as_main
 from langchain_openai import ChatOpenAI
 from langchain_core.pydantic_v1 import BaseModel, Field
 from typing import List
-from dotenv import load_dotenv
 import os
 import json
 

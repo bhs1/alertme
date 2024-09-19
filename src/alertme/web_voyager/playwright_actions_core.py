@@ -1,7 +1,10 @@
-from playwright.async_api import Page, expect
 import platform
-from web_voyager.utils import calculate_distance, mask_sensitive_data
-from web_voyager.playwright_utils import is_visible_in_viewport
+
+from playwright.async_api import Page, expect
+
+from alertme.web_voyager.playwright_utils import is_visible_in_viewport
+from alertme.web_voyager.screenshot_utils import calculate_distance, mask_sensitive_data
+
 
 async def wait_for_xpath(page, xpath, timeout=3000):
     try:

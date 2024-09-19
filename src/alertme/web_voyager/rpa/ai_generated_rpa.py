@@ -1,10 +1,7 @@
-import sys
-sys.path.insert(0, '.')
-
-from web_voyager.main import run_web_voyager
-from web_voyager.code_converter import ActionConverter
-from code_generators.html_parser_generator import generate_html_parser, save_html_parser
-import tasks.tennis_task as tennis_task
+import alertme.web_voyager.tasks.tennis_task as tennis_task
+from alertme.code_generators.html_parser_generator import generate_html_parser, save_html_parser
+from alertme.web_voyager.code_converter import ActionConverter
+from alertme.web_voyager.main import run_web_voyager
 
 if __name__ == "__main__":
     # ================================ Run web voyager to generate action log for tennis task ================================

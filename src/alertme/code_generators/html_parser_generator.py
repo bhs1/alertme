@@ -1,15 +1,10 @@
-import sys
-
-sys.path.insert(0, '.')
-sys.path.insert(0, './web_voyager/')
-
 import os
 import logging
 from dotenv import load_dotenv
-from codegen import CodeGenerator, combined_code
+from alertme.utils.codegen import CodeGenerator, combined_code
 
 def generate_html_parser():
-    from web_voyager.tasks.tennis_task import get_html_parser_test_cases, get_html_parser_code_gen_prompt
+    from alertme.web_voyager.tasks.tennis_task import get_html_parser_test_cases, get_html_parser_code_gen_prompt
     
     load_dotenv()
 

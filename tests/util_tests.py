@@ -1,9 +1,6 @@
 import sys
-sys.path.append('/Users/bensolis-cohen/Projects/alertme')
-from codegen import check_code
+from alertme.utils.codegen import check_code
 
-
-import pytest
 
 class TestCheckCode:
 
