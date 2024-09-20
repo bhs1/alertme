@@ -1,5 +1,5 @@
 from playwright.async_api import async_playwright
-from playwright_stealth import stealth_async
+from playwright_stealth import stealth_async  # type: ignore
 
 from alertme.utils.path_utils import get_output_path
 

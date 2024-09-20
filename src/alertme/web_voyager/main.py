@@ -8,7 +8,7 @@ from typing import List, Optional, TypedDict
 
 from dotenv import load_dotenv
 from langchain_core.pydantic_v1 import BaseModel, Field
-from langchain_core.runnables import RunnableLambda, chain as chain_decorator
+from langchain_core.runnables import RunnableLambda, chain as chain_decorator, Runnable, RunnableConfig
 from langchain_core.tracers.langchain import wait_for_all_tracers
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END, StateGraph
@@ -214,7 +214,7 @@ async def scroll(state: AgentState):
         target, direction, text = scroll_args
 
         if target.upper() == "WINDOW":
-            x, y = 0, 0
+            x, y = 0., 0.
             xpath = ""
             scroll_amount = 500
         else:
@@ -271,7 +271,9 @@ async def to_google(state: AgentState):
 
 async def to_url(state: AgentState):
     try:
-        url = state["prediction"].args[0]
+        prediction = state["prediction"]
+        assert prediction.args, "No URL provided."
+        url = prediction.args[0]
         await playwright_to_url(state['page'], url)
         store_action("to_url", {"url": url, "task_param_used": state['task_param_used']})
         return f"Navigated to {url}."
@@ -372,7 +374,8 @@ def wait_for_tracers():
 async def agent_node(state: AgentState):
     state = await (RunnableLambda(annotate) | RunnableLambda(format_descriptions)).ainvoke(state)
     agent = web_voyager_prompt | llm.with_structured_output(Prediction)
-    prediction = await agent.ainvoke(state, {"tags": ["agent-node"]})
+    config = RunnableConfig(tags=['agent-node'])
+    prediction = await agent.ainvoke(state, config)
     wait_for_tracers()
     return {**state, "prediction": prediction}
 
@@ -456,6 +459,7 @@ def format_scratchpad(scratchpad):
 def get_action_text(prediction: Prediction, state: AgentState):
     action = prediction.action
     args = prediction.args
+    assert args, "No args provided for action."
     try:
         if action == "Type":
             return args[1]
@@ -557,7 +561,7 @@ async def reflect(state: AgentState):
 
     print(masked_print_str)
 
-    prediction = state.get("prediction")
+    prediction = state["prediction"]
     action_taken = f"Action attempted: {prediction.action} with args: {prediction.args}. Which results in:"
     thought = prediction.thought
     if thought:
@@ -624,8 +628,9 @@ def select_tool(state: AgentState):
 
 
 async def end(state: AgentState):
-    res = state["prediction"].args[0]  # TODO: Format this.
-    masked_res = await mask_sensitive_data(res)
+    res_args = state["prediction"].args  # TODO: Format this.
+    assert res_args, "No args provided for action."
+    masked_res = await mask_sensitive_data(res_args[0])
     print(f"Final response: {masked_res}")
 
     await save_actions_log()

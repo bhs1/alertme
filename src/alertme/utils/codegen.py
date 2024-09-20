@@ -3,7 +3,7 @@ import uuid
 from difflib import ndiff
 from typing import TypedDict, List
 
-import deepdiff
+import deepdiff # type: ignore
 from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
@@ -64,8 +64,8 @@ class GraphState(TypedDict):
     error: str  # Flag for control flow to indicate whether test error was tripped
     last_test_results: str
     # Each element is [reflection_summary, correction_summary]
-    previous_corrections: list[list[str]]
-    code_solution: str
+    previous_corrections: list[tuple[str, str, str]]
+    code_solution: Code
     iterations: int
     test_cases: list[TestCase]
     reflection_prompt: str
@@ -165,7 +165,7 @@ class CodeGenerator:
         # Parameters
         self.max_iterations = 10
 
-    def correction_list_to_string(self, correction_list: List[tuple]):
+    def correction_list_to_string(self, correction_list: List[tuple[str, str, str]]):
         return """\n\n================================================\n
     """.join(
             [
@@ -264,7 +264,7 @@ the issue. Remember to define "global debug_output" at the top of any scope that
         # Solution
         code = self.code_gen_chain.invoke({"messages": messages})
         previous_corrections = state["previous_corrections"]
-        previous_corrections.append([code.correction_summary, code.imports, code.code])
+        previous_corrections.append(tuple([code.correction_summary, code.imports, code.code]))
 
         # Increment
         iterations = iterations + 1
@@ -460,7 +460,7 @@ the issue. Remember to define "global debug_output" at the top of any scope that
                 self.log(f"Comparing as strings: No Match. Exception: {e}")
                 return False, f"Expected: {expected_output}, Got: {global_output}"
 
-    def validate_test_cases_json(test_cases: List[TestCase]) -> bool:
+    def validate_test_cases_json(self, test_cases: List[TestCase]) -> bool:
         """
         Validates that all 'inputs' in the test cases are valid JSON.
 
@@ -476,7 +476,7 @@ the issue. Remember to define "global debug_output" at the top of any scope that
                 json.loads(test_case['inputs'])
             except json.JSONDecodeError:
                 return False
-            return True
+        return True
 
     # Conditional edges
     def _decide_to_finish(self, state: GraphState):
@@ -548,7 +548,8 @@ if __name__ == "__main__":
     # Combine the data
     combined_data = combine_request_data(REQUEST_PARAMS_MAP, request)
     test_cases = [{'inputs': combined_data, 'outputs': expected_output}]
-    func_str = get_request_replace_func(test_cases)
+    # TODO: THIS BELOW CODE WAS BROKEN COMMENTING OUT FOR NOW
+    # func_str = get_request_replace_func(test_cases)
     # with open("data/succesful_func.txt", "r") as f:
     #    func_str = f.read()
-    print(replace_fields(request, REQUEST_PARAMS_MAP, func_str))
+    # print(replace_fields(request, REQUEST_PARAMS_MAP, func_str))
